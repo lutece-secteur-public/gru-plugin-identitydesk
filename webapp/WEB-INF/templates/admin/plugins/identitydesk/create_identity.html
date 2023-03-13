@@ -1,0 +1,116 @@
+<#-- include "manageidentities_tabs.html" />
+<@tabs tab="identity" /> -->
+
+<script type="text/javascript">
+    $(function () {
+        $("input[name='insee_birthplace_label']").autocomplete({
+            minLength: 3,
+            source: function (request, response) {
+                $.ajax({
+                    url: '${autocomplete_city_endpoint}' + request.term,
+                    type: 'GET',
+                    contentType: 'application/json',
+                    dataType: "json",
+                    data: '',
+                    success: function (data) {
+                        if (data.response.status === 'OK') {
+                            response($.map(data.response.cities, function (city) {
+                                var dpt = city.codeZone;
+                                if (dpt.length === 1) {
+                                    dpt = '0' + dpt;
+                                }
+                                if (dpt) {
+                                    dpt = '(' + dpt + ') ';
+                                } else {
+                                    dpt = '';
+                                }
+                                return {
+                                    label: dpt + city.name,
+                                    value: city.code
+                                };
+                            }));
+                        }
+                    }
+                });
+            },
+            select: function (event, ui) {
+                event.preventDefault();
+                var cityName = ui.item.label;
+                if (cityName.startsWith('(') && cityName.length > 5) {
+                    cityName = cityName.substring(5).trim();
+                }
+                $("input[name='insee_birthplace_label']").val(cityName);
+                $("input[name='insee_birthplace_code']").val(ui.item.value);
+            }
+        });
+        $("input[name='insee_birthplace_label']").keyup(function () {
+            $("input[name='insee_birthplace_code']").val('');
+        });
+        $("input[name='insee_birthcountry_label']").autocomplete({
+            minLength: 3,
+            source: function (request, response) {
+                $.ajax({
+                    url: '${autocomplete_country_endpoint}' + request.term,
+                    type: 'GET',
+                    contentType: 'application/json',
+                    dataType: "json",
+                    data: '',
+                    success: function (data) {
+                        if (data.response.status === 'OK') {
+                            response($.map(data.response.countries, function (country) {
+                                return {
+                                    label: country.name,
+                                    value: country.code
+                                };
+                            }));
+                        }
+                    }
+                });
+            },
+            select: function (event, ui) {
+                event.preventDefault();
+                $("input[name='insee_birthcountry_label']").val(ui.item.label);
+                $("input[name='insee_birthcountry_code']").val(ui.item.value);
+            }
+        });
+        $("input[name='insee_birthcountry_label']").keyup(function () {
+            $("input[name='insee_birthcountry_code']").val('');
+        });
+    });
+</script>
+
+<@rowBoxHeader i18nTitleKey="identitydesk.create_identity.title">
+    <form class="form-horizontal" method="post" name="create_identity" action="jsp/admin/plugins/identitydesk/ManageIdentities.jsp">
+        <@messages infos=infos />
+        <@messages errors=errors />
+        <@messages warnings=warnings />
+
+        <#list service_contract.attributeDefinitions?filter(a -> a.attributeRight.writable) as writableAttr>
+            <#if writableAttr.keyName == 'insee_birthplace_code' || writableAttr.keyName == 'insee_birthcountry_code'>
+                <input type="hidden" name="${writableAttr.keyName}" value="<#list identity.attributes?filter(a -> a.key == writableAttr.keyName) as attr>${attr.value}</#list>" />
+            <#else>
+                <#assign labelId = "${writableAttr.keyName}-input">
+                <@formGroup labelKey=writableAttr.name labelFor=labelId mandatory=writableAttr.attributeRequirement?? >
+                    <div class="d-flex">
+                        <input id="${labelId}" class="form-control" type="text" name="${writableAttr.keyName}" placeholder="${writableAttr.description}"
+                               value="<#list identity.attributes?filter(a -> a.key == writableAttr.keyName) as attr>${attr.value}</#list>" />
+                        <select class="form-control w-auto" name="${writableAttr.keyName}-certif">
+                            <option hidden disabled selected value> -- Choissez un niveau de certification -- </option>
+                            <#if writableAttr.attributeRequirement??>
+                                <#list writableAttr.attributeCertifications?filter(c -> (c.level?number >= writableAttr.attributeRequirement.level?number)) as attrCert>
+                                    <option value="${attrCert.code}">${attrCert.label}</option>
+                                </#list>
+                            <#else>
+                                <#list writableAttr.attributeCertifications as attrCert>
+                                    <option value="${attrCert.code}">${attrCert.label}</option>
+                                </#list>
+                            </#if>
+                        </select>
+                    </div>
+                </@formGroup>
+            </#if>
+        </#list>
+
+        <@actionButtons button1Name="action_createIdentity" button2Name="view_manageIdentitys"/>
+    </form>
+</@rowBoxHeader>

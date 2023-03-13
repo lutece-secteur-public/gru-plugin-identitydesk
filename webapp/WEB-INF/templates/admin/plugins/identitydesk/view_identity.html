@@ -1,0 +1,66 @@
+<@rowBox>
+    <@boxHeader i18nTitleKey="">
+    <@headerButtons>
+        <form class="form-inline pull-right" method="post" name="manage_identities" action="jsp/admin/plugins/identitystore/ManageIdentities.jsp">
+            <!-- Add pull-right to class1 -->
+            <@actionButtons button1Name="view_viewAttributeHistory" icon1="fa fa-eye" i18nValue1Key="identitystore.manage_identities.buttonAttributsHisto" />
+        </form>
+    </@headerButtons>
+    </@boxHeader>
+    <@boxBody>
+<h1> <i class="fa fa-user"> </i> ${identity.firstName} ${identity.familyName}</h1>
+
+
+    <table class="table table-condensed table-striped">
+    	<thead>
+        <tr>
+            <th>#i18n{identitystore.view_identity.label.attribut}</th>
+            <th>#i18n{identitystore.view_identity.label.key}</th>
+            <th>#i18n{identitystore.view_identity.label.value}</th>
+            <th>#i18n{identitystore.view_identity.label.date_lastupdate}</th>
+            <th>#i18n{identitystore.view_identity.label.certif_level}</th>
+            <th>#i18n{identitystore.view_identity.label.certif_lastupdate}</th>
+            <th>#i18n{identitystore.view_identity.label.certif}</th>
+        </tr>  
+        </thead>  
+        <tbody>
+        <#list identity.attributes?values as attribute>
+        <tr>
+            <td> ${attribute.attributeKey.name} </td>
+            <td> ${attribute.attributeKey.keyName} </td>
+            <td><strong> ${attribute.value} </strong></td>
+            <td><strong> ${attribute.lastUpdateDate!} </strong></td>
+            <td>
+                <#if attribute.certificate ??>
+                    <span class="badge bg-primary">${attribute.certificate.certificateLevel}</span>
+                    <span class="badge bg-success"> <i class="fa fa-check"> </i> information certifi&eacute;e</span>
+                </#if>
+            </td>
+            <td>
+                <#if attribute.certificate ??>
+                    ${attribute.certificate.certificateDate}
+                </#if>
+            </td>
+            <td>
+                <#if attribute.certificate ??>                
+            	<#if attribute.certificate.certifierIconUrl != ''>
+                    <img src="${attribute.certificate.certifierIconUrl}" height="20" width="20">
+				</#if>
+				<#if attribute.certificate.certifierName ??>
+                    <strong> ${attribute.certificate.certifierName} </strong><br>
+				<#else>
+					${attribute.certificate.certifierCode}<br>
+				</#if>
+					<#if attribute.certificate.expirationDate ??> 
+                    <small>Date d'expiration : ${attribute.certificate.expirationDate}</small>
+					<#else>
+					<small>Pas d'expiration</small>
+					</#if>
+                </#if>
+            </td>
+        </tr>
+        </#list>
+        </tbody>
+    </table>
+  </@boxBody>
+</@rowBox>

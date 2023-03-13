@@ -1,0 +1,16 @@
+<#include "adminidentities_tabs.html" />
+<@tabs tab="identityattribute" />
+
+<@rowBoxHeader i18nTitleKey="identitystore.modify_identityattribute.title">
+    <form class="form-horizontal" method="post" name="modify_identityattribute" action="jsp/admin/plugins/identitystore/ManageIdentityAttributes.jsp">
+        <@messages errors=errors />
+        <input type="hidden" id="id" name="id" value="${identityattribute.id}"/>
+        
+        <@fieldInputText i18nLabelKey="identitystore.modify_identityattribute.labelIdIdentity" inputName="id_identity" mandatory=true value="${identityattribute.idIdentity}" i18nHelpBlockKey="identitystore.modify_identityattribute.labelIdIdentity.help" />
+        <@fieldInputText i18nLabelKey="identitystore.modify_identityattribute.labelIdAttribute" inputName="id_attribute" mandatory=true value="${identityattribute.idAttribute}" i18nHelpBlockKey="identitystore.modify_identityattribute.labelIdAttribute.help" />
+        <@fieldInputText i18nLabelKey="identitystore.modify_identityattribute.labelAttributeValue" inputName="attribute_value" mandatory=true value="${identityattribute.attributeValue}" i18nHelpBlockKey="identitystore.modify_identityattribute.labelAttributeValue.help" />
+        <@fieldInputText i18nLabelKey="identitystore.modify_identityattribute.labelIdCertification" inputName="id_certification"  value="${identityattribute.idCertification}" i18nHelpBlockKey="identitystore.modify_identityattribute.labelIdCertification.help" />
+        <@actionButtons button1Name="action_modifyIdentityAttribute" button2Name="view_manageIdentityAttributes"/>
+    </form>
+</@rowBoxHeader>
+
