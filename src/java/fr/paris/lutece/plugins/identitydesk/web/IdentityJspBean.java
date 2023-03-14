@@ -155,16 +155,15 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
 
     private IdentityService _identityService = SpringContextService.getBean( "identityService.rest.httpAccess" );
 
-    private final String _autocompleteCityEndpoint = AppPropertiesService.getProperty("identitydesk.autocomplete.city.endpoint");
-    private final String _autocompleteCountryEndpoint = AppPropertiesService.getProperty("identitydesk.autocomplete.country.endpoint");
+    private final String _autocompleteCityEndpoint = AppPropertiesService.getProperty( "identitydesk.autocomplete.city.endpoint" );
+    private final String _autocompleteCountryEndpoint = AppPropertiesService.getProperty( "identitydesk.autocomplete.country.endpoint" );
 
     @View( value = VIEW_MANAGE_IDENTITIES, defaultView = true )
     public String getManageIdentitys( HttpServletRequest request )
     {
         final List<QualifiedIdentity> qualifiedIdentities = new ArrayList<>( );
 
-        collectSearchAttributes( request );
-        if ( CollectionUtils.isNotEmpty( _searchAttributes ) )
+        if ( collectSearchAttributes( request ) && CollectionUtils.isNotEmpty( _searchAttributes ) )
         {
             final IdentitySearchRequest searchRequest = new IdentitySearchRequest( );
             final SearchDto search = new SearchDto( );
@@ -211,7 +210,8 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
         final String phone = request.getParameter( "mobile_phone" );
 
         final List<QualifiedIdentity> qualifiedIdentities = new ArrayList<>( );
-        if ( !Arrays.asList( email_login, gender, family_name, preferred_username, first_name, birthdate, insee_birthplace_label, insee_birthcountry_label, phone )
+        if ( !Arrays
+                .asList( email_login, gender, family_name, preferred_username, first_name, birthdate, insee_birthplace_label, insee_birthcountry_label, phone )
                 .contains( null ) )
         {
             _searchAttributes = new ArrayList<>( );
@@ -292,7 +292,7 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
         {
             e.printStackTrace( );
             addError( "Erreur lors de la récupération du contrat de service" );
-            return getManageIdentitys(request);
+            return getManageIdentitys( request );
         }
 
         Map<String, Object> model = getModel( );
@@ -307,14 +307,12 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
     private Identity initNewIdentity( final HttpServletRequest request )
     {
         final Identity identity = new Identity( );
-        request.getParameterMap()
-               .entrySet()
-               .stream()
-               .filter(entry -> !entry.getKey().startsWith("action_") && !entry.getKey().startsWith("view_") &&
-                                !entry.getKey().endsWith("-certif") && !entry.getKey().startsWith("insee_") &&
-                                !entry.getKey().equals("customer_id"))
-               .filter(entry -> entry.getValue() != null && entry.getValue().length == 1 && StringUtils.isNotBlank(entry.getValue()[0]))
-               .forEach(entry -> identity.getAttributes().add(initAttribute(entry.getKey(), entry.getValue()[0], request.getParameter(entry.getKey() + "-certif"))));
+        request.getParameterMap( ).entrySet( ).stream( )
+                .filter( entry -> !entry.getKey( ).startsWith( "action_" ) && !entry.getKey( ).startsWith( "view_" ) && !entry.getKey( ).endsWith( "-certif" )
+                        && !entry.getKey( ).startsWith( "insee_" ) && !entry.getKey( ).equals( "customer_id" ) )
+                .filter( entry -> entry.getValue( ) != null && entry.getValue( ).length == 1 && StringUtils.isNotBlank( entry.getValue( ) [0] ) )
+                .forEach( entry -> identity.getAttributes( )
+                        .add( initAttribute( entry.getKey( ), entry.getValue( ) [0], request.getParameter( entry.getKey( ) + "-certif" ) ) ) );
 
         final String insee_birthplace_label = request.getParameter( "insee_birthplace_label" );
         final String insee_birthplace_code = request.getParameter( "insee_birthplace_code" );
@@ -544,7 +542,7 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
                 final CertifiedAttribute oldAttr = identityToUpdate.getAttributes( ).stream( ).filter( a -> a.getKey( ).equals( newAttr.getKey( ) ) )
                         .findFirst( ).orElse( null );
                 if ( oldAttr != null && oldAttr.getValue( ).equals( newAttr.getValue( ) )
-                     && Objects.equals(oldAttr.getCertificationProcess(), newAttr.getCertificationProcess()) )
+                        && Objects.equals( oldAttr.getCertificationProcess( ), newAttr.getCertificationProcess( ) ) )
                 {
                     return oldAttr;
                 }
