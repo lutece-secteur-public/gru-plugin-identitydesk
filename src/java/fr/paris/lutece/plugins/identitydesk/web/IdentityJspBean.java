@@ -157,6 +157,7 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
 
     private final String _autocompleteCityEndpoint = AppPropertiesService.getProperty( "identitydesk.autocomplete.city.endpoint" );
     private final String _autocompleteCountryEndpoint = AppPropertiesService.getProperty( "identitydesk.autocomplete.country.endpoint" );
+    private final String _defaultClientCode = AppPropertiesService.getProperty( "identitydesk.default.client.code" );
 
     @View( value = VIEW_MANAGE_IDENTITIES, defaultView = true )
     public String getManageIdentitys( HttpServletRequest request )
@@ -171,7 +172,7 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
             search.setAttributes( _searchAttributes );
             try
             {
-                final IdentitySearchResponse searchResponse = _identityService.searchIdentities( searchRequest, "TEST" );
+                final IdentitySearchResponse searchResponse = _identityService.searchIdentities( searchRequest, getClientCode( request ) );
                 qualifiedIdentities.addAll( searchResponse.getIdentities( ) );
                 if ( qualifiedIdentities.isEmpty( ) )
                 {
@@ -272,6 +273,16 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
         return false;
     }
 
+    private String getClientCode( final HttpServletRequest request )
+    {
+        String clientCode = request.getParameter( "client_code" );
+        if ( StringUtils.isBlank( clientCode ) )
+        {
+            return _defaultClientCode;
+        }
+        return clientCode;
+    }
+
     /**
      * Returns the form to create a identity
      *
@@ -285,7 +296,7 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
         _identity = initNewIdentity( request );
         try
         {
-            final ServiceContractSearchResponse response = _identityService.getServiceContract( "TEST" );
+            final ServiceContractSearchResponse response = _identityService.getServiceContract( getClientCode( request ) );
             _serviceContract = response.getServiceContract( );
         }
         catch( IdentityStoreException e )
@@ -367,7 +378,7 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
             identityChangeRequest.setIdentity( identity );
             identityChangeRequest.setOrigin( this.getAuthor( ) );
 
-            final IdentityChangeResponse response = _identityService.createIdentity( identityChangeRequest, "TEST" );
+            final IdentityChangeResponse response = _identityService.createIdentity( identityChangeRequest, getClientCode( request ) );
             if ( response.getStatus( ) != IdentityChangeStatus.CREATE_SUCCESS )
             {
                 if ( response.getStatus( ) == IdentityChangeStatus.FAILURE )
@@ -471,13 +482,13 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
         final String customerId = request.getParameter( "customer_id" );
         try
         {
-            _identity = this.getIdentityFromCustomerId( customerId, "TEST" );
+            _identity = this.getIdentityFromCustomerId( customerId, getClientCode( request ) );
             if ( _identity == null )
             {
                 addError( "Erreur lors de la récupération de l'identité sélectionnée" );
                 return getManageIdentitys( request );
             }
-            final ServiceContractSearchResponse contractResponse = _identityService.getServiceContract( "TEST" );
+            final ServiceContractSearchResponse contractResponse = _identityService.getServiceContract( getClientCode( request ) );
             _serviceContract = contractResponse.getServiceContract( );
         }
         catch( IdentityStoreException e )
@@ -494,9 +505,9 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
         return getPage( PROPERTY_PAGE_TITLE_MODIFY_IDENTITY, TEMPLATE_MODIFY_IDENTITY, model );
     }
 
-    private Identity getIdentityFromCustomerId( final String customerId, final String applicationCode ) throws IdentityStoreException
+    private Identity getIdentityFromCustomerId( final String customerId, final String clientCode ) throws IdentityStoreException
     {
-        final IdentitySearchResponse identityResponse = _identityService.getIdentityByCustomerId( customerId, "TEST" );
+        final IdentitySearchResponse identityResponse = _identityService.getIdentityByCustomerId( customerId, clientCode );
         Identity identity = null;
         if ( identityResponse.getIdentities( ) != null && identityResponse.getIdentities( ).size( ) == 1 )
         {
@@ -529,7 +540,7 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
         final String customerId = request.getParameter( "customer_id" );
         try
         {
-            final Identity identityToUpdate = this.getIdentityFromCustomerId( customerId, "TEST" );
+            final Identity identityToUpdate = this.getIdentityFromCustomerId( customerId, getClientCode( request ) );
             if ( identityToUpdate == null )
             {
                 addError( "Erreur lors de la récupération de l'identité sélectionnée" );
@@ -555,7 +566,7 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
             identityToUpdate.setAttributes( updatedAttributes );
             changeRequest.setIdentity( identityToUpdate );
             changeRequest.setOrigin( this.getAuthor( ) );
-            final IdentityChangeResponse response = _identityService.updateIdentity( changeRequest, "TEST" );
+            final IdentityChangeResponse response = _identityService.updateIdentity( changeRequest, getClientCode( request ) );
             if ( response.getStatus( ) != IdentityChangeStatus.UPDATE_SUCCESS && response.getStatus( ) != IdentityChangeStatus.UPDATE_INCOMPLETE_SUCCESS )
             {
                 if ( response.getStatus( ) == IdentityChangeStatus.FAILURE )
