@@ -121,6 +121,7 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
     private static final String JSP_MANAGE_IDENTITIES = "jsp/admin/plugins/identitydesk/ManageIdentities.jsp";
     private static final String MARK_AUTOCOMPLETE_CITY_ENDPOINT = "autocomplete_city_endpoint";
     private static final String MARK_AUTOCOMPLETE_COUNTRY_ENDPOINT = "autocomplete_country_endpoint";
+    private static final String MARK_RETURN_URL = "return_url";
 
     // Properties
     private static final String MESSAGE_CONFIRM_REMOVE_IDENTITY = "identitydesk.message.confirmRemoveIdentity";
@@ -192,6 +193,7 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
         model.put( MARK_QUERY_SEARCH_ATTRIBUTES, _searchAttributes );
         model.put( MARK_AUTOCOMPLETE_CITY_ENDPOINT, _autocompleteCityEndpoint );
         model.put( MARK_AUTOCOMPLETE_COUNTRY_ENDPOINT, _autocompleteCountryEndpoint );
+        markReturnUrl( request, model );
 
         return getPage( PROPERTY_PAGE_TITLE_MANAGE_IDENTITIES, TEMPLATE_SEARCH_IDENTITIES, model );
     }
@@ -210,7 +212,6 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
         final String insee_birthcountry_code = request.getParameter( "insee_birthcountry_code" );
         final String phone = request.getParameter( "mobile_phone" );
 
-        final List<QualifiedIdentity> qualifiedIdentities = new ArrayList<>( );
         if ( !Arrays
                 .asList( email_login, gender, family_name, preferred_username, first_name, birthdate, insee_birthplace_label, insee_birthcountry_label, phone )
                 .contains( null ) )
@@ -283,6 +284,15 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
         return clientCode;
     }
 
+    private void markReturnUrl( final HttpServletRequest request, final Map<String, Object> model )
+    {
+        final String returnUrl = request.getParameter( "return_url" );
+        if ( StringUtils.isNotBlank( returnUrl ) )
+        {
+            model.put( MARK_RETURN_URL, returnUrl );
+        }
+    }
+
     /**
      * Returns the form to create a identity
      *
@@ -311,6 +321,7 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
         model.put( MARK_SERVICE_CONTRACT, _serviceContract );
         model.put( MARK_AUTOCOMPLETE_CITY_ENDPOINT, _autocompleteCityEndpoint );
         model.put( MARK_AUTOCOMPLETE_COUNTRY_ENDPOINT, _autocompleteCountryEndpoint );
+        markReturnUrl( request, model );
 
         return getPage( PROPERTY_PAGE_TITLE_CREATE_IDENTITY, TEMPLATE_CREATE_IDENTITY, model );
     }
@@ -320,7 +331,8 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
         final Identity identity = new Identity( );
         request.getParameterMap( ).entrySet( ).stream( )
                 .filter( entry -> !entry.getKey( ).startsWith( "action_" ) && !entry.getKey( ).startsWith( "view_" ) && !entry.getKey( ).endsWith( "-certif" )
-                        && !entry.getKey( ).startsWith( "insee_" ) && !entry.getKey( ).equals( "customer_id" ) )
+                        && !entry.getKey( ).startsWith( "insee_" ) && !entry.getKey( ).equals( "customer_id" ) && !entry.getKey( ).equals( "client_code" )
+                        && !entry.getKey( ).equals( "return_url" ) )
                 .filter( entry -> entry.getValue( ) != null && entry.getValue( ).length == 1 && StringUtils.isNotBlank( entry.getValue( ) [0] ) )
                 .forEach( entry -> identity.getAttributes( )
                         .add( initAttribute( entry.getKey( ), entry.getValue( ) [0], request.getParameter( entry.getKey( ) + "-certif" ) ) ) );
@@ -501,6 +513,7 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
         model.put( MARK_SERVICE_CONTRACT, _serviceContract );
         model.put( MARK_AUTOCOMPLETE_CITY_ENDPOINT, _autocompleteCityEndpoint );
         model.put( MARK_AUTOCOMPLETE_COUNTRY_ENDPOINT, _autocompleteCountryEndpoint );
+        markReturnUrl( request, model );
 
         return getPage( PROPERTY_PAGE_TITLE_MODIFY_IDENTITY, TEMPLATE_MODIFY_IDENTITY, model );
     }

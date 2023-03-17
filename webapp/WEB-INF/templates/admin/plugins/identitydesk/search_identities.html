@@ -24,11 +24,15 @@
     span.certification-date {
         color: #aaa;
     }
+    .always-hidden {
+        display: none !important;
+        visibility: hidden !important;
+    }
 </style>
 <script type="text/javascript">
     $(function () {
         $(".identity-result-table span.entity-quality").each(function () {
-            var quality = Math.ceil(parseFloat($(this).text()));
+            const quality = Math.ceil(parseFloat($(this).text()));
             if (quality > 80) {
                 $(this).parent().addClass("green-quality");
             } else if (quality >= 50) {
@@ -39,8 +43,8 @@
             $(this).text(quality);
         });
         $("input[type=text]:not(input[value=''])").each(function () {
-            var name = $(this).attr("name");
-            var search = $(this).val().toUpperCase();
+            const name = $(this).attr("name");
+            const search = $(this).val().toUpperCase();
             $(".identity-result-table span[class=" + name + "-value]").each(function () {
                 $(this).addClass("font-weight-bold");
                 if ($(this).text().toUpperCase() === search) {
@@ -68,7 +72,7 @@
                 $(".select-btn").show();
                 $(".modify-btn").show();
                 $(".insert-btn").hide();
-                var table = $(this).parents("table.identity-result-table");
+                const table = $(this).parents("table.identity-result-table");
                 table.css("border", "1px solid orange");
                 table.children("input[type=hidden]").removeAttr("disabled");
             } else {
@@ -92,7 +96,7 @@
                     success: function (data) {
                         if (data.response.status === 'OK') {
                             response($.map(data.response.cities, function (city) {
-                                var dpt = city.codeZone;
+                                let dpt = city.codeZone;
                                 if (dpt.length === 1) {
                                     dpt = '0' + dpt;
                                 }
@@ -112,7 +116,7 @@
             },
             select: function (event, ui) {
                 event.preventDefault();
-                var cityName = ui.item.label;
+                let cityName = ui.item.label;
                 if (cityName.startsWith('(') && cityName.length > 5) {
                     cityName = cityName.substring(5).trim();
                 }
@@ -153,10 +157,18 @@
         $("input[name='insee_birthcountry_label']").keyup(function () {
             $("input[name='insee_birthcountry_code']").val('');
         });
+        $("#select-btn").click(function () {
+            const url = $("input[name='return_url']").val();
+            const cuid = $("input[name='customer_id']").val();
+            if (url && cuid) {
+                window.location = url + '?cuid=' + cuid;
+            }
+        });
     });
 </script>
 
 <form class="form-inline" action="jsp/admin/plugins/identitydesk/ManageIdentities.jsp">
+<input type="hidden" name="return_url" value="${(return_url)!''}">
 <@rowBox>
     <@boxHeader i18nTitleKey="identitydesk.search_identities.title">
 
@@ -265,11 +277,17 @@
         <button class="btn btn-warning insert-btn" name="view_createIdentity" style="display: none">
             Insérer une nouvelle identité
         </button>
-        <button class="btn btn-warning select-btn" style="display: none">
-            Sélectionner une identité existante
-        </button>
+        <#if return_url?? >
+            <button class="btn btn-warning select-btn" style="display: none">
+                Sélectionner l'identité et retour au site appelant
+            </button>
+        <#else>
+            <button class="btn btn-warning always-hidden select-btn" style="display: none">
+                Sélectionner l'identité et retour au site appelant
+            </button>
+        </#if>
         <button class="btn btn-warning modify-btn" name="view_modifyIdentity" style="display: none">
-            Modifier une identité existante
+            Modifier l'identité sélectionnée
         </button>
 </@boxBody>
 </@rowBox>
