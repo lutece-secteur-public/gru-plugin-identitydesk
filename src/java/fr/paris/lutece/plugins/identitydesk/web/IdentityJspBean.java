@@ -35,6 +35,7 @@ package fr.paris.lutece.plugins.identitydesk.web;
 
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.common.AuthorType;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.common.RequestAuthor;
+import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.contract.AttributeDefinitionDto;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.contract.ServiceContractDto;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.contract.ServiceContractSearchResponse;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.crud.CertifiedAttribute;
@@ -64,11 +65,13 @@ import org.apache.commons.lang3.StringUtils;
 import javax.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -122,6 +125,7 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
     private static final String MARK_AUTOCOMPLETE_CITY_ENDPOINT = "autocomplete_city_endpoint";
     private static final String MARK_AUTOCOMPLETE_COUNTRY_ENDPOINT = "autocomplete_country_endpoint";
     private static final String MARK_RETURN_URL = "return_url";
+    private static final String MARK_SEARCH_ATTRIBUTE_ORDER = "search_attribute_order";
 
     // Properties
     private static final String MESSAGE_CONFIRM_REMOVE_IDENTITY = "identitydesk.message.confirmRemoveIdentity";
@@ -159,6 +163,12 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
     private final String _autocompleteCityEndpoint = AppPropertiesService.getProperty( "identitydesk.autocomplete.city.endpoint" );
     private final String _autocompleteCountryEndpoint = AppPropertiesService.getProperty( "identitydesk.autocomplete.country.endpoint" );
     private final String _defaultClientCode = AppPropertiesService.getProperty( "identitydesk.default.client.code" );
+    private final List<String> _searchAttributeKeyList = Arrays
+            .asList( AppPropertiesService.getProperty( "identitydesk.search.attribute.order" ).split( "," ) );
+    private final List<String> _searchAttributeKeyStrictList = Arrays
+            .asList( AppPropertiesService.getProperty( "identitydesk.search.strict.attributes" ).split( "," ) );
+    private final List<String> _createAttributeKeyList = Arrays
+            .asList( AppPropertiesService.getProperty( "identitydesk.create.attribute.order" ).split( "," ) );
 
     @View( value = VIEW_MANAGE_IDENTITIES, defaultView = true )
     public String getManageIdentitys( HttpServletRequest request )
@@ -186,6 +196,16 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
                 addError( "Une erreur est survenue pendant la recherche d'identités." );
             }
         }
+        try
+        {
+            final ServiceContractSearchResponse response = _identityService.getServiceContract( getClientCode( request ) );
+            _serviceContract = response.getServiceContract( );
+        }
+        catch( IdentityStoreException e )
+        {
+            e.printStackTrace( ); // FIXME logger ?
+            addError( "Une erreur est survenue pendant la récupération du contrat de service." );
+        }
 
         Map<String, Object> model = getPaginatedListModel( request, MARK_IDENTITY_LIST, qualifiedIdentities, JSP_MANAGE_IDENTITIES );
         model.put( MARK_QUERY, _strQuery );
@@ -193,6 +213,8 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
         model.put( MARK_QUERY_SEARCH_ATTRIBUTES, _searchAttributes );
         model.put( MARK_AUTOCOMPLETE_CITY_ENDPOINT, _autocompleteCityEndpoint );
         model.put( MARK_AUTOCOMPLETE_COUNTRY_ENDPOINT, _autocompleteCountryEndpoint );
+        model.put( MARK_SERVICE_CONTRACT, _serviceContract );
+        model.put( MARK_SEARCH_ATTRIBUTE_ORDER, _searchAttributeKeyList );
         markReturnUrl( request, model );
 
         return getPage( PROPERTY_PAGE_TITLE_MANAGE_IDENTITIES, TEMPLATE_SEARCH_IDENTITIES, model );
@@ -200,74 +222,41 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
 
     private boolean collectSearchAttributes( final HttpServletRequest request )
     {
-        final String email_login = request.getParameter( "email_login" );
-        final String gender = request.getParameter( "gender" );
-        final String family_name = request.getParameter( "family_name" );
-        final String preferred_username = request.getParameter( "preferred_username" );
-        final String first_name = request.getParameter( "first_name" );
-        final String birthdate = request.getParameter( "birthdate" );
-        final String insee_birthplace_label = request.getParameter( "insee_birthplace_label" );
-        final String insee_birthplace_code = request.getParameter( "insee_birthplace_code" );
-        final String insee_birthcountry_label = request.getParameter( "insee_birthcountry_label" );
-        final String insee_birthcountry_code = request.getParameter( "insee_birthcountry_code" );
-        final String phone = request.getParameter( "mobile_phone" );
-
-        if ( !Arrays
-                .asList( email_login, gender, family_name, preferred_username, first_name, birthdate, insee_birthplace_label, insee_birthcountry_label, phone )
-                .contains( null ) )
+        final List<SearchAttributeDto> searchList = _searchAttributeKeyList.stream( ).map( attrKey -> {
+            final String value = request.getParameter( attrKey );
+            if ( value != null )
+            {
+                return new SearchAttributeDto( attrKey, value, _searchAttributeKeyStrictList.contains( attrKey ) );
+            }
+            return null;
+        } ).collect( Collectors.toList( ) );
+        if ( !searchList.contains( null ) )
         {
-            _searchAttributes = new ArrayList<>( );
-            if ( StringUtils.isNotBlank( email_login ) )
+            final Optional<SearchAttributeDto> login = searchList.stream( ).filter( s -> s.getKey( ).equals( "login" ) ).findFirst( );
+            if ( login.isPresent( ) && StringUtils.isBlank( login.get( ).getValue( ) ) )
             {
-                _searchAttributes.add( new SearchAttributeDto( "email_login", email_login, true ) );
-                _searchAttributes.add( new SearchAttributeDto( "email", email_login, true ) );
+                final Optional<SearchAttributeDto> firstname = searchList.stream( ).filter( s -> s.getKey( ).equals( "firstname" ) ).findFirst( );
+                final Optional<SearchAttributeDto> familyname = searchList.stream( ).filter( s -> s.getKey( ).equals( "family_name" ) ).findFirst( );
+                final Optional<SearchAttributeDto> birthdate = searchList.stream( ).filter( s -> s.getKey( ).equals( "birthdate" ) ).findFirst( );
+                if ( ( firstname.isPresent( ) && StringUtils.isBlank( firstname.get( ).getValue( ) ) )
+                        || ( familyname.isPresent( ) && StringUtils.isBlank( familyname.get( ).getValue( ) ) )
+                        || ( birthdate.isPresent( ) && StringUtils.isBlank( birthdate.get( ).getValue( ) ) ) )
+                {
+                    addInfo( "Pour lancer une recherche, merci de renseigner au minimum soit :"
+                            + "<ul><li>Le critère Login</li><li>Les critères Prénoms + Nom de naissance + Date de naissance</li></ul>" );
+                    return false;
+                }
             }
-            if ( StringUtils.isNotBlank( gender ) )
+            _searchAttributes = searchList.stream( ).filter( s -> StringUtils.isNotBlank( s.getValue( ) ) ).collect( Collectors.toList( ) );
+            if ( _searchAttributes.stream( ).anyMatch( s -> s.getKey( ).equals( "birthplace" ) ) )
             {
-                _searchAttributes.add( new SearchAttributeDto( "gender", gender, true ) );
+                final String value = request.getParameter( "birthplace_code" );
+                _searchAttributes.add( new SearchAttributeDto( "birthplace_code", value, _searchAttributeKeyStrictList.contains( "birthplace_code" ) ) );
             }
-            if ( StringUtils.isNotBlank( family_name ) )
+            if ( _searchAttributes.stream( ).anyMatch( s -> s.getKey( ).equals( "birthcountry" ) ) )
             {
-                _searchAttributes.add( new SearchAttributeDto( "family_name", family_name, false ) );
-            }
-            if ( StringUtils.isNotBlank( preferred_username ) )
-            {
-                _searchAttributes.add( new SearchAttributeDto( "preferred_username", preferred_username, false ) );
-            }
-            if ( StringUtils.isNotBlank( first_name ) )
-            {
-                _searchAttributes.add( new SearchAttributeDto( "first_name", first_name, false ) );
-            }
-            if ( StringUtils.isNotBlank( birthdate ) )
-            {
-                _searchAttributes.add( new SearchAttributeDto( "birthdate", birthdate, true ) );
-            }
-            if ( StringUtils.isNotBlank( insee_birthplace_label ) )
-            {
-                _searchAttributes.add( new SearchAttributeDto( "insee_birthplace_label", insee_birthplace_label, true ) );
-            }
-            if ( StringUtils.isNotBlank( insee_birthplace_code ) )
-            {
-                _searchAttributes.add( new SearchAttributeDto( "insee_birthplace_code", insee_birthplace_code, true ) );
-            }
-            if ( StringUtils.isNotBlank( insee_birthcountry_label ) )
-            {
-                _searchAttributes.add( new SearchAttributeDto( "insee_birthcountry_label", insee_birthcountry_label, true ) );
-            }
-            if ( StringUtils.isNotBlank( insee_birthcountry_code ) )
-            {
-                _searchAttributes.add( new SearchAttributeDto( "insee_birthcountry_code", insee_birthcountry_code, true ) );
-            }
-            if ( StringUtils.isNotBlank( phone ) )
-            {
-                _searchAttributes.add( new SearchAttributeDto( "mobile_phone", phone, true ) );
-                _searchAttributes.add( new SearchAttributeDto( "fixed_phone", phone, true ) );
-            }
-            if ( StringUtils.isBlank( email_login ) && ( StringUtils.isAnyBlank( first_name, family_name, birthdate ) ) )
-            {
-                addInfo( "Pour lancer une recherche, merci de renseigner au minimum soit :"
-                        + "<ul><li>Le critère Email</li><li>Les critères Prénoms + Nom de naissance + Date de naissance</li></ul>" );
-                return false;
+                final String value = request.getParameter( "birthcountry_code" );
+                _searchAttributes.add( new SearchAttributeDto( "birthcountry_code", value, _searchAttributeKeyStrictList.contains( "birthcountry_code" ) ) );
             }
             return true;
         }
@@ -308,6 +297,7 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
         {
             final ServiceContractSearchResponse response = _identityService.getServiceContract( getClientCode( request ) );
             _serviceContract = response.getServiceContract( );
+            sortServiceContractAttributes( _createAttributeKeyList );
         }
         catch( IdentityStoreException e )
         {
@@ -331,30 +321,26 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
         final Identity identity = new Identity( );
         request.getParameterMap( ).entrySet( ).stream( )
                 .filter( entry -> !entry.getKey( ).startsWith( "action_" ) && !entry.getKey( ).startsWith( "view_" ) && !entry.getKey( ).endsWith( "-certif" )
-                        && !entry.getKey( ).startsWith( "insee_" ) && !entry.getKey( ).equals( "customer_id" ) && !entry.getKey( ).equals( "client_code" )
-                        && !entry.getKey( ).equals( "return_url" ) )
+                        && !entry.getKey( ).startsWith( "birthplace" ) && !entry.getKey( ).startsWith( "birthcountry" )
+                        && !entry.getKey( ).equals( "customer_id" ) && !entry.getKey( ).equals( "client_code" ) && !entry.getKey( ).equals( "return_url" ) )
                 .filter( entry -> entry.getValue( ) != null && entry.getValue( ).length == 1 && StringUtils.isNotBlank( entry.getValue( ) [0] ) )
                 .forEach( entry -> identity.getAttributes( )
                         .add( initAttribute( entry.getKey( ), entry.getValue( ) [0], request.getParameter( entry.getKey( ) + "-certif" ) ) ) );
 
-        final String insee_birthplace_label = request.getParameter( "insee_birthplace_label" );
-        final String insee_birthplace_code = request.getParameter( "insee_birthplace_code" );
-        final String insee_birthcountry_label = request.getParameter( "insee_birthcountry_label" );
-        final String insee_birthcountry_code = request.getParameter( "insee_birthcountry_code" );
+        final String birthplace = request.getParameter( "birthplace" );
+        final String birthplace_code = request.getParameter( "birthplace_code" );
+        final String birthcountry = request.getParameter( "birthcountry" );
+        final String birthcountry_code = request.getParameter( "birthcountry_code" );
 
-        if ( StringUtils.isNotBlank( insee_birthplace_label ) )
+        if ( StringUtils.isNotBlank( birthplace ) )
         {
-            identity.getAttributes( )
-                    .add( initAttribute( "insee_birthplace_label", insee_birthplace_label, request.getParameter( "insee_birthplace_label-certif" ) ) );
-            identity.getAttributes( )
-                    .add( initAttribute( "insee_birthplace_code", insee_birthplace_code, request.getParameter( "insee_birthplace_label-certif" ) ) );
+            identity.getAttributes( ).add( initAttribute( "birthplace", birthplace, request.getParameter( "birthplace-certif" ) ) );
+            identity.getAttributes( ).add( initAttribute( "birthplace_code", birthplace_code, request.getParameter( "birthplace-certif" ) ) );
         }
-        if ( StringUtils.isNotBlank( insee_birthcountry_label ) )
+        if ( StringUtils.isNotBlank( birthcountry ) )
         {
-            identity.getAttributes( )
-                    .add( initAttribute( "insee_birthcountry_label", insee_birthcountry_label, request.getParameter( "insee_birthcountry_label-certif" ) ) );
-            identity.getAttributes( )
-                    .add( initAttribute( "insee_birthcountry_code", insee_birthcountry_code, request.getParameter( "insee_birthcountry_label-certif" ) ) );
+            identity.getAttributes( ).add( initAttribute( "birthcountry", birthcountry, request.getParameter( "birthcountry-certif" ) ) );
+            identity.getAttributes( ).add( initAttribute( "birthcountry_code", birthcountry_code, request.getParameter( "birthcountry-certif" ) ) );
         }
 
         return identity;
@@ -492,16 +478,18 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
     public String getModifyIdentity( HttpServletRequest request )
     {
         final String customerId = request.getParameter( "customer_id" );
+        final QualifiedIdentity qualifiedIdentity;
         try
         {
-            _identity = this.getIdentityFromCustomerId( customerId, getClientCode( request ) );
-            if ( _identity == null )
+            qualifiedIdentity = this.getIdentityFromCustomerId( customerId, getClientCode( request ), QualifiedIdentity.class );
+            if ( qualifiedIdentity == null )
             {
                 addError( "Erreur lors de la récupération de l'identité sélectionnée" );
                 return getManageIdentitys( request );
             }
             final ServiceContractSearchResponse contractResponse = _identityService.getServiceContract( getClientCode( request ) );
             _serviceContract = contractResponse.getServiceContract( );
+            sortServiceContractAttributes( _createAttributeKeyList );
         }
         catch( IdentityStoreException e )
         {
@@ -509,7 +497,7 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
             return getManageIdentitys( request );
         }
         Map<String, Object> model = getModel( );
-        model.put( MARK_IDENTITY, _identity );
+        model.put( MARK_IDENTITY, qualifiedIdentity );
         model.put( MARK_SERVICE_CONTRACT, _serviceContract );
         model.put( MARK_AUTOCOMPLETE_CITY_ENDPOINT, _autocompleteCityEndpoint );
         model.put( MARK_AUTOCOMPLETE_COUNTRY_ENDPOINT, _autocompleteCountryEndpoint );
@@ -518,26 +506,45 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
         return getPage( PROPERTY_PAGE_TITLE_MODIFY_IDENTITY, TEMPLATE_MODIFY_IDENTITY, model );
     }
 
-    private Identity getIdentityFromCustomerId( final String customerId, final String clientCode ) throws IdentityStoreException
+    private <T> T getIdentityFromCustomerId( final String customerId, final String clientCode, final Class<T> identityClass ) throws IdentityStoreException
     {
-        final IdentitySearchResponse identityResponse = _identityService.getIdentityByCustomerId( customerId, clientCode );
-        Identity identity = null;
+        final IdentitySearchResponse identityResponse = _identityService.getIdentity( null, customerId, clientCode );
         if ( identityResponse.getIdentities( ) != null && identityResponse.getIdentities( ).size( ) == 1 )
         {
-            final QualifiedIdentity qualifiedIdentity = identityResponse.getIdentities( ).get( 0 );
-            identity = new Identity( );
-            identity.setCustomerId( qualifiedIdentity.getCustomerId( ) );
-            identity.setConnectionId( qualifiedIdentity.getConnectionId( ) );
-            identity.setAttributes( qualifiedIdentity.getAttributes( ).stream( ).map( a -> {
-                final CertifiedAttribute attribute = new CertifiedAttribute( );
-                attribute.setKey( a.getKey( ) );
-                attribute.setValue( a.getValue( ) );
-                attribute.setCertificationProcess( a.getCertifier( ) );
-                attribute.setCertificationDate( a.getCertificationDate( ) );
-                return attribute;
-            } ).collect( Collectors.toList( ) ) );
+            if ( identityClass.equals( QualifiedIdentity.class ) )
+            {
+                return identityClass.cast( identityResponse.getIdentities( ).get( 0 ) );
+            }
+            else
+                if ( identityClass.equals( Identity.class ) )
+                {
+                    final QualifiedIdentity qualifiedIdentity = identityResponse.getIdentities( ).get( 0 );
+                    final Identity identity = new Identity( );
+                    identity.setCustomerId( qualifiedIdentity.getCustomerId( ) );
+                    identity.setConnectionId( qualifiedIdentity.getConnectionId( ) );
+                    identity.setAttributes( qualifiedIdentity.getAttributes( ).stream( ).map( a -> {
+                        final CertifiedAttribute attribute = new CertifiedAttribute( );
+                        attribute.setKey( a.getKey( ) );
+                        attribute.setValue( a.getValue( ) );
+                        attribute.setCertificationProcess( a.getCertifier( ) );
+                        attribute.setCertificationDate( a.getCertificationDate( ) );
+                        return attribute;
+                    } ).collect( Collectors.toList( ) ) );
+                    return identityClass.cast( identity );
+                }
         }
-        return identity;
+        return null;
+    }
+
+    private void sortServiceContractAttributes( final List<String> attrKeyOrder )
+    {
+        _serviceContract.getAttributeDefinitions( ).sort( ( a1, a2 ) -> {
+            final int index1 = attrKeyOrder.indexOf( a1.getKeyName( ) );
+            final int index2 = attrKeyOrder.indexOf( a2.getKeyName( ) );
+            final Integer i1 = index1 == -1 ? 999 : index1;
+            final Integer i2 = index2 == -1 ? 999 : index2;
+            return i1.compareTo( i2 );
+        } );
     }
 
     /**
@@ -553,7 +560,7 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
         final String customerId = request.getParameter( "customer_id" );
         try
         {
-            final Identity identityToUpdate = this.getIdentityFromCustomerId( customerId, getClientCode( request ) );
+            final Identity identityToUpdate = this.getIdentityFromCustomerId( customerId, getClientCode( request ), Identity.class );
             if ( identityToUpdate == null )
             {
                 addError( "Erreur lors de la récupération de l'identité sélectionnée" );

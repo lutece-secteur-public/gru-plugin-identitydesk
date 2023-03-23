@@ -84,7 +84,7 @@
         if ($("input[type=text]:not(input[value=''])").length > 0 && !$("div #messages_infos_div").is(":visible")) {
             $(".create-identity-btn").show();
         }
-        $("input[name='insee_birthplace_label']").autocomplete({
+        $("input[name='birthplace']").autocomplete({
             minLength: 3,
             source: function (request, response) {
                 $.ajax({
@@ -120,14 +120,14 @@
                 if (cityName.startsWith('(') && cityName.length > 5) {
                     cityName = cityName.substring(5).trim();
                 }
-                $("input[name='insee_birthplace_label']").val(cityName);
-                $("input[name='insee_birthplace_code']").val(ui.item.value);
+                $("input[name='birthplace']").val(cityName);
+                $("input[name='birthplace_code']").val(ui.item.value);
             }
         });
-        $("input[name='insee_birthplace_label']").keyup(function () {
-            $("input[name='insee_birthplace_code']").val('');
+        $("input[name='birthplace']").keyup(function () {
+            $("input[name='birthplace_code']").val('');
         });
-        $("input[name='insee_birthcountry_label']").autocomplete({
+        $("input[name='birthcountry']").autocomplete({
             minLength: 3,
             source: function (request, response) {
                 $.ajax({
@@ -150,12 +150,12 @@
             },
             select: function (event, ui) {
                 event.preventDefault();
-                $("input[name='insee_birthcountry_label']").val(ui.item.label);
-                $("input[name='insee_birthcountry_code']").val(ui.item.value);
+                $("input[name='birthcountry']").val(ui.item.label);
+                $("input[name='birthcountry_code']").val(ui.item.value);
             }
         });
-        $("input[name='insee_birthcountry_label']").keyup(function () {
-            $("input[name='insee_birthcountry_code']").val('');
+        $("input[name='birthcountry']").keyup(function () {
+            $("input[name='birthcountry_code']").val('');
         });
         $("#select-btn").click(function () {
             const url = $("input[name='return_url']").val();
@@ -181,16 +181,6 @@
     <@messages infos=infos />
     <@messages errors=errors />
     <@messages warnings=warnings />
-    <#assign displayedAttrList = [ ['email_login', 'Email', 'Email ou email de login'],
-                                   ['gender', 'Civilité', 'Civilité'],
-                                   ['family_name', 'Nom de naissance', 'Nom de naissance'],
-                                   ['preferred_username', 'Nom d&apos;usage', 'Nom d&apos;usage'],
-                                   ['first_name', 'Prénoms', 'Prénoms'],
-                                   ['birthdate', 'Date de naissance', 'Date de naissance'],
-                                   ['insee_birthplace_label', 'Ville de naissance', 'Ville de naissance'],
-                                   ['insee_birthcountry_label', 'Pays de naissance', 'Pays de naissance'],
-                                   ['mobile_phone', 'Téléphone', 'Téléphone fixe ou mobile'] ] >
-
 
         <div class="input-group">
             <@table class="identity-search-table">
@@ -202,16 +192,18 @@
                     </th>
                 </tr>
                 <@tableHeadBodySeparator />
-                <#list displayedAttrList as displayedAttr>
-                    <tr>
-                        <th>${displayedAttr[1]}</th>
-                        <th><input class="form-control" type="text" name="${displayedAttr[0]}" placeholder="${displayedAttr[2]}"
-                                   value="<#list query_search_attributes?filter(a -> a.key == displayedAttr[0]) as attr>${attr.value}</#list>" /></th>
-                    </tr>
-                    <@tableHeadBodySeparator />
+                <#list search_attribute_order as attrKey>
+                    <#list service_contract.attributeDefinitions?filter(a -> a.attributeRight.searchable && a.keyName == attrKey) as searchableAttr>
+                        <tr>
+                            <th>${searchableAttr.name}</th>
+                            <th><input class="form-control" type="text" name="${searchableAttr.keyName}" placeholder="${searchableAttr.description}"
+                                       value="<#list query_search_attributes?filter(a -> a.key == searchableAttr.keyName) as attr>${attr.value}</#list>" /></th>
+                        </tr>
+                        <@tableHeadBodySeparator />
+                    </#list>
                 </#list>
-                <input type="hidden" name="insee_birthplace_code" value="<#list query_search_attributes?filter(a -> a.key == 'insee_birthplace_code') as attr>${attr.value}</#list>" />
-                <input type="hidden" name="insee_birthcountry_code" value="<#list query_search_attributes?filter(a -> a.key == 'insee_birthcountry_code') as attr>${attr.value}</#list>" />
+                <input type="hidden" name="birthplace_code" value="<#list query_search_attributes?filter(a -> a.key == 'birthplace_code') as attr>${attr.value}</#list>" />
+                <input type="hidden" name="birthcountry_code" value="<#list query_search_attributes?filter(a -> a.key == 'birthcountry_code') as attr>${attr.value}</#list>" />
                 <tr>
                     <th>&nbsp;</th>
                     <th>
@@ -238,7 +230,7 @@
                         </th>
                     </tr>
                     <@tableHeadBodySeparator />
-                    <#list displayedAttrList?map(a -> a[0]) as displayedAttrKey>
+                    <#list search_attribute_order as displayedAttrKey>
                         <tr>
                             <td>
                                 <#list identity.attributes?filter(a -> a.key == displayedAttrKey) as attr>

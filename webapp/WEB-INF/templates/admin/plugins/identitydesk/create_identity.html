@@ -3,7 +3,7 @@
 
 <script type="text/javascript">
     $(function () {
-        $("input[name='insee_birthplace_label']").autocomplete({
+        $("input[name='birthplace']").autocomplete({
             minLength: 3,
             source: function (request, response) {
                 $.ajax({
@@ -39,14 +39,14 @@
                 if (cityName.startsWith('(') && cityName.length > 5) {
                     cityName = cityName.substring(5).trim();
                 }
-                $("input[name='insee_birthplace_label']").val(cityName);
-                $("input[name='insee_birthplace_code']").val(ui.item.value);
+                $("input[name='birthplace']").val(cityName);
+                $("input[name='birthplace_code']").val(ui.item.value);
             }
         });
-        $("input[name='insee_birthplace_label']").keyup(function () {
-            $("input[name='insee_birthplace_code']").val('');
+        $("input[name='birthplace']").keyup(function () {
+            $("input[name='birthplace_code']").val('');
         });
-        $("input[name='insee_birthcountry_label']").autocomplete({
+        $("input[name='birthcountry']").autocomplete({
             minLength: 3,
             source: function (request, response) {
                 $.ajax({
@@ -69,12 +69,12 @@
             },
             select: function (event, ui) {
                 event.preventDefault();
-                $("input[name='insee_birthcountry_label']").val(ui.item.label);
-                $("input[name='insee_birthcountry_code']").val(ui.item.value);
+                $("input[name='birthcountry']").val(ui.item.label);
+                $("input[name='birthcountry_code']").val(ui.item.value);
             }
         });
-        $("input[name='insee_birthcountry_label']").keyup(function () {
-            $("input[name='insee_birthcountry_code']").val('');
+        $("input[name='birthcountry']").keyup(function () {
+            $("input[name='birthcountry_code']").val('');
         });
     });
 </script>
@@ -87,7 +87,7 @@
         <input type="hidden" name="return_url" value="${(return_url)!''}">
 
         <#list service_contract.attributeDefinitions?filter(a -> a.attributeRight.writable) as writableAttr>
-            <#if writableAttr.keyName == 'insee_birthplace_code' || writableAttr.keyName == 'insee_birthcountry_code'>
+            <#if writableAttr.keyName == 'birthplace_code' || writableAttr.keyName == 'birthcountry_code'>
                 <input type="hidden" name="${writableAttr.keyName}" value="<#list identity.attributes?filter(a -> a.key == writableAttr.keyName) as attr>${attr.value}</#list>" />
             <#else>
                 <#assign labelId = "${writableAttr.keyName}-input">
