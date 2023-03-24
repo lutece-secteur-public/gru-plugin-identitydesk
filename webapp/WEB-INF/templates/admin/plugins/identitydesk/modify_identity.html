@@ -104,19 +104,19 @@
                                 <option hidden disabled selected value> -- Choissez un niveau de certification -- </option>
                             </#if>
                             <#if writableAttr.attributeRequirement??>
-                                <#list writableAttr.attributeCertifications?filter(c -> (c.level?number >= writableAttr.attributeRequirement.level?number)) as attrCert>
+                                <#list writableAttr.attributeCertifications?filter(c -> (c.level?number >= writableAttr.attributeRequirement.level?number && c.level?number >= (attr[0].certificationLevel)!0)) as attrCert>
                                     <#if ((attr[0].certifier)!'') == attrCert.code>
-                                        <option value="${attrCert.code}" selected>${attrCert.label}</option>
+                                        <option value="${attrCert.code}" selected>${attrCert.level} - ${attrCert.label}</option>
                                     <#else>
-                                        <option value="${attrCert.code}">${attrCert.label}</option>
+                                        <option value="${attrCert.code}">${attrCert.level} - ${attrCert.label}</option>
                                     </#if>
                                 </#list>
                             <#else>
-                                <#list writableAttr.attributeCertifications as attrCert>
+                                <#list writableAttr.attributeCertifications?filter(c -> (c.level?number >= (attr[0].certificationLevel)!0)) as attrCert>
                                     <#if ((attr[0].certifier)!'') == attrCert.code>
-                                        <option value="${attrCert.code}" selected>${attrCert.label}</option>
+                                        <option value="${attrCert.code}" selected>${attrCert.level} - ${attrCert.label}</option>
                                     <#else>
-                                        <option value="${attrCert.code}">${attrCert.label}</option>
+                                        <option value="${attrCert.code}">${attrCert.level} - ${attrCert.label}</option>
                                     </#if>
                                 </#list>
                             </#if>

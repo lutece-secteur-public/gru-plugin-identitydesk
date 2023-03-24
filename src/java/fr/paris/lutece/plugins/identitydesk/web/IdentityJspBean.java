@@ -367,6 +367,11 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
         try
         {
             final Identity identity = initNewIdentity( request );
+            if ( identity.getAttributes( ).stream( ).anyMatch( a -> StringUtils.isBlank( a.getCertificationProcess( ) ) ) )
+            {
+                addWarning( "Un niveau de certification doit obligatoirement être sélectionné pour chaque attribut renseigné." );
+                return getCreateIdentity( request );
+            }
             final IdentityChangeRequest identityChangeRequest = new IdentityChangeRequest( );
             identityChangeRequest.setIdentity( identity );
             identityChangeRequest.setOrigin( this.getAuthor( ) );
@@ -563,6 +568,11 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
             }
             final IdentityChangeRequest changeRequest = new IdentityChangeRequest( );
             final Identity identityFromParams = this.initNewIdentity( request );
+            if ( identityFromParams.getAttributes( ).stream( ).anyMatch( a -> StringUtils.isBlank( a.getCertificationProcess( ) ) ) )
+            {
+                addWarning( "Un niveau de certification doit obligatoirement être sélectionné pour chaque attribut renseigné." );
+                return getModifyIdentity( request );
+            }
 
             final List<CertifiedAttribute> updatedAttributes = identityFromParams.getAttributes( ).stream( ).map( newAttr -> {
                 final CertifiedAttribute oldAttr = identityToUpdate.getAttributes( ).stream( ).filter( a -> a.getKey( ).equals( newAttr.getKey( ) ) )

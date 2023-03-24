@@ -99,11 +99,11 @@
                             <option hidden disabled selected value> -- Choissez un niveau de certification -- </option>
                             <#if writableAttr.attributeRequirement??>
                                 <#list writableAttr.attributeCertifications?filter(c -> (c.level?number >= writableAttr.attributeRequirement.level?number)) as attrCert>
-                                    <option value="${attrCert.code}">${attrCert.label}</option>
+                                    <option value="${attrCert.code}">${attrCert.level} - ${attrCert.label}</option>
                                 </#list>
                             <#else>
                                 <#list writableAttr.attributeCertifications as attrCert>
-                                    <option value="${attrCert.code}">${attrCert.label}</option>
+                                    <option value="${attrCert.code}">${attrCert.level} - ${attrCert.label}</option>
                                 </#list>
                             </#if>
                         </select>
