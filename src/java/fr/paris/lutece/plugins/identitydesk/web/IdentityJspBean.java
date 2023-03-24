@@ -35,7 +35,6 @@ package fr.paris.lutece.plugins.identitydesk.web;
 
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.common.AuthorType;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.common.RequestAuthor;
-import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.contract.AttributeDefinitionDto;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.contract.ServiceContractDto;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.contract.ServiceContractSearchResponse;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.crud.CertifiedAttribute;
@@ -65,7 +64,6 @@ import org.apache.commons.lang3.StringUtils;
 import javax.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -163,12 +161,9 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
     private final String _autocompleteCityEndpoint = AppPropertiesService.getProperty( "identitydesk.autocomplete.city.endpoint" );
     private final String _autocompleteCountryEndpoint = AppPropertiesService.getProperty( "identitydesk.autocomplete.country.endpoint" );
     private final String _defaultClientCode = AppPropertiesService.getProperty( "identitydesk.default.client.code" );
-    private final List<String> _searchAttributeKeyList = Arrays
-            .asList( AppPropertiesService.getProperty( "identitydesk.search.attribute.order" ).split( "," ) );
+    private final List<String> _sortedAttributeKeyList = Arrays.asList( AppPropertiesService.getProperty( "identitydesk.attribute.order" ).split( "," ) );
     private final List<String> _searchAttributeKeyStrictList = Arrays
             .asList( AppPropertiesService.getProperty( "identitydesk.search.strict.attributes" ).split( "," ) );
-    private final List<String> _createAttributeKeyList = Arrays
-            .asList( AppPropertiesService.getProperty( "identitydesk.create.attribute.order" ).split( "," ) );
 
     @View( value = VIEW_MANAGE_IDENTITIES, defaultView = true )
     public String getManageIdentitys( HttpServletRequest request )
@@ -200,6 +195,7 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
         {
             final ServiceContractSearchResponse response = _identityService.getServiceContract( getClientCode( request ) );
             _serviceContract = response.getServiceContract( );
+            sortServiceContractAttributes( );
         }
         catch( IdentityStoreException e )
         {
@@ -214,7 +210,6 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
         model.put( MARK_AUTOCOMPLETE_CITY_ENDPOINT, _autocompleteCityEndpoint );
         model.put( MARK_AUTOCOMPLETE_COUNTRY_ENDPOINT, _autocompleteCountryEndpoint );
         model.put( MARK_SERVICE_CONTRACT, _serviceContract );
-        model.put( MARK_SEARCH_ATTRIBUTE_ORDER, _searchAttributeKeyList );
         markReturnUrl( request, model );
 
         return getPage( PROPERTY_PAGE_TITLE_MANAGE_IDENTITIES, TEMPLATE_SEARCH_IDENTITIES, model );
@@ -222,7 +217,7 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
 
     private boolean collectSearchAttributes( final HttpServletRequest request )
     {
-        final List<SearchAttributeDto> searchList = _searchAttributeKeyList.stream( ).map( attrKey -> {
+        final List<SearchAttributeDto> searchList = _sortedAttributeKeyList.stream( ).map( attrKey -> {
             final String value = request.getParameter( attrKey );
             if ( value != null )
             {
@@ -297,7 +292,7 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
         {
             final ServiceContractSearchResponse response = _identityService.getServiceContract( getClientCode( request ) );
             _serviceContract = response.getServiceContract( );
-            sortServiceContractAttributes( _createAttributeKeyList );
+            sortServiceContractAttributes( );
         }
         catch( IdentityStoreException e )
         {
@@ -489,7 +484,7 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
             }
             final ServiceContractSearchResponse contractResponse = _identityService.getServiceContract( getClientCode( request ) );
             _serviceContract = contractResponse.getServiceContract( );
-            sortServiceContractAttributes( _createAttributeKeyList );
+            sortServiceContractAttributes( );
         }
         catch( IdentityStoreException e )
         {
@@ -536,11 +531,11 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
         return null;
     }
 
-    private void sortServiceContractAttributes( final List<String> attrKeyOrder )
+    private void sortServiceContractAttributes( )
     {
         _serviceContract.getAttributeDefinitions( ).sort( ( a1, a2 ) -> {
-            final int index1 = attrKeyOrder.indexOf( a1.getKeyName( ) );
-            final int index2 = attrKeyOrder.indexOf( a2.getKeyName( ) );
+            final int index1 = _sortedAttributeKeyList.indexOf( a1.getKeyName( ) );
+            final int index2 = _sortedAttributeKeyList.indexOf( a2.getKeyName( ) );
             final Integer i1 = index1 == -1 ? 999 : index1;
             final Integer i2 = index2 == -1 ? 999 : index2;
             return i1.compareTo( i2 );
