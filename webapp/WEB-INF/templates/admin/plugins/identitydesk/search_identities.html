@@ -94,8 +94,8 @@
                     dataType: "json",
                     data: '',
                     success: function (data) {
-                        if (data.response.status === 'OK') {
-                            response($.map(data.response.cities, function (city) {
+                        if (data.status === 'OK') {
+                            response($.map(data.result, function (city) {
                                 let dpt = city.codeZone;
                                 if (dpt.length === 1) {
                                     dpt = '0' + dpt;
@@ -106,7 +106,7 @@
                                     dpt = '';
                                 }
                                 return {
-                                    label: dpt + city.name,
+                                    label: city.value + dept,
                                     value: city.code
                                 };
                             }));
@@ -137,10 +137,10 @@
                     dataType: "json",
                     data: '',
                     success: function (data) {
-                        if (data.response.status === 'OK') {
-                            response($.map(data.response.countries, function (country) {
+                        if (data.status === 'OK') {
+                            response($.map(data.result, function (country) {
                                 return {
-                                    label: country.name,
+                                    label: country.value,
                                     value: country.code
                                 };
                             }));
