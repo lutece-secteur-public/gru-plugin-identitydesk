@@ -13,9 +13,9 @@
                     dataType: "json",
                     data: '',
                     success: function (data) {
-                        if (data.response.status === 'OK') {
-                            response($.map(data.response.cities, function (city) {
-                                var dpt = city.codeZone;
+                        if (data.status === 'OK') {
+                            response($.map(data.result, function (city) {
+                                let dpt = city.codeZone;
                                 if (dpt.length === 1) {
                                     dpt = '0' + dpt;
                                 }
@@ -25,7 +25,7 @@
                                     dpt = '';
                                 }
                                 return {
-                                    label: dpt + city.name,
+                                    label: city.value + dept,
                                     value: city.code
                                 };
                             }));
@@ -35,7 +35,7 @@
             },
             select: function (event, ui) {
                 event.preventDefault();
-                var cityName = ui.item.label;
+                let cityName = ui.item.label;
                 if (cityName.startsWith('(') && cityName.length > 5) {
                     cityName = cityName.substring(5).trim();
                 }
@@ -56,10 +56,10 @@
                     dataType: "json",
                     data: '',
                     success: function (data) {
-                        if (data.response.status === 'OK') {
-                            response($.map(data.response.countries, function (country) {
+                        if (data.status === 'OK') {
+                            response($.map(data.result, function (country) {
                                 return {
-                                    label: country.name,
+                                    label: country.value,
                                     value: country.code
                                 };
                             }));
