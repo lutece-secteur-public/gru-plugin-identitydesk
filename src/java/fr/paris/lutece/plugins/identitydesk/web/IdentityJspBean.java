@@ -227,22 +227,22 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
         } ).collect( Collectors.toList( ) );
         if ( !searchList.contains( null ) )
         {
-            final Optional<SearchAttributeDto> login = searchList.stream( ).filter( s -> s.getKey( ).equals( "login" ) ).findFirst( );
-            if ( login.isPresent( ) && StringUtils.isBlank( login.get( ).getValue( ) ) )
+            _searchAttributes = searchList.stream( ).filter( s -> StringUtils.isNotBlank( s.getValue( ) ) ).collect( Collectors.toList( ) );
+            final Optional<SearchAttributeDto> login = _searchAttributes.stream( ).filter( s -> s.getKey( ).equals( "login" ) ).findFirst( );
+            if ( !login.isPresent( ) || StringUtils.isBlank( login.get( ).getValue( ) ) )
             {
-                final Optional<SearchAttributeDto> firstname = searchList.stream( ).filter( s -> s.getKey( ).equals( "firstname" ) ).findFirst( );
-                final Optional<SearchAttributeDto> familyname = searchList.stream( ).filter( s -> s.getKey( ).equals( "family_name" ) ).findFirst( );
-                final Optional<SearchAttributeDto> birthdate = searchList.stream( ).filter( s -> s.getKey( ).equals( "birthdate" ) ).findFirst( );
-                if ( ( firstname.isPresent( ) && StringUtils.isBlank( firstname.get( ).getValue( ) ) )
-                        || ( familyname.isPresent( ) && StringUtils.isBlank( familyname.get( ).getValue( ) ) )
-                        || ( birthdate.isPresent( ) && StringUtils.isBlank( birthdate.get( ).getValue( ) ) ) )
+                final Optional<SearchAttributeDto> firstname = _searchAttributes.stream( ).filter( s -> s.getKey( ).equals( "first_name" ) ).findFirst( );
+                final Optional<SearchAttributeDto> familyname = _searchAttributes.stream( ).filter( s -> s.getKey( ).equals( "family_name" ) ).findFirst( );
+                final Optional<SearchAttributeDto> birthdate = _searchAttributes.stream( ).filter( s -> s.getKey( ).equals( "birthdate" ) ).findFirst( );
+                if ( ( !firstname.isPresent( ) || StringUtils.isBlank( firstname.get( ).getValue( ) ) )
+                        || ( !familyname.isPresent( ) || StringUtils.isBlank( familyname.get( ).getValue( ) ) )
+                        || ( !birthdate.isPresent( ) || StringUtils.isBlank( birthdate.get( ).getValue( ) ) ) )
                 {
                     addInfo( "Pour lancer une recherche, merci de renseigner au minimum soit :"
                             + "<ul><li>Le critère Login</li><li>Les critères Prénoms + Nom de naissance + Date de naissance</li></ul>" );
                     return false;
                 }
             }
-            _searchAttributes = searchList.stream( ).filter( s -> StringUtils.isNotBlank( s.getValue( ) ) ).collect( Collectors.toList( ) );
             if ( _searchAttributes.stream( ).anyMatch( s -> s.getKey( ).equals( "birthplace" ) ) )
             {
                 final String value = request.getParameter( "birthplace_code" );

@@ -164,6 +164,9 @@
                 window.location = url + '?cuid=' + cuid;
             }
         });
+        $("#reset-form-button").click(function() {
+            $(".identity-search-table input").val('');
+        });
     });
 </script>
 
@@ -207,6 +210,9 @@
                 <tr>
                     <th>&nbsp;</th>
                     <th>
+                        <button id="reset-form-button" class="btn btn-default" type="button">
+                            Réinitialiser
+                        </button>
                         <button class="btn btn-default" type="submit">
                             Rechercher
                         </button>
