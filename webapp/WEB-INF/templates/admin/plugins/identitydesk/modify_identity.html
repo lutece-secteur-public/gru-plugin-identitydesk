@@ -20,12 +20,12 @@
                                     dpt = '0' + dpt;
                                 }
                                 if (dpt) {
-                                    dpt = '(' + dpt + ') ';
+                                    dpt = ' (' + dpt + ')';
                                 } else {
                                     dpt = '';
                                 }
                                 return {
-                                    label: city.value + dept,
+                                    label: city.value + dpt,
                                     value: city.code
                                 };
                             }));
