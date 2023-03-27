@@ -103,10 +103,12 @@
                             <#else>
                                 <option hidden disabled selected value> -- Choissez un niveau de certification -- </option>
                             </#if>
+                            <#assign selected = false>
                             <#if writableAttr.attributeRequirement??>
                                 <#list writableAttr.attributeCertifications?filter(c -> (c.level?number >= writableAttr.attributeRequirement.level?number && c.level?number >= (attr[0].certificationLevel)!0)) as attrCert>
                                     <#if ((attr[0].certifier)!'') == attrCert.code>
                                         <option value="${attrCert.code}" selected>${attrCert.level} - ${attrCert.label}</option>
+                                        <#assign selected = true>
                                     <#else>
                                         <option value="${attrCert.code}">${attrCert.level} - ${attrCert.label}</option>
                                     </#if>
@@ -115,10 +117,14 @@
                                 <#list writableAttr.attributeCertifications?filter(c -> (c.level?number >= (attr[0].certificationLevel)!0)) as attrCert>
                                     <#if ((attr[0].certifier)!'') == attrCert.code>
                                         <option value="${attrCert.code}" selected>${attrCert.level} - ${attrCert.label}</option>
+                                        <#assign selected = true>
                                     <#else>
                                         <option value="${attrCert.code}">${attrCert.level} - ${attrCert.label}</option>
                                     </#if>
                                 </#list>
+                            </#if>
+                            <#if (attr[0].certifier)?? && selected == false>
+                                <option value="${attr[0].certifier}" selected>${attr[0].certificationLevel} - ${attr[0].certifier}</option>
                             </#if>
                         </select>
                     </div>
