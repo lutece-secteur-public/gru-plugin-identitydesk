@@ -412,9 +412,6 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
             else
             {
                 addInfo( "Identité créée avec succès" );
-                request.getParameterMap( ).put( "customer_id", new String [ ] {
-                        response.getCustomerId( )
-                } );
             }
         }
         catch( final IdentityStoreException e )
@@ -531,7 +528,7 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
 
     private <T> T getIdentityFromCustomerId( final String customerId, final String clientCode, final Class<T> identityClass ) throws IdentityStoreException
     {
-        final IdentitySearchResponse identityResponse = _identityService.getIdentity( null, customerId, clientCode );
+        final IdentitySearchResponse identityResponse = _identityService.getIdentity( customerId, clientCode );
         if ( identityResponse.getIdentities( ) != null && identityResponse.getIdentities( ).size( ) == 1 )
         {
             if ( identityClass.equals( QualifiedIdentity.class ) )
@@ -617,7 +614,8 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
             identityToUpdate.setAttributes( updatedAttributes );
             changeRequest.setIdentity( identityToUpdate );
             changeRequest.setOrigin( this.getAuthor( ) );
-            final IdentityChangeResponse response = _identityService.updateIdentity( changeRequest, getClientCode( request ) );
+            final IdentityChangeResponse response = _identityService.updateIdentity( identityToUpdate.getCustomerId( ), changeRequest,
+                    getClientCode( request ) );
             if ( response.getStatus( ) != IdentityChangeStatus.UPDATE_SUCCESS && response.getStatus( ) != IdentityChangeStatus.UPDATE_INCOMPLETE_SUCCESS )
             {
                 if ( response.getStatus( ) == IdentityChangeStatus.FAILURE )
