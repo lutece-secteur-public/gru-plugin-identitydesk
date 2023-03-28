@@ -35,6 +35,7 @@ package fr.paris.lutece.plugins.identitydesk.web;
 
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.common.AuthorType;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.common.RequestAuthor;
+import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.contract.AttributeDefinitionDto;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.contract.ServiceContractDto;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.contract.ServiceContractSearchResponse;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.crud.CertifiedAttribute;
@@ -170,27 +171,6 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
     {
         final List<QualifiedIdentity> qualifiedIdentities = new ArrayList<>( );
 
-        if ( collectSearchAttributes( request ) && CollectionUtils.isNotEmpty( _searchAttributes ) )
-        {
-            final IdentitySearchRequest searchRequest = new IdentitySearchRequest( );
-            final SearchDto search = new SearchDto( );
-            searchRequest.setSearch( search );
-            search.setAttributes( _searchAttributes );
-            try
-            {
-                final IdentitySearchResponse searchResponse = _identityService.searchIdentities( searchRequest, getClientCode( request ) );
-                qualifiedIdentities.addAll( searchResponse.getIdentities( ) );
-                if ( qualifiedIdentities.isEmpty( ) )
-                {
-                    addWarning( "Aucun résultat pour votre recherche." );
-                }
-            }
-            catch( IdentityStoreException e )
-            {
-                e.printStackTrace( ); // FIXME logger ?
-                addError( "Une erreur est survenue pendant la recherche d'identités." );
-            }
-        }
         try
         {
             final ServiceContractSearchResponse response = _identityService.getServiceContract( getClientCode( request ) );
@@ -201,6 +181,44 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
         {
             e.printStackTrace( ); // FIXME logger ?
             addError( "Une erreur est survenue pendant la récupération du contrat de service." );
+        }
+        if ( collectSearchAttributes( request ) && CollectionUtils.isNotEmpty( _searchAttributes ) )
+        {
+            final String customerId = request.getParameter( "customer_id" );
+            if ( StringUtils.isNotBlank( customerId ) )
+            {
+                try
+                {
+                    final QualifiedIdentity identity = getIdentityFromCustomerId( customerId, getClientCode( request ), QualifiedIdentity.class );
+                    qualifiedIdentities.add( identity );
+                }
+                catch( IdentityStoreException e )
+                {
+                    e.printStackTrace( ); // FIXME logger ?
+                    addError( "Une erreur est survenue pendant la récupération de l'identité." );
+                }
+            }
+            else
+            {
+                final IdentitySearchRequest searchRequest = new IdentitySearchRequest( );
+                final SearchDto search = new SearchDto( );
+                searchRequest.setSearch( search );
+                search.setAttributes( _searchAttributes );
+                try
+                {
+                    final IdentitySearchResponse searchResponse = _identityService.searchIdentities( searchRequest, getClientCode( request ) );
+                    qualifiedIdentities.addAll( searchResponse.getIdentities( ) );
+                    if ( qualifiedIdentities.isEmpty( ) )
+                    {
+                        addWarning( "Aucun résultat pour votre recherche." );
+                    }
+                }
+                catch( IdentityStoreException e )
+                {
+                    e.printStackTrace( ); // FIXME logger ?
+                    addError( "Une erreur est survenue pendant la recherche d'identités." );
+                }
+            }
         }
 
         Map<String, Object> model = getPaginatedListModel( request, MARK_IDENTITY_LIST, qualifiedIdentities, JSP_MANAGE_IDENTITIES );
@@ -217,14 +235,16 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
 
     private boolean collectSearchAttributes( final HttpServletRequest request )
     {
-        final List<SearchAttributeDto> searchList = _sortedAttributeKeyList.stream( ).map( attrKey -> {
-            final String value = request.getParameter( attrKey );
-            if ( value != null )
-            {
-                return new SearchAttributeDto( attrKey, value, _searchAttributeKeyStrictList.contains( attrKey ) );
-            }
-            return null;
-        } ).collect( Collectors.toList( ) );
+        final List<SearchAttributeDto> searchList = _serviceContract.getAttributeDefinitions( ).stream( ).map( AttributeDefinitionDto::getKeyName )
+                .map( attrKey -> {
+                    final String value = request.getParameter( attrKey );
+                    if ( value != null )
+                    {
+                        return new SearchAttributeDto( attrKey, value, _searchAttributeKeyStrictList.contains( attrKey ) );
+                    }
+                    return null;
+                } ).collect( Collectors.toList( ) );
+
         if ( !searchList.contains( null ) )
         {
             _searchAttributes = searchList.stream( ).filter( s -> StringUtils.isNotBlank( s.getValue( ) ) ).collect( Collectors.toList( ) );
@@ -392,6 +412,9 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
             else
             {
                 addInfo( "Identité créée avec succès" );
+                request.getParameterMap( ).put( "customer_id", new String [ ] {
+                        response.getCustomerId( )
+                } );
             }
         }
         catch( final IdentityStoreException e )
@@ -585,9 +608,10 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
                 return newAttr;
             } ).filter( Objects::nonNull ).collect( Collectors.toList( ) );
 
-            if (CollectionUtils.isEmpty(updatedAttributes)) {
-                addInfo("Aucune modification d'attribut détectée, identité non mise à jour.");
-                return getManageIdentitys(request);
+            if ( CollectionUtils.isEmpty( updatedAttributes ) )
+            {
+                addInfo( "Aucune modification d'attribut détectée, identité non mise à jour." );
+                return getManageIdentitys( request );
             }
 
             identityToUpdate.setAttributes( updatedAttributes );
