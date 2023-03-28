@@ -580,13 +580,15 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
                 if ( oldAttr != null && oldAttr.getValue( ).equals( newAttr.getValue( ) )
                         && Objects.equals( oldAttr.getCertificationProcess( ), newAttr.getCertificationProcess( ) ) )
                 {
-                    return oldAttr;
+                    return null;
                 }
                 return newAttr;
-            } ).collect( Collectors.toList( ) );
-            updatedAttributes.addAll( identityToUpdate.getAttributes( ).stream( )
-                    .filter( oldAttr -> identityFromParams.getAttributes( ).stream( ).noneMatch( newAttr -> newAttr.getKey( ).equals( oldAttr.getKey( ) ) ) )
-                    .collect( Collectors.toList( ) ) );
+            } ).filter( Objects::nonNull ).collect( Collectors.toList( ) );
+
+            if (CollectionUtils.isEmpty(updatedAttributes)) {
+                addInfo("Aucune modification d'attribut détectée, identité non mise à jour.");
+                return getManageIdentitys(request);
+            }
 
             identityToUpdate.setAttributes( updatedAttributes );
             changeRequest.setIdentity( identityToUpdate );
