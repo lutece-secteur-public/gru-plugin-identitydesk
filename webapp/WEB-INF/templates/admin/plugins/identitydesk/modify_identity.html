@@ -76,6 +76,17 @@
         $("input[name='birthcountry']").keyup(function () {
             $("input[name='birthcountry_code']").val('');
         });
+        $("option[title]").each(function() {
+            $(this).parent().attr('title', $(this).attr('title'))
+        });
+        $("select[name$='-certif']").change(function () {
+            let title = $(this).find("option:selected").attr('title');
+            if (title) {
+                $(this).attr('title', title);
+            } else {
+                $(this).removeAttr('title');
+            }
+        });
     });
 </script>
 
@@ -124,7 +135,7 @@
                                 </#list>
                             </#if>
                             <#if (attr[0].certifier)?? && selected == false>
-                                <option value="${attr[0].certifier}" selected>${attr[0].certificationLevel} - ${attr[0].certifier}</option>
+                                <option value="${attr[0].certifier}" title="Cet attribut a été enregistré avec cette certification, mais n'est pas autorisée dans votre contrat de service" selected>${attr[0].certificationLevel} - ${attr[0].certifier} *</option>
                             </#if>
                         </select>
                     </div>
