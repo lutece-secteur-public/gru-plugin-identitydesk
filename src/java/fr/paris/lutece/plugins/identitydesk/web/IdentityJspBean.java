@@ -182,9 +182,10 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
             e.printStackTrace( ); // FIXME logger ?
             addError( "Une erreur est survenue pendant la récupération du contrat de service." );
         }
+        final String customerId = _searchAttributes.stream( ).filter( a -> a.getKey( ).equals( "customer_id" ) ).map( SearchAttributeDto::getValue )
+                .findFirst( ).orElse( null );
         if ( collectSearchAttributes( request ) && CollectionUtils.isNotEmpty( _searchAttributes ) )
         {
-            final String customerId = request.getParameter( "customer_id" );
             if ( StringUtils.isNotBlank( customerId ) )
             {
                 try
@@ -412,6 +413,7 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
             else
             {
                 addInfo( "Identité créée avec succès" );
+                _searchAttributes.add( new SearchAttributeDto( "customer_id", response.getCustomerId( ), true ) );
             }
         }
         catch( final IdentityStoreException e )
@@ -608,6 +610,7 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
             if ( CollectionUtils.isEmpty( updatedAttributes ) )
             {
                 addInfo( "Aucune modification d'attribut détectée, identité non mise à jour." );
+                _searchAttributes.add( new SearchAttributeDto( "customer_id", customerId, true ) );
                 return getManageIdentitys( request );
             }
 
@@ -631,6 +634,7 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
             else
             {
                 addInfo( "Identité modifiée avec succès" );
+                _searchAttributes.add( new SearchAttributeDto( "customer_id", customerId, true ) );
             }
         }
         catch( IdentityStoreException e )
