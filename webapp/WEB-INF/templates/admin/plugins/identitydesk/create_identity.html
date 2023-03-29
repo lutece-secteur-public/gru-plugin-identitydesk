@@ -87,6 +87,7 @@
         <input type="hidden" name="return_url" value="${(return_url)!''}">
 
         <#list service_contract.attributeDefinitions?filter(a -> a.attributeRight.writable) as writableAttr>
+            <#assign attr = identity.attributes?filter(a -> a.key == writableAttr.keyName) >
             <#if writableAttr.keyName == 'birthplace_code' || writableAttr.keyName == 'birthcountry_code'>
                 <input type="hidden" name="${writableAttr.keyName}" value="<#list identity.attributes?filter(a -> a.key == writableAttr.keyName) as attr>${attr.value}</#list>" />
             <#else>
@@ -94,16 +95,28 @@
                 <@formGroup labelKey=writableAttr.name labelFor=labelId mandatory=writableAttr.attributeRequirement?? >
                     <div class="d-flex">
                         <input id="${labelId}" class="form-control" type="text" name="${writableAttr.keyName}" placeholder="${writableAttr.description}"
-                               value="<#list identity.attributes?filter(a -> a.key == writableAttr.keyName) as attr>${attr.value}</#list>" />
+                               value="${(attr[0].value)!''}" />
                         <select class="form-control w-auto" name="${writableAttr.keyName}-certif">
-                            <option hidden disabled selected value> -- Choissez un niveau de certification -- </option>
+                            <#if (attr[0].certificationProcess)??>
+                                <option hidden disabled value> -- Choissez un niveau de certification -- </option>
+                            <#else>
+                                <option hidden disabled selected value> -- Choissez un niveau de certification -- </option>
+                            </#if>
                             <#if writableAttr.attributeRequirement??>
                                 <#list writableAttr.attributeCertifications?filter(c -> (c.level?number >= writableAttr.attributeRequirement.level?number)) as attrCert>
-                                    <option value="${attrCert.code}">${attrCert.level} - ${attrCert.label}</option>
+                                    <#if ((attr[0].certificationProcess)!'') == attrCert.code>
+                                        <option value="${attrCert.code}" selected>${attrCert.level} - ${attrCert.label}</option>
+                                    <#else>
+                                        <option value="${attrCert.code}">${attrCert.level} - ${attrCert.label}</option>
+                                    </#if>
                                 </#list>
                             <#else>
                                 <#list writableAttr.attributeCertifications as attrCert>
-                                    <option value="${attrCert.code}">${attrCert.level} - ${attrCert.label}</option>
+                                    <#if ((attr[0].certificationProcess)!'') == attrCert.code>
+                                        <option value="${attrCert.code}" selected>${attrCert.level} - ${attrCert.label}</option>
+                                    <#else>
+                                        <option value="${attrCert.code}">${attrCert.level} - ${attrCert.label}</option>
+                                    </#if>
                                 </#list>
                             </#if>
                         </select>
