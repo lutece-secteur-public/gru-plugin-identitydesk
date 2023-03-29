@@ -6,6 +6,9 @@
     table tr {
         height: 45px;
     }
+    table th {
+        height: 60px;
+    }
     h4 > ul {
         margin-bottom: 0;
     }
@@ -30,17 +33,26 @@
     }
 </style>
 <script type="text/javascript">
+    function formatPercentages(element, label) {
+        const value = Math.ceil(parseFloat(element.text()));
+        element.text(label + ' ' + value + '%');
+        if (value > 80) {
+            element.addClass("bg-success");
+        } else if (value >= 50) {
+            element.addClass("bg-warning");
+        } else {
+            element.addClass("bg-danger");
+        }
+    }
     $(function () {
         $(".identity-result-table span.entity-quality").each(function () {
-            const quality = Math.ceil(parseFloat($(this).text()));
-            if (quality > 80) {
-                $(this).parent().addClass("green-quality");
-            } else if (quality >= 50) {
-                $(this).parent().addClass("orange-quality");
-            } else {
-                $(this).parent().addClass("red-quality");
-            }
-            $(this).text(quality);
+            formatPercentages($(this), 'Qualité');
+        });
+        $(".identity-result-table span.entity-coverage").each(function () {
+            formatPercentages($(this), 'Coverage');
+        });
+        $(".identity-result-table span.entity-scoring").each(function () {
+            formatPercentages($(this), 'Scoring');
         });
         $("input[type=text]:not(input[value=''])").each(function () {
             const name = $(this).attr("name");
@@ -200,16 +212,16 @@
                         <input type="hidden" name="${searchableAttr.keyName}" value="<#list query_search_attributes?filter(a -> a.key == searchableAttr.keyName) as attr>${attr.value}</#list>" />
                     <#else>
                         <tr>
-                            <th>${searchableAttr.name}</th>
-                            <th><input class="form-control" type="text" name="${searchableAttr.keyName}" placeholder="${searchableAttr.description}"
-                                       value="<#list query_search_attributes?filter(a -> a.key == searchableAttr.keyName) as attr>${attr.value}</#list>" /></th>
+                            <td>${searchableAttr.name}</td>
+                            <td><input class="form-control" type="text" name="${searchableAttr.keyName}" placeholder="${searchableAttr.description}"
+                                       value="<#list query_search_attributes?filter(a -> a.key == searchableAttr.keyName) as attr>${attr.value}</#list>" /></td>
                         </tr>
                         <@tableHeadBodySeparator />
                     </#if>
                 </#list>
                 <tr>
-                    <th>&nbsp;</th>
-                    <th>
+                    <td>&nbsp;</td>
+                    <td>
                         <button id="reset-form-button" class="btn btn-default" type="button">
                             Réinitialiser
                         </button>
@@ -219,7 +231,7 @@
                         <button class="btn btn-outline-warning action-btn create-identity-btn" type="button" style="display: none">
                             Créer cette identité
                         </button>
-                    </th>
+                    </td>
                 </tr>
             </@table>
 
@@ -230,9 +242,11 @@
                     <input type="hidden" name="customer_id" value="${identity.customerId}" disabled>
                     <tr>
                         <th>
-                            <span class="id-value" style="display: none !important">${identity.customerId}</span>
-                            Identité existante
-                            <div class="col-12"><span class="entity-quality">${identity.quality * 100}</span> %</div>
+                            <span class="id-value always-hidden">${identity.customerId}</span>
+                            <div class="col-12">Identité existante</div>
+                            <span class="badge entity-quality">${identity.quality * 100}</span>
+                            <span class="badge entity-coverage mx-2">${identity.coverage * 100}</span>
+                            <span class="badge entity-scoring">${identity.scoring * 100}</span>
                         </th>
                     </tr>
                     <@tableHeadBodySeparator />
