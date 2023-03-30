@@ -16,13 +16,17 @@
             </p>
             -->
             <subsection name="Introduction">
-                <p></p>
+                <p>Identity Desk is a front-office plugin, allowing to search, view, create and update identities, following the connected Lutèce user's service contract rules.</p>
             </subsection>
             <subsection name="Configuration">
-                <p></p>
-            </subsection>
-            <subsection name="Usage">
-                <p></p>
+                <ul>
+                    <li>`identitydesk.identitystore.endpoint` : Identity Store backoffice endpoint called for searching/creating/updating identities.</li>
+                    <li>`identitydesk.default.client.code` : Default client code sent when calling Identity Store backoffice.</li>
+                    <li>`identitydesk.autocomplete.city.endpoint` : Called endpoint for place of birth autocomplete (INSEE).</li>
+                    <li>`identitydesk.autocomplete.country.endpoint` : Called endpoint for birth country autocomplete (INSEE).</li>
+                    <li>`identitydesk.attribute.order` : Attributes display order in the forms (write comma-separated attribute keys).</li>
+                    <li>`identitydesk.search.strict.attributes` : Attributes list to be searched in non-approximate mode (write comma-separated attribute keys).</li>
+                </ul>
             </subsection>
         </section>
     </body>

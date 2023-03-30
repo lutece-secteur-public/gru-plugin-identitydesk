@@ -7,17 +7,17 @@
 
 ## Introduction
 
-Identity Desk is a front-office plugin, allowing to search, view, create and update identities, following the connected Lutèce user's service contract rules.
+Identity Desk est un plugin front-office, permettant de rechercher, consulter, créer et modifier des identités, dans le respect du contrat de service de l'utilisateur connecté au système Lutèce.
 
 ## Configuration
 
  
-* `identitydesk.identitystore.endpoint` : Identity Store backoffice endpoint called for searching/creating/updating identities.
-* `identitydesk.default.client.code` : Default client code sent when calling Identity Store backoffice.
-* `identitydesk.autocomplete.city.endpoint` : Called endpoint for place of birth autocomplete (INSEE).
-* `identitydesk.autocomplete.country.endpoint` : Called endpoint for birth country autocomplete (INSEE).
-* `identitydesk.attribute.order` : Attributes display order in the forms (write comma-separated attribute keys).
-* `identitydesk.search.strict.attributes` : Attributes list to be searched in non-approximate mode (write comma-separated attribute keys).
+* `identitydesk.identitystore.endpoint` : Endpoint du backoffice Identity Store pour la recherche/création/modification d'identité.
+* `identitydesk.default.client.code` : Code client par défaut envoyé lors des appels au backoffice Idendity Store.
+* `identitydesk.autocomplete.city.endpoint` : Endpoint utilisé pour l'autocomplétion de la ville de naissance (INSEE).
+* `identitydesk.autocomplete.country.endpoint` : Endpoint utilisé pour l'autocomplétion du pays de naissance (INSEE).
+* `identitydesk.attribute.order` : Détermine l'ordre d'affichage des attributs dans les formulaires (clés d'attributs à renseigner séparés par des virgules).
+* `identitydesk.search.strict.attributes` : Détermine les attributs à rechercher en mode non approximé (clés d'attributs à renseigner séparés par des virgules).
 
 
 [Maven documentation and reports](https://dev.lutece.paris.fr/plugins/plugin-identitydesk/)
