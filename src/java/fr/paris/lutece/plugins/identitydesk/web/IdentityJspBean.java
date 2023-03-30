@@ -152,6 +152,7 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
 
     // Session variable to store working values
     private Identity _identity;
+    private QualifiedIdentity _qualifiedIdentity;
     private String _strQuery;
     private String _strQueryFilter;
     private List<SearchAttributeDto> _searchAttributes = new ArrayList<>( );
@@ -241,7 +242,7 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
                     final String value = request.getParameter( attrKey );
                     if ( value != null )
                     {
-                        return new SearchAttributeDto( attrKey, value, _searchAttributeKeyStrictList.contains( attrKey ) );
+                        return new SearchAttributeDto( attrKey, value.trim( ), _searchAttributeKeyStrictList.contains( attrKey ) );
                     }
                     return null;
                 } ).collect( Collectors.toList( ) );

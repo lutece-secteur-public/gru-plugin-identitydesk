@@ -203,7 +203,13 @@
                     <th>&nbsp;</th>
                     <th>
                         Identité recherchée
-                        <div class="col-12">&nbsp;</div>
+                        <div class="col-12">
+                            <#if identity_list?size gt 0>
+                                Résultat(s) trouvé(s) : ${identity_list?size}
+                            <#else>
+                                &nbsp;
+                            </#if>
+                        </div>
                     </th>
                 </tr>
                 <@tableHeadBodySeparator />
