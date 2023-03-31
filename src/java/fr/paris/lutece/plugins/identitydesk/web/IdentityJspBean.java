@@ -147,42 +147,45 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
             AppLogService.error( "Error while retrieving service contract [client code = " + clientCode + "].", e );
             addError( "Une erreur est survenue pendant la récupération du contrat de service." );
         }
-        final String customerId = _searchAttributes.stream( ).filter( a -> a.getKey( ).equals( "customer_id" ) ).map( SearchAttributeDto::getValue )
-                .findFirst( ).orElse( null );
-        if ( collectSearchAttributes( request ) && CollectionUtils.isNotEmpty( _searchAttributes ) )
+        if ( _serviceContract != null )
         {
-            if ( StringUtils.isNotBlank( customerId ) )
+            final String customerId = _searchAttributes.stream( ).filter( a -> a.getKey( ).equals( "customer_id" ) ).map( SearchAttributeDto::getValue )
+                    .findFirst( ).orElse( null );
+            if ( collectSearchAttributes( request ) && CollectionUtils.isNotEmpty( _searchAttributes ) )
             {
-                try
+                if ( StringUtils.isNotBlank( customerId ) )
                 {
-                    final QualifiedIdentity identity = getIdentityFromCustomerId( customerId, clientCode, QualifiedIdentity.class );
-                    qualifiedIdentities.add( identity );
-                }
-                catch( final IdentityStoreException e )
-                {
-                    AppLogService.error( "Error while retrieving the identity [customerId = " + customerId + "].", e );
-                    addError( "Une erreur est survenue pendant la récupération de l'identité." );
-                }
-            }
-            else
-            {
-                final IdentitySearchRequest searchRequest = new IdentitySearchRequest( );
-                final SearchDto search = new SearchDto( );
-                searchRequest.setSearch( search );
-                search.setAttributes( _searchAttributes );
-                try
-                {
-                    final IdentitySearchResponse searchResponse = _identityService.searchIdentities( searchRequest, clientCode );
-                    qualifiedIdentities.addAll( searchResponse.getIdentities( ) );
-                    if ( qualifiedIdentities.isEmpty( ) )
+                    try
                     {
-                        addWarning( "Aucun résultat pour votre recherche." );
+                        final QualifiedIdentity identity = getIdentityFromCustomerId( customerId, clientCode, QualifiedIdentity.class );
+                        qualifiedIdentities.add( identity );
+                    }
+                    catch( final IdentityStoreException e )
+                    {
+                        AppLogService.error( "Error while retrieving the identity [customerId = " + customerId + "].", e );
+                        addError( "Une erreur est survenue pendant la récupération de l'identité." );
                     }
                 }
-                catch( final IdentityStoreException e )
+                else
                 {
-                    AppLogService.error( "Error while searching identities [IdentitySearchRequest = " + searchRequest + "].", e );
-                    addError( "Une erreur est survenue pendant la recherche d'identités." );
+                    final IdentitySearchRequest searchRequest = new IdentitySearchRequest( );
+                    final SearchDto search = new SearchDto( );
+                    searchRequest.setSearch( search );
+                    search.setAttributes( _searchAttributes );
+                    try
+                    {
+                        final IdentitySearchResponse searchResponse = _identityService.searchIdentities( searchRequest, clientCode );
+                        qualifiedIdentities.addAll( searchResponse.getIdentities( ) );
+                        if ( qualifiedIdentities.isEmpty( ) )
+                        {
+                            addWarning( "Aucun résultat pour votre recherche." );
+                        }
+                    }
+                    catch( final IdentityStoreException e )
+                    {
+                        AppLogService.error( "Error while searching identities [IdentitySearchRequest = " + searchRequest + "].", e );
+                        addError( "Une erreur est survenue pendant la recherche d'identités." );
+                    }
                 }
             }
         }
