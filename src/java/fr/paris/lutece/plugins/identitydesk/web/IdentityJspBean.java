@@ -54,6 +54,7 @@ import fr.paris.lutece.plugins.identitystore.web.exception.IdentityStoreExceptio
 import fr.paris.lutece.portal.service.message.AdminMessage;
 import fr.paris.lutece.portal.service.message.AdminMessageService;
 import fr.paris.lutece.portal.service.spring.SpringContextService;
+import fr.paris.lutece.portal.service.util.AppLogService;
 import fr.paris.lutece.portal.service.util.AppPropertiesService;
 import fr.paris.lutece.portal.util.mvc.admin.annotations.Controller;
 import fr.paris.lutece.portal.util.mvc.commons.annotations.Action;
@@ -134,15 +135,16 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
     {
         final List<QualifiedIdentity> qualifiedIdentities = new ArrayList<>( );
 
+        final String clientCode = getClientCode( request );
         try
         {
-            final ServiceContractSearchResponse response = _identityService.getServiceContract( getClientCode( request ) );
+            final ServiceContractSearchResponse response = _identityService.getServiceContract( clientCode );
             _serviceContract = response.getServiceContract( );
             sortServiceContractAttributes( );
         }
-        catch( IdentityStoreException e )
+        catch( final IdentityStoreException e )
         {
-            e.printStackTrace( ); // FIXME logger ?
+            AppLogService.error( "Error while retrieving service contract [client code = " + clientCode + "].", e );
             addError( "Une erreur est survenue pendant la récupération du contrat de service." );
         }
         final String customerId = _searchAttributes.stream( ).filter( a -> a.getKey( ).equals( "customer_id" ) ).map( SearchAttributeDto::getValue )
@@ -153,12 +155,12 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
             {
                 try
                 {
-                    final QualifiedIdentity identity = getIdentityFromCustomerId( customerId, getClientCode( request ), QualifiedIdentity.class );
+                    final QualifiedIdentity identity = getIdentityFromCustomerId( customerId, clientCode, QualifiedIdentity.class );
                     qualifiedIdentities.add( identity );
                 }
-                catch( IdentityStoreException e )
+                catch( final IdentityStoreException e )
                 {
-                    e.printStackTrace( ); // FIXME logger ?
+                    AppLogService.error( "Error while retrieving the identity [customerId = " + customerId + "].", e );
                     addError( "Une erreur est survenue pendant la récupération de l'identité." );
                 }
             }
@@ -170,16 +172,16 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
                 search.setAttributes( _searchAttributes );
                 try
                 {
-                    final IdentitySearchResponse searchResponse = _identityService.searchIdentities( searchRequest, getClientCode( request ) );
+                    final IdentitySearchResponse searchResponse = _identityService.searchIdentities( searchRequest, clientCode );
                     qualifiedIdentities.addAll( searchResponse.getIdentities( ) );
                     if ( qualifiedIdentities.isEmpty( ) )
                     {
                         addWarning( "Aucun résultat pour votre recherche." );
                     }
                 }
-                catch( IdentityStoreException e )
+                catch( final IdentityStoreException e )
                 {
-                    e.printStackTrace( ); // FIXME logger ?
+                    AppLogService.error( "Error while searching identities [IdentitySearchRequest = " + searchRequest + "].", e );
                     addError( "Une erreur est survenue pendant la recherche d'identités." );
                 }
             }
@@ -206,15 +208,16 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
     public String getCreateIdentity( HttpServletRequest request )
     {
         final Identity identity = initNewIdentity( request );
+        final String clientCode = getClientCode( request );
         try
         {
-            final ServiceContractSearchResponse response = _identityService.getServiceContract( getClientCode( request ) );
+            final ServiceContractSearchResponse response = _identityService.getServiceContract( clientCode );
             _serviceContract = response.getServiceContract( );
             sortServiceContractAttributes( );
         }
-        catch( IdentityStoreException e )
+        catch( final IdentityStoreException e )
         {
-            e.printStackTrace( );
+            AppLogService.error( "Error while retrieving service contract [client code = " + clientCode + "].", e );
             addError( "Erreur lors de la récupération du contrat de service" );
             return getManageIdentitys( request );
         }
@@ -239,6 +242,7 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
     @Action( ACTION_CREATE_IDENTITY )
     public String doCreateIdentity( HttpServletRequest request )
     {
+        final IdentityChangeRequest identityChangeRequest = new IdentityChangeRequest( );
         try
         {
             final Identity identity = initNewIdentity( request );
@@ -247,7 +251,6 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
                 addWarning( "Un niveau de certification doit obligatoirement être sélectionné pour chaque attribut renseigné." );
                 return getCreateIdentity( request );
             }
-            final IdentityChangeRequest identityChangeRequest = new IdentityChangeRequest( );
             identityChangeRequest.setIdentity( identity );
             identityChangeRequest.setOrigin( this.getAuthor( ) );
 
@@ -272,9 +275,9 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
         }
         catch( final IdentityStoreException e )
         {
-            e.printStackTrace( );
-            addError( e.getMessage( ) );
-            throw new RuntimeException( e );
+            AppLogService.error( "Error while creating the identity [IdentityChangeRequest = " + identityChangeRequest + "].", e );
+            addError( "Erreur lors de la création de l'identité." );
+            return getCreateIdentity( request );
         }
         return getManageIdentitys( request );
     }
@@ -291,20 +294,22 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
     {
         final String customerId = request.getParameter( "customer_id" );
         final QualifiedIdentity qualifiedIdentity;
+        final String clientCode = getClientCode( request );
         try
         {
-            qualifiedIdentity = this.getIdentityFromCustomerId( customerId, getClientCode( request ), QualifiedIdentity.class );
+            qualifiedIdentity = this.getIdentityFromCustomerId( customerId, clientCode, QualifiedIdentity.class );
             if ( qualifiedIdentity == null )
             {
                 addError( "Erreur lors de la récupération de l'identité sélectionnée" );
                 return getManageIdentitys( request );
             }
-            final ServiceContractSearchResponse contractResponse = _identityService.getServiceContract( getClientCode( request ) );
+            final ServiceContractSearchResponse contractResponse = _identityService.getServiceContract( clientCode );
             _serviceContract = contractResponse.getServiceContract( );
             sortServiceContractAttributes( );
         }
-        catch( IdentityStoreException e )
+        catch( final IdentityStoreException e )
         {
+            AppLogService.error( "Error while retrieving service contract [client code = " + clientCode + "].", e );
             addError( "Erreur lors de la récupération de l'identité sélectionnée" );
             return getManageIdentitys( request );
         }
@@ -329,6 +334,7 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
     public String doModifyIdentity( HttpServletRequest request )
     {
         final String customerId = request.getParameter( "customer_id" );
+        final IdentityChangeRequest changeRequest = new IdentityChangeRequest( );
         try
         {
             final Identity identityToUpdate = this.getIdentityFromCustomerId( customerId, getClientCode( request ), Identity.class );
@@ -337,7 +343,6 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
                 addError( "Erreur lors de la récupération de l'identité sélectionnée" );
                 return getManageIdentitys( request );
             }
-            final IdentityChangeRequest changeRequest = new IdentityChangeRequest( );
             final Identity identityFromParams = this.initNewIdentity( request );
             if ( identityFromParams.getAttributes( ).stream( ).anyMatch( a -> StringUtils.isBlank( a.getCertificationProcess( ) ) ) )
             {
@@ -386,11 +391,11 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
                 _searchAttributes.add( new SearchAttributeDto( "customer_id", customerId, true ) );
             }
         }
-        catch( IdentityStoreException e )
+        catch( final IdentityStoreException e )
         {
-            e.printStackTrace( );
-            addError( e.getMessage( ) );
-            throw new RuntimeException( e );
+            AppLogService.error( "Error while updating the identity [IdentityChangeRequest = " + changeRequest + "].", e );
+            addError( "Erreur lors de la modification de l'identité." );
+            return getModifyIdentity( request );
         }
         return getManageIdentitys( request );
     }
