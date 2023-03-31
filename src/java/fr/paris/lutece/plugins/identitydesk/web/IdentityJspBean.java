@@ -415,11 +415,13 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
                     return null;
                 } ).collect( Collectors.toList( ) );
 
-        if ( !searchList.contains( null ) )
+        _searchAttributes.clear( );
+        _searchAttributes.addAll( searchList.stream( ).filter( s -> (s != null && StringUtils.isNotBlank( s.getValue( ) ) ) ).collect( Collectors.toList( ) ) );
+        
+        
+        if ( _searchAttributes.size() > 0 )
         {
-            _searchAttributes.clear( );
-            _searchAttributes.addAll( searchList.stream( ).filter( s -> StringUtils.isNotBlank( s.getValue( ) ) ).collect( Collectors.toList( ) ) );
-            final Optional<SearchAttributeDto> login = _searchAttributes.stream( ).filter( s -> s.getKey( ).equals( "login" ) ).findFirst( );
+           final Optional<SearchAttributeDto> login = _searchAttributes.stream( ).filter( s -> s.getKey( ).equals( "login" ) ).findFirst( );
             if ( !login.isPresent( ) || StringUtils.isBlank( login.get( ).getValue( ) ) )
             {
                 final Optional<SearchAttributeDto> firstname = _searchAttributes.stream( ).filter( s -> s.getKey( ).equals( "first_name" ) ).findFirst( );
