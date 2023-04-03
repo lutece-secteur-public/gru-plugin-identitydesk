@@ -74,6 +74,20 @@ import fr.paris.lutece.portal.service.util.AppPropertiesService;
 import fr.paris.lutece.portal.util.mvc.admin.annotations.Controller;
 import fr.paris.lutece.portal.util.mvc.commons.annotations.Action;
 import fr.paris.lutece.portal.util.mvc.commons.annotations.View;
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections4.map.PassiveExpiringMap;
+import org.apache.commons.lang3.StringUtils;
+
+import javax.servlet.http.HttpServletRequest;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 /**
  * This class provides the user interface to manage Identity features ( manage, create, modify, remove )
@@ -118,6 +132,7 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
 
     // Session variable to store working values
     private final List<SearchAttributeDto> _searchAttributes = new ArrayList<>( );
+    private final Map<String, ServiceContractDto> _serviceContractCache = new PassiveExpiringMap<>( 5, TimeUnit.MINUTES );
     private ServiceContractDto _serviceContract;
     private List<AttributeStatus> _attributeStatuses = new ArrayList<>( );
     private String _currentClientCode = AppPropertiesService.getProperty( "identitydesk.default.client.code" );
@@ -293,7 +308,6 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
     {
         final String customerId = request.getParameter( "customer_id" );
         final QualifiedIdentity qualifiedIdentity;
-
         try
         {
             qualifiedIdentity = getQualifiedIdentityFromCustomerId( customerId );
@@ -650,9 +664,9 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
         return identity;
     }
 
-    private void sortServiceContractAttributes( )
+    private void sortServiceContractAttributes( final ServiceContractDto contract )
     {
-        _serviceContract.getAttributeDefinitions( ).sort( ( a1, a2 ) -> {
+        contract.getAttributeDefinitions( ).sort( ( a1, a2 ) -> {
             final int index1 = _sortedAttributeKeyList.indexOf( a1.getKeyName( ) );
             final int index2 = _sortedAttributeKeyList.indexOf( a2.getKeyName( ) );
             final Integer i1 = index1 == -1 ? 999 : index1;
