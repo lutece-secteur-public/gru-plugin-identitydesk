@@ -169,11 +169,11 @@
         $("input[name='birthcountry']").keyup(function () {
             $("input[name='birthcountry_code']").val('');
         });
-        $("#select-btn").click(function () {
+        $(".select-btn").click(function () {
             const url = $("input[name='return_url']").val();
             const cuid = $("input[name='customer_id']").val();
             if (url && cuid) {
-                window.location = url + '?cuid=' + cuid;
+                window.location.replace(url + '?cuid=' + cuid);
             }
         });
         $("#reset-form-button").click(function() {
@@ -295,11 +295,11 @@
             Insérer une nouvelle identité
         </button>
         <#if return_url?? >
-            <button class="btn btn-warning select-btn" style="display: none">
+            <button class="btn btn-warning select-btn" type="button" style="display: none">
                 Sélectionner l'identité et retour au site appelant
             </button>
         <#else>
-            <button class="btn btn-warning always-hidden select-btn" style="display: none">
+            <button class="btn btn-warning always-hidden select-btn" type="button" style="display: none">
                 Sélectionner l'identité et retour au site appelant
             </button>
         </#if>
