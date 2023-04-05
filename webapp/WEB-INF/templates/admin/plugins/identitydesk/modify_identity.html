@@ -1,8 +1,35 @@
 <#-- include "manageidentities_tabs.html" />
 <@tabs tab="identity" /> -->
 
+<style>
+    #identity-update-table select {
+        min-width: 280px;
+        text-align: center;
+    }
+    #identity-update-table input {
+        min-width: 400px;
+    }
+    #identity-update-table th {
+        text-align: center;
+    }
+    td.certifier-td, td.certification-date-td, td.action-td {
+        text-align: center;
+    }
+    #identity-update-table tr {
+        height: 45px;
+    }
+</style>
 <script type="text/javascript">
     $(function () {
+        $('#identity-update-table td, #identity-update-table th').each(function () {
+            if ($(this).hasClass('certifier-td')) {
+                $(this).addClass('ps-3');
+            } else if ($(this).hasClass('certification-date-td')) {
+                $(this).addClass('pe-4');
+            } else {
+                $(this).addClass("px-3");
+            }
+        });
         $("input[name='birthplace']").autocomplete({
             minLength: 3,
             source: function (request, response) {
@@ -98,50 +125,64 @@
         <input type="hidden" name="return_url" value="${(return_url)!''}">
         <input type="hidden" name="customer_id" value="${identity.customerId}"/>
 
-        <#list service_contract.attributeDefinitions?filter(a -> a.attributeRight.writable) as writableAttr>
-            <#assign attr = identity.attributes?filter(a -> a.key == writableAttr.keyName) >
-            <#if writableAttr.keyName == 'birthplace_code' || writableAttr.keyName == 'birthcountry_code'>
-                <input type="hidden" name="${writableAttr.keyName}" value="${(attr[0].value)!''}" />
-            <#else>
-                <#assign labelId = "${writableAttr.keyName}-input">
-                <@formGroup labelKey=writableAttr.name labelFor=labelId mandatory=writableAttr.attributeRequirement?? >
-                    <div class="d-flex">
-                        <input id="${labelId}" class="form-control" type="text" name="${writableAttr.keyName}" placeholder="${writableAttr.description}"
-                               value="${(attr[0].value)!''}" />
-                        <select class="form-control w-auto" name="${writableAttr.keyName}-certif">
-                            <#if (attr[0].certifier)??>
-                                <option hidden disabled value> -- Choissez un niveau de certification -- </option>
+        <table id="identity-update-table">
+            <thead>
+                <tr>
+                    <th>&nbsp;</th>
+                    <th>Valeur</th>
+                    <th colspan="2">Certification</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                <#list identity.attributeList as attr>
+                    <#if attr.key == 'birthplace_code' || attr.key == 'birthcountry_code'>
+                        <input type="hidden" name="${attr.key}" value="${(attr.value)!''}" />
+                    <#else>
+                        <tr>
+                            <#if attr.key == 'birthplace_code' || attr.key == 'birthcountry_code'>
+                                <input type="hidden" name="${attr.key}" value="${(attr.value)!''}" />
                             <#else>
-                                <option hidden disabled selected value> -- Choissez un niveau de certification -- </option>
-                            </#if>
-                            <#assign selected = false>
-                            <#if writableAttr.attributeRequirement??>
-                                <#list writableAttr.attributeCertifications?filter(c -> (c.level?number >= writableAttr.attributeRequirement.level?number && c.level?number >= (attr[0].certificationLevel)!0)) as attrCert>
-                                    <#if ((attr[0].certifier)!'') == attrCert.code>
-                                        <option value="${attrCert.code}" selected>${attrCert.level} - ${attrCert.label}</option>
-                                        <#assign selected = true>
+                                <td>${attr.name}<#if attr.mandatory>&nbsp; *</#if></td>
+                                <td>
+                                    <#if attr.updatable>
+                                        <input class="form-control" type="text" name="${attr.key}" placeholder="${attr.description}" value="${(attr.value)!''}" />
                                     <#else>
-                                        <option value="${attrCert.code}">${attrCert.level} - ${attrCert.label}</option>
+                                        ${(attr.value)!''}
                                     </#if>
-                                </#list>
-                            <#else>
-                                <#list writableAttr.attributeCertifications?filter(c -> (c.level?number >= (attr[0].certificationLevel)!0)) as attrCert>
-                                    <#if ((attr[0].certifier)!'') == attrCert.code>
-                                        <option value="${attrCert.code}" selected>${attrCert.level} - ${attrCert.label}</option>
-                                        <#assign selected = true>
+                                </td>
+                                <td class="certifier-td">
+                                    <#if attr.certifier??>
+                                        <span class="badge badge-pill badge-info mx-1">${attr.certifier}</span>
+                                    </#if>
+                                </td>
+                                <td class="certification-date-td">
+                                    <#if attr.certificationDate??>
+                                        <span class="certification-date">${attr.certificationDate?date}</span>
+                                    </#if>
+                                </td>
+                                <td class="action-td">
+                                    <#if attr.allowedCertificationList?has_content>
+                                        <select class="form-control w-auto" name="${attr.key}-certif">
+                                            <option selected value> -- Modifier la certification -- </option>
+                                            <#list attr.allowedCertificationList as certif>
+                                                <option value="${certif.code}">${certif.level} - ${certif.label}</option>
+                                            </#list>
+                                        </select>
                                     <#else>
-                                        <option value="${attrCert.code}">${attrCert.level} - ${attrCert.label}</option>
+                                        <#if attr.updatable>
+                                            Certification non modifiable
+                                        <#else>
+                                            Donnée certifiée non modifiable
+                                        </#if>
                                     </#if>
-                                </#list>
+                                </td>
                             </#if>
-                            <#if (attr[0].certifier)?? && selected == false>
-                                <option value="${attr[0].certifier}" title="Cet attribut a été enregistré avec cette certification, mais n'est pas autorisée dans votre contrat de service" selected>${attr[0].certificationLevel} - ${attr[0].certifier} *</option>
-                            </#if>
-                        </select>
-                    </div>
-                </@formGroup>
-            </#if>
-        </#list>
+                        </tr>
+                    </#if>
+                </#list>
+            </tbody>
+        </table>
 
         <@actionButtons button1Name="action_modifyIdentity" button2Name="view_manageIdentitys"/>
     </form>

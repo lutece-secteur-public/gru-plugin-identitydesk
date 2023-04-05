@@ -36,6 +36,8 @@ package fr.paris.lutece.plugins.identitydesk.web;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.common.AuthorType;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.common.RequestAuthor;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.contract.AttributeDefinitionDto;
+import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.contract.AttributeRequirement;
+import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.contract.CertificationProcessus;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.contract.ServiceContractDto;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.contract.ServiceContractSearchResponse;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.crud.CertifiedAttribute;
@@ -312,12 +314,13 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
         }
         catch( final IdentityStoreException e )
         {
-            AppLogService.error( "Error while retrieving service contract [client code = " + clientCode + "].", e );
+            AppLogService.error( "Error while retrieving selected identity [customerId = " + customerId + "].", e );
             addError( "Erreur lors de la récupération de l'identité sélectionnée" );
             return getManageIdentitys( request );
         }
+        final IdentityDto dto = IdentityDto.from( qualifiedIdentity, _serviceContract );
         Map<String, Object> model = getModel( );
-        model.put( MARK_IDENTITY, qualifiedIdentity );
+        model.put( MARK_IDENTITY, dto );
         model.put( MARK_SERVICE_CONTRACT, _serviceContract );
         model.put( MARK_AUTOCOMPLETE_CITY_ENDPOINT, _autocompleteCityEndpoint );
         model.put( MARK_AUTOCOMPLETE_COUNTRY_ENDPOINT, _autocompleteCountryEndpoint );
@@ -347,19 +350,31 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
                 return getManageIdentitys( request );
             }
             final Identity identityFromParams = this.initNewIdentity( request );
-            if ( identityFromParams.getAttributes( ).stream( ).anyMatch( a -> StringUtils.isBlank( a.getCertificationProcess( ) ) ) )
+            final List<CertifiedAttribute> attributesWithoutCertif = identityFromParams.getAttributes( ).stream( )
+                    .filter( a -> StringUtils.isBlank( a.getCertificationProcess( ) ) ).collect( Collectors.toList( ) );
+            if ( CollectionUtils.isNotEmpty( attributesWithoutCertif ) )
             {
-                addWarning( "Un niveau de certification doit obligatoirement être sélectionné pour chaque attribut renseigné." );
-                return getModifyIdentity( request );
+                final List<String> alreadyCertifiedAttrKeys = identityToUpdate.getAttributes( ).stream( )
+                        .filter( a -> StringUtils.isNotBlank( a.getCertificationProcess( ) ) ).map( CertifiedAttribute::getKey )
+                        .collect( Collectors.toList( ) );
+                if ( attributesWithoutCertif.stream( ).anyMatch( a -> !alreadyCertifiedAttrKeys.contains( a.getKey( ) ) ) )
+                {
+                    addWarning( "Un niveau de certification doit obligatoirement être sélectionné pour chaque attribut renseigné." );
+                    return getModifyIdentity( request );
+                }
             }
 
             final List<CertifiedAttribute> updatedAttributes = identityFromParams.getAttributes( ).stream( ).map( newAttr -> {
                 final CertifiedAttribute oldAttr = identityToUpdate.getAttributes( ).stream( ).filter( a -> a.getKey( ).equals( newAttr.getKey( ) ) )
                         .findFirst( ).orElse( null );
-                if ( oldAttr != null && oldAttr.getValue( ).equals( newAttr.getValue( ) )
-                        && Objects.equals( oldAttr.getCertificationProcess( ), newAttr.getCertificationProcess( ) ) )
+                if ( oldAttr != null && StringUtils.isBlank( newAttr.getCertificationProcess( ) ) )
                 {
-                    return null;
+                    if ( oldAttr.getValue( ).equals( newAttr.getValue( ) ) )
+                    {
+                        return null;
+                    }
+                    newAttr.setCertificationProcess( oldAttr.getCertificationProcess( ) );
+                    newAttr.setCertificationDate( oldAttr.getCertificationDate( ) );
                 }
                 return newAttr;
             } ).filter( Objects::nonNull ).collect( Collectors.toList( ) );
@@ -560,6 +575,180 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
             final Integer i2 = index2 == -1 ? 999 : index2;
             return i1.compareTo( i2 );
         } );
+    }
+
+    /**
+     * DTO used for the update UI.
+     */
+    public static class IdentityDto
+    {
+        private final String customerId;
+        private final List<AttributeDto> attributeList;
+
+        private IdentityDto( final String customerId )
+        {
+            this.customerId = customerId;
+            this.attributeList = new ArrayList<>( );
+        }
+
+        public String getCustomerId( )
+        {
+            return customerId;
+        }
+
+        public List<AttributeDto> getAttributeList( )
+        {
+            return attributeList;
+        }
+
+        public static IdentityDto from( final QualifiedIdentity qualifiedIdentity, final ServiceContractDto serviceContract )
+        {
+            if ( qualifiedIdentity == null || serviceContract == null )
+            {
+                return null;
+            }
+            final IdentityDto identityDto = new IdentityDto( qualifiedIdentity.getCustomerId( ) );
+            serviceContract.getAttributeDefinitions( ).stream( ).filter( a -> a.getAttributeRight( ).isWritable( ) ).forEach( attrDef -> {
+                final fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.search.CertifiedAttribute identityAttr = qualifiedIdentity.getAttributes( ).stream( )
+                        .filter( a -> a.getKey( ).equals( attrDef.getKeyName( ) ) ).findFirst( ).orElse( null );
+                identityDto.getAttributeList( ).add( AttributeDto.from( identityAttr, attrDef ) );
+            } );
+
+            return identityDto;
+        }
+
+        public static class AttributeDto
+        {
+            private final String key;
+            private final String name;
+            private final String description;
+            private final String value;
+            private final String certifier;
+            private final Integer certificationLevel;
+            private final Date certificationDate;
+            private final boolean mandatory;
+            private final List<CertificationProcessus> allowedCertificationList;
+            private boolean updatable = false;
+
+            private AttributeDto( final String key, final String name, final String description, final boolean mandatory )
+            {
+                this.key = key;
+                this.name = name;
+                this.description = description;
+                this.value = null;
+                this.certifier = null;
+                this.certificationLevel = null;
+                this.certificationDate = null;
+                this.mandatory = mandatory;
+                this.allowedCertificationList = new ArrayList<>( );
+            }
+
+            private AttributeDto( final String key, final String name, final String description, final String value, final String certifier,
+                    final Integer certificationLevel, final Date certificationDate, final boolean mandatory )
+            {
+                this.key = key;
+                this.value = value;
+                this.name = name;
+                this.description = description;
+                this.certifier = certifier;
+                this.certificationLevel = certificationLevel;
+                this.certificationDate = certificationDate;
+                this.mandatory = mandatory;
+                this.allowedCertificationList = new ArrayList<>( );
+            }
+
+            public String getKey( )
+            {
+                return key;
+            }
+
+            public String getName( )
+            {
+                return name;
+            }
+
+            public String getDescription( )
+            {
+                return description;
+            }
+
+            public String getValue( )
+            {
+                return value;
+            }
+
+            public String getCertifier( )
+            {
+                return certifier;
+            }
+
+            public Integer getCertificationLevel( )
+            {
+                return certificationLevel;
+            }
+
+            public Date getCertificationDate( )
+            {
+                return certificationDate;
+            }
+
+            public boolean isMandatory( )
+            {
+                return mandatory;
+            }
+
+            public List<CertificationProcessus> getAllowedCertificationList( )
+            {
+                return allowedCertificationList;
+            }
+
+            public boolean isUpdatable( )
+            {
+                return updatable;
+            }
+
+            public void setUpdatable( boolean updatable )
+            {
+                this.updatable = updatable;
+            }
+
+            public static AttributeDto from( final fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.search.CertifiedAttribute certifiedAttribute,
+                    final AttributeDefinitionDto attributeDefinition )
+            {
+                if ( certifiedAttribute == null )
+                {
+                    return empty( attributeDefinition );
+                }
+                final AttributeDto attributeDto = new AttributeDto( certifiedAttribute.getKey( ), attributeDefinition.getName( ),
+                        attributeDefinition.getDescription( ), certifiedAttribute.getValue( ), certifiedAttribute.getCertifier( ),
+                        certifiedAttribute.getCertificationLevel( ), certifiedAttribute.getCertificationDate( ),
+                        attributeDefinition.getAttributeRequirement( ) != null );
+                attributeDto.getAllowedCertificationList( ).addAll( attributeDefinition.getAttributeCertifications( ).stream( ).filter( cert -> {
+                    final int allowedLevel = cert.getLevel( ) != null ? Integer.parseInt( cert.getLevel( ) ) : 0;
+                    final int currentLevel = certifiedAttribute.getCertificationLevel( ) != null ? certifiedAttribute.getCertificationLevel( ) : 0;
+
+                    final AttributeRequirement requirement = attributeDefinition.getAttributeRequirement( );
+                    boolean meetRequirement = true;
+                    if ( requirement != null && requirement.getLevel( ) != null )
+                    {
+                        meetRequirement = allowedLevel >= Integer.parseInt( requirement.getLevel( ) );
+                    }
+                    attributeDto.setUpdatable( attributeDto.isUpdatable( ) || ( allowedLevel >= currentLevel && meetRequirement ) );
+                    return allowedLevel >= currentLevel && meetRequirement && !certifiedAttribute.getCertifier( ).equals( cert.getCode( ) );
+                } ).collect( Collectors.toList( ) ) );
+
+                return attributeDto;
+            }
+
+            private static AttributeDto empty( final AttributeDefinitionDto attributeDefinition )
+            {
+                final AttributeDto attributeDto = new AttributeDto( attributeDefinition.getKeyName( ), attributeDefinition.getName( ),
+                        attributeDefinition.getDescription( ), attributeDefinition.getAttributeRequirement( ) != null );
+                attributeDto.getAllowedCertificationList( ).addAll( attributeDefinition.getAttributeCertifications( ) );
+                attributeDto.setUpdatable( !attributeDto.getAllowedCertificationList( ).isEmpty( ) );
+                return attributeDto;
+            }
+        }
     }
 
 }
