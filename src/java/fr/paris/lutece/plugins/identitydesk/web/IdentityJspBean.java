@@ -54,7 +54,6 @@ import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.contract.AttributeDef
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.contract.AttributeRequirement;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.contract.CertificationProcessus;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.contract.ServiceContractDto;
-import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.contract.ServiceContractSearchResponse;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.crud.CertifiedAttribute;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.crud.Identity;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.crud.IdentityChangeRequest;
@@ -75,7 +74,6 @@ import fr.paris.lutece.portal.util.mvc.admin.annotations.Controller;
 import fr.paris.lutece.portal.util.mvc.commons.annotations.Action;
 import fr.paris.lutece.portal.util.mvc.commons.annotations.View;
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.collections4.map.PassiveExpiringMap;
 import org.apache.commons.lang3.StringUtils;
 
 import javax.servlet.http.HttpServletRequest;
@@ -86,7 +84,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
@@ -132,7 +129,6 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
 
     // Session variable to store working values
     private final List<SearchAttributeDto> _searchAttributes = new ArrayList<>( );
-    private final Map<String, ServiceContractDto> _serviceContractCache = new PassiveExpiringMap<>( 5, TimeUnit.MINUTES );
     private ServiceContractDto _serviceContract;
     private List<AttributeStatus> _attributeStatuses = new ArrayList<>( );
     private String _currentClientCode = AppPropertiesService.getProperty( "identitydesk.default.client.code" );
