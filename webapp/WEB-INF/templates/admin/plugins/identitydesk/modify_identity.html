@@ -18,6 +18,10 @@
     #identity-update-table tr {
         height: 45px;
     }
+    #identity-update-table td.status-td {
+        font-weight: bold;
+        color: orange;
+    }
 </style>
 <script type="text/javascript">
     $(function () {
@@ -29,6 +33,16 @@
             } else {
                 $(this).addClass("px-3");
             }
+        });
+        $('button[name="action_modifyIdentity"]').click(function (e) {
+            $('#mandatory-msg').hide();
+            $('input.mandatory').each(function () {
+                if (!$(this).val().trim()) {
+                    e.preventDefault();
+                    $(this).addClass('border-danger');
+                    $('#mandatory-msg').show();
+                }
+            });
         });
         $("input[name='birthplace']").autocomplete({
             minLength: 3,
@@ -125,13 +139,16 @@
         <input type="hidden" name="return_url" value="${(return_url)!''}">
         <input type="hidden" name="customer_id" value="${identity.customerId}"/>
 
-        <table id="identity-update-table">
+        <table id="identity-update-table" class="mb-4">
             <thead>
                 <tr>
                     <th>&nbsp;</th>
                     <th>Valeur</th>
                     <th colspan="2">Certification</th>
                     <th>Action</th>
+                    <#if attribute_statuses?has_content>
+                        <th>Status</th>
+                    </#if>
                 </tr>
             </thead>
             <tbody>
@@ -140,42 +157,49 @@
                         <input type="hidden" name="${attr.key}" value="${(attr.value)!''}" />
                     <#else>
                         <tr>
-                            <#if attr.key == 'birthplace_code' || attr.key == 'birthcountry_code'>
-                                <input type="hidden" name="${attr.key}" value="${(attr.value)!''}" />
-                            <#else>
-                                <td>${attr.name}<#if attr.mandatory>&nbsp; *</#if></td>
-                                <td>
-                                    <#if attr.updatable>
+                            <td>${attr.name}<#if attr.mandatory>&nbsp; *</#if></td>
+                            <td>
+                                <#if attr.updatable>
+                                    <#if attr.mandatory>
+                                        <input class="form-control mandatory" type="text" name="${attr.key}" placeholder="${attr.description}" value="${(attr.value)!''}" />
+                                    <#else>
                                         <input class="form-control" type="text" name="${attr.key}" placeholder="${attr.description}" value="${(attr.value)!''}" />
+                                    </#if>
+                                <#else>
+                                    ${(attr.value)!''}
+                                </#if>
+                            </td>
+                            <td class="certifier-td">
+                                <#if attr.certifier??>
+                                    <span class="badge badge-pill badge-info mx-1">${attr.certifier}</span>
+                                </#if>
+                            </td>
+                            <td class="certification-date-td">
+                                <#if attr.certificationDate??>
+                                    <span class="certification-date">${attr.certificationDate?date}</span>
+                                </#if>
+                            </td>
+                            <td class="action-td">
+                                <#if attr.allowedCertificationList?has_content>
+                                    <select class="form-control w-auto" name="${attr.key}-certif">
+                                        <option selected value> -- Modifier la certification -- </option>
+                                        <#list attr.allowedCertificationList as certif>
+                                            <option value="${certif.code}">${certif.level} - ${certif.label}</option>
+                                        </#list>
+                                    </select>
+                                <#else>
+                                    <#if attr.updatable>
+                                        Certification non modifiable
                                     <#else>
-                                        ${(attr.value)!''}
+                                        Donnée certifiée non modifiable
                                     </#if>
-                                </td>
-                                <td class="certifier-td">
-                                    <#if attr.certifier??>
-                                        <span class="badge badge-pill badge-info mx-1">${attr.certifier}</span>
-                                    </#if>
-                                </td>
-                                <td class="certification-date-td">
-                                    <#if attr.certificationDate??>
-                                        <span class="certification-date">${attr.certificationDate?date}</span>
-                                    </#if>
-                                </td>
-                                <td class="action-td">
-                                    <#if attr.allowedCertificationList?has_content>
-                                        <select class="form-control w-auto" name="${attr.key}-certif">
-                                            <option selected value> -- Modifier la certification -- </option>
-                                            <#list attr.allowedCertificationList as certif>
-                                                <option value="${certif.code}">${certif.level} - ${certif.label}</option>
-                                            </#list>
-                                        </select>
-                                    <#else>
-                                        <#if attr.updatable>
-                                            Certification non modifiable
-                                        <#else>
-                                            Donnée certifiée non modifiable
-                                        </#if>
-                                    </#if>
+                                </#if>
+                            </td>
+                            <#if attribute_statuses?has_content>
+                                <td class="status-td">
+                                    <#list attribute_statuses?filter(s -> s.key == attr.key) as attrStatus>
+                                        ${attrStatus.status.message}
+                                    </#list>
                                 </td>
                             </#if>
                         </tr>
@@ -185,6 +209,9 @@
         </table>
 
         <@actionButtons button1Name="action_modifyIdentity" button2Name="view_manageIdentitys"/>
+        <div id="mandatory-msg" class="text-danger" style="display: none">
+            Merci de renseigner tous les attributs obligatoires.
+        </div>
     </form>
 </@rowBoxHeader>
 

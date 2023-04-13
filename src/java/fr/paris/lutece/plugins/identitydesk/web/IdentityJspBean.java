@@ -33,6 +33,7 @@
  */
 package fr.paris.lutece.plugins.identitydesk.web;
 
+import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.common.AttributeStatus;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.common.AuthorType;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.common.RequestAuthor;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.contract.AttributeDefinitionDto;
@@ -102,6 +103,7 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
     private static final String MARK_AUTOCOMPLETE_CITY_ENDPOINT = "autocomplete_city_endpoint";
     private static final String MARK_AUTOCOMPLETE_COUNTRY_ENDPOINT = "autocomplete_country_endpoint";
     private static final String MARK_RETURN_URL = "return_url";
+    private static final String MARK_ATTRIBUTE_STATUSES = "attribute_statuses";
 
     // Views
     private static final String VIEW_MANAGE_IDENTITIES = "manageIdentitys";
@@ -115,6 +117,7 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
     // Session variable to store working values
     private final List<SearchAttributeDto> _searchAttributes = new ArrayList<>( );
     private ServiceContractDto _serviceContract;
+    private List<AttributeStatus> _attributeStatuses = new ArrayList<>( );
 
     private final IdentityService _identityService = SpringContextService.getBean( "identityService.rest.httpAccess" );
 
@@ -228,10 +231,11 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
         }
 
         Map<String, Object> model = getModel( );
-        model.put( MARK_IDENTITY, identity );
+        model.put( MARK_IDENTITY, IdentityDto.from( identity, _serviceContract ) );
         model.put( MARK_SERVICE_CONTRACT, _serviceContract );
         model.put( MARK_AUTOCOMPLETE_CITY_ENDPOINT, _autocompleteCityEndpoint );
         model.put( MARK_AUTOCOMPLETE_COUNTRY_ENDPOINT, _autocompleteCountryEndpoint );
+        model.put( MARK_ATTRIBUTE_STATUSES, _attributeStatuses );
         markReturnUrl( request, model );
 
         return getPage( PROPERTY_PAGE_TITLE_CREATE_IDENTITY, TEMPLATE_CREATE_IDENTITY, model );
@@ -248,6 +252,7 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
     public String doCreateIdentity( HttpServletRequest request )
     {
         final IdentityChangeRequest identityChangeRequest = new IdentityChangeRequest( );
+        _attributeStatuses.clear( );
         try
         {
             final Identity identity = initNewIdentity( request );
@@ -269,6 +274,10 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
                 else
                 {
                     addWarning( response.getMessage( ) );
+                }
+                if ( response.getAttributeStatuses( ) != null )
+                {
+                    _attributeStatuses.addAll( response.getAttributeStatuses( ) );
                 }
                 return getCreateIdentity( request );
             }
@@ -324,6 +333,7 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
         model.put( MARK_SERVICE_CONTRACT, _serviceContract );
         model.put( MARK_AUTOCOMPLETE_CITY_ENDPOINT, _autocompleteCityEndpoint );
         model.put( MARK_AUTOCOMPLETE_COUNTRY_ENDPOINT, _autocompleteCountryEndpoint );
+        model.put( MARK_ATTRIBUTE_STATUSES, _attributeStatuses );
         markReturnUrl( request, model );
 
         return getPage( PROPERTY_PAGE_TITLE_MODIFY_IDENTITY, TEMPLATE_MODIFY_IDENTITY, model );
@@ -341,6 +351,7 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
     {
         final String customerId = request.getParameter( "customer_id" );
         final IdentityChangeRequest changeRequest = new IdentityChangeRequest( );
+        _attributeStatuses.clear( );
         try
         {
             final Identity identityToUpdate = this.getIdentityFromCustomerId( customerId, getClientCode( request ), Identity.class );
@@ -400,6 +411,10 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
                 else
                 {
                     addWarning( "Status de la mise à jour : " + response.getStatus( ).getLabel( ) + " : " + response.getMessage( ) );
+                }
+                if ( response.getAttributeStatuses( ) != null )
+                {
+                    _attributeStatuses.addAll( response.getAttributeStatuses( ) );
                 }
                 return getModifyIdentity( request );
             }
@@ -578,12 +593,18 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
     }
 
     /**
-     * DTO used for the update UI.
+     * DTO used for the create and update UI.
      */
     public static class IdentityDto
     {
         private final String customerId;
         private final List<AttributeDto> attributeList;
+
+        private IdentityDto( )
+        {
+            this.customerId = null;
+            this.attributeList = new ArrayList<>( );
+        }
 
         private IdentityDto( final String customerId )
         {
@@ -601,6 +622,13 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
             return attributeList;
         }
 
+        /**
+         * Static builder for update UI.
+         * 
+         * @param qualifiedIdentity
+         * @param serviceContract
+         * @return
+         */
         public static IdentityDto from( final QualifiedIdentity qualifiedIdentity, final ServiceContractDto serviceContract )
         {
             if ( qualifiedIdentity == null || serviceContract == null )
@@ -611,7 +639,37 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
             serviceContract.getAttributeDefinitions( ).stream( ).filter( a -> a.getAttributeRight( ).isWritable( ) ).forEach( attrDef -> {
                 final fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.search.CertifiedAttribute identityAttr = qualifiedIdentity.getAttributes( ).stream( )
                         .filter( a -> a.getKey( ).equals( attrDef.getKeyName( ) ) ).findFirst( ).orElse( null );
-                identityDto.getAttributeList( ).add( AttributeDto.from( identityAttr, attrDef ) );
+                if ( CollectionUtils.isNotEmpty( attrDef.getAttributeCertifications( ) )
+                        || ( identityAttr != null && StringUtils.isNotBlank( identityAttr.getValue( ) ) ) )
+                {
+                    identityDto.getAttributeList( ).add( AttributeDto.from( identityAttr, attrDef ) );
+                }
+            } );
+
+            return identityDto;
+        }
+
+        /**
+         * Static builder for create UI.
+         * 
+         * @param identity
+         * @param serviceContract
+         * @return
+         */
+        public static IdentityDto from( final Identity identity, final ServiceContractDto serviceContract )
+        {
+            if ( identity == null || serviceContract == null )
+            {
+                return null;
+            }
+            final IdentityDto identityDto = new IdentityDto( );
+            serviceContract.getAttributeDefinitions( ).stream( ).filter( a -> a.getAttributeRight( ).isWritable( ) ).forEach( attrDef -> {
+                final CertifiedAttribute identityAttr = identity.getAttributes( ).stream( ).filter( a -> a.getKey( ).equals( attrDef.getKeyName( ) ) )
+                        .findFirst( ).orElse( null );
+                if ( CollectionUtils.isNotEmpty( attrDef.getAttributeCertifications( ) ) )
+                {
+                    identityDto.getAttributeList( ).add( AttributeDto.from( identityAttr, attrDef ) );
+                }
             } );
 
             return identityDto;
@@ -712,6 +770,13 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
                 this.updatable = updatable;
             }
 
+            /**
+             * Static builder for update UI.
+             * 
+             * @param certifiedAttribute
+             * @param attributeDefinition
+             * @return
+             */
             public static AttributeDto from( final fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.search.CertifiedAttribute certifiedAttribute,
                     final AttributeDefinitionDto attributeDefinition )
             {
@@ -735,6 +800,38 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
                     }
                     attributeDto.setUpdatable( attributeDto.isUpdatable( ) || ( allowedLevel >= currentLevel && meetRequirement ) );
                     return allowedLevel >= currentLevel && meetRequirement && !certifiedAttribute.getCertifier( ).equals( cert.getCode( ) );
+                } ).collect( Collectors.toList( ) ) );
+
+                return attributeDto;
+            }
+
+            /**
+             * Static builder for create UI.
+             * 
+             * @param certifiedAttribute
+             * @param attributeDefinition
+             * @return
+             */
+            public static AttributeDto from( final CertifiedAttribute certifiedAttribute, final AttributeDefinitionDto attributeDefinition )
+            {
+                if ( certifiedAttribute == null )
+                {
+                    return empty( attributeDefinition );
+                }
+                final AttributeDto attributeDto = new AttributeDto( certifiedAttribute.getKey( ), attributeDefinition.getName( ),
+                        attributeDefinition.getDescription( ), certifiedAttribute.getValue( ), null, null, null,
+                        attributeDefinition.getAttributeRequirement( ) != null );
+                attributeDto.getAllowedCertificationList( ).addAll( attributeDefinition.getAttributeCertifications( ).stream( ).filter( cert -> {
+                    final int allowedLevel = cert.getLevel( ) != null ? Integer.parseInt( cert.getLevel( ) ) : 0;
+
+                    final AttributeRequirement requirement = attributeDefinition.getAttributeRequirement( );
+                    boolean meetRequirement = true;
+                    if ( requirement != null && requirement.getLevel( ) != null )
+                    {
+                        meetRequirement = allowedLevel >= Integer.parseInt( requirement.getLevel( ) );
+                    }
+                    attributeDto.setUpdatable( attributeDto.isUpdatable( ) || meetRequirement );
+                    return meetRequirement;
                 } ).collect( Collectors.toList( ) ) );
 
                 return attributeDto;
