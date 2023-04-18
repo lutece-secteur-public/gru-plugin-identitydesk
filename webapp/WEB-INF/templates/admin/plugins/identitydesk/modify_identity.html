@@ -121,6 +121,15 @@
             $(this).parent().attr('title', $(this).attr('title'))
         });
         $("select[name$='-certif']").change(function () {
+        	// show input only if a certification process is selected
+        	// restore value if certification is unselect
+        	let attrKey = $(this).prop("name").substring(0, $(this).prop("name").indexOf( '-certif' ));
+        	let attrInput =   $( '#' + attrKey );
+        	attrInput.toggle( $(this).find("option:selected").val() != "" ) ;
+        	if ( $(this).find("option:selected").val() == "" ) attrInput.val( $('#'+ attrKey + '-svg').text() );
+        	
+        	console.log( "text:", $('#'+ attrKey + '-svg').text() );
+        	
             let title = $(this).find("option:selected").attr('title');
             if (title) {
                 $(this).attr('title', title);
@@ -128,6 +137,9 @@
                 $(this).removeAttr('title');
             }
         });
+        
+        // init
+        $("select[name$='-certif']").change();
     });
 </script>
 
@@ -146,6 +158,7 @@
                     <th>Valeur</th>
                     <th colspan="2">Certification</th>
                     <th>Action</th>
+                    <th>Nouvelle valeur</th>
                     <#if attribute_statuses?has_content>
                         <th>Status</th>
                     </#if>
@@ -153,21 +166,16 @@
             </thead>
             <tbody>
                 <#list identity.attributeList as attr>
+                    <#assign isUpdateAllowed =  attr.updatable && attr.allowedCertificationList?has_content />
+                    
                     <#if attr.key == 'birthplace_code' || attr.key == 'birthcountry_code'>
                         <input type="hidden" name="${attr.key}" value="${(attr.value)!''}" />
                     <#else>
                         <tr>
-                            <td>${attr.name}<#if attr.mandatory>&nbsp; *</#if></td>
-                            <td>
-                                <#if attr.updatable>
-                                    <#if attr.mandatory>
-                                        <input class="form-control mandatory" type="text" name="${attr.key}" placeholder="${attr.description}" value="${(attr.value)!''}" />
-                                    <#else>
-                                        <input class="form-control" type="text" name="${attr.key}" placeholder="${attr.description}" value="${(attr.value)!''}" />
-                                    </#if>
-                                <#else>
-                                    ${(attr.value)!''}
-                                </#if>
+                            <td>${attr.name}<#if attr.mandatory>&nbsp; *</#if> <span class="badge badge-pill badge-info" title="${attr.description}">?</span></td>
+                           
+                            <td class="action-td">
+	                            <span id="${attr.key}-svg" >${(attr.value)!''}</span>
                             </td>
                             <td class="certifier-td">
                                 <#if attr.certifier??>
@@ -180,19 +188,21 @@
                                 </#if>
                             </td>
                             <td class="action-td">
-                                <#if attr.allowedCertificationList?has_content>
+                                <#if isUpdateAllowed >
                                     <select class="form-control w-auto" name="${attr.key}-certif">
-                                        <option selected value> -- Modifier la certification -- </option>
+                                        <option selected value="">(Sélectionner  le niveau de certification)</option>
                                         <#list attr.allowedCertificationList as certif>
-                                            <option value="${certif.code}">${certif.level} - ${certif.label}</option>
+                                            <option value="${certif.code}">[${certif.code}] ${certif.label}</option>
                                         </#list>
                                     </select>
                                 <#else>
-                                    <#if attr.updatable>
-                                        Certification non modifiable
-                                    <#else>
                                         Donnée certifiée non modifiable
-                                    </#if>
+                                </#if>
+                            </td>
+                            <td>
+                                <#if isUpdateAllowed >
+                                   <input class="form-control  <#if attr.mandatory>mandatory</#if>" type="text" name="${attr.key}" id="${attr.key}"  value="${(attr.value)!''}"  /> 
+                                
                                 </#if>
                             </td>
                             <#if attribute_statuses?has_content>

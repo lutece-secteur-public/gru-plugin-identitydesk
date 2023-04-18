@@ -222,7 +222,7 @@
                     <#else>
                         <tr>
                             <td>${searchableAttr.name}</td>
-                            <td><input class="form-control" type="text" name="${searchableAttr.keyName}" placeholder="${searchableAttr.description}"
+                            <td><input class="form-control" type="text" name="search_${searchableAttr.keyName}" 
                                        value="<#list query_search_attributes?filter(a -> a.key == searchableAttr.keyName) as attr>${attr.value}</#list>" /></td>
                         </tr>
                         <@tableHeadBodySeparator />
@@ -253,9 +253,10 @@
                         <th>
                             <span class="id-value always-hidden">${identity.customerId}</span>
                             <div class="col-12">Identité existante</div>
-                            <span class="badge entity-quality">${identity.quality * 100}</span>
-                            <span class="badge entity-coverage mx-2">${identity.coverage * 100}</span>
+                            
                             <span class="badge entity-scoring">${identity.scoring * 100}</span>
+                            <span class="badge entity-quality">${identity.quality * 100}</span>
+                            <span class="badge entity-coverage ">${identity.coverage * 100}</span>
                         </th>
                     </tr>
                     <@tableHeadBodySeparator />
