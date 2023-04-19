@@ -94,6 +94,7 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
 
     // Constants
     private static final String SEARCH_PARAMETER_SUFFIX = "search_";
+    private static final String NEW_SEARCH_PARAMETER = "new_search";
     
     // Markers
     private static final String MARK_IDENTITY_LIST = "identity_list";
@@ -146,13 +147,18 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
         initClientCode( request );
         initServiceContract( _currentClientCode );
         
-        collectSearchAttributes( request );
-       
-        final String customerId = _searchAttributes.stream( ).filter( a -> a.getKey( ).equals( "customer_id" ) ).map( SearchAttributeDto::getValue )
-                .findFirst( ).orElse( null );
-        if (  CollectionUtils.isNotEmpty( _searchAttributes ) && checkSearchAttributes( ) )
+        // Search
+        if (  request.getParameter( NEW_SEARCH_PARAMETER ) != null )
         {
-            if ( StringUtils.isNotBlank( customerId ) )
+        	// get search criterias
+        	collectSearchAttributes( request );
+        	
+        	// check 
+        	checkSearchAttributes( );
+        	
+        	final String customerId = _searchAttributes.stream( ).filter( a -> a.getKey( ).equals( "customer_id" ) ).map( SearchAttributeDto::getValue )
+                    .findFirst( ).orElse( null );
+        	if ( StringUtils.isNotBlank( customerId ) )
             {
                 try
                 {
@@ -333,6 +339,7 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
         final String customerId = request.getParameter( "customer_id" );
         final IdentityChangeRequest changeRequest = new IdentityChangeRequest( );
         _attributeStatuses.clear( );
+        
         try
         {
             final Identity identityToUpdate = this.getIdentityFromCustomerId( customerId );
@@ -343,20 +350,8 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
             }
             
             final Identity identityFromParams = initNewIdentity( request );
-            final List<CertifiedAttribute> attributesWithoutCertif = identityFromParams.getAttributes( ).stream( )
-                    .filter( a -> StringUtils.isBlank( a.getCertificationProcess( ) ) ).collect( Collectors.toList( ) );
-            if ( CollectionUtils.isNotEmpty( attributesWithoutCertif ) )
-            {
-                final List<String> alreadyCertifiedAttrKeys = identityToUpdate.getAttributes( ).stream( )
-                        .filter( a -> StringUtils.isNotBlank( a.getCertificationProcess( ) ) ).map( CertifiedAttribute::getKey )
-                        .collect( Collectors.toList( ) );
-                if ( attributesWithoutCertif.stream( ).anyMatch( a -> !alreadyCertifiedAttrKeys.contains( a.getKey( ) ) ) )
-                {
-                    addWarning( "Un niveau de certification doit obligatoirement être sélectionné pour chaque attribut renseigné." );
-                    return getModifyIdentity( request );
-                }
-            }
-
+            
+            // check for updates
             final List<CertifiedAttribute> updatedAttributes = identityFromParams.getAttributes( ).stream( ).map( newAttr -> {
                 final CertifiedAttribute oldAttr = identityToUpdate.getAttributes( ).stream( ).filter( a -> a.getKey( ).equals( newAttr.getKey( ) ) )
                         .findFirst( ).orElse( null );
@@ -375,15 +370,36 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
             if ( CollectionUtils.isEmpty( updatedAttributes ) )
             {
                 addInfo( "Aucune modification d'attribut détectée, identité non mise à jour." );
-                _searchAttributes.add( new SearchAttributeDto( "customer_id", customerId, true ) );
                 return getSearchIdentities( request );
+            } 
+            else
+            {
+            	identityToUpdate.setAttributes( updatedAttributes );
             }
 
-            identityToUpdate.setAttributes( updatedAttributes );
+            // check if all attributes to update are certified
+            final List<CertifiedAttribute> attributesWithoutCertif = identityToUpdate.getAttributes( ).stream( )
+                    .filter( a -> StringUtils.isBlank( a.getCertificationProcess( ) ) ).collect( Collectors.toList( ) );
+            if ( CollectionUtils.isNotEmpty( attributesWithoutCertif ) )
+            {
+                final List<String> alreadyCertifiedAttrKeys = identityToUpdate.getAttributes( ).stream( )
+                        .filter( a -> StringUtils.isNotBlank( a.getCertificationProcess( ) ) ).map( CertifiedAttribute::getKey )
+                        .collect( Collectors.toList( ) );
+                if ( attributesWithoutCertif.stream( ).anyMatch( a -> !alreadyCertifiedAttrKeys.contains( a.getKey( ) ) ) )
+                {
+                    addWarning( "Un niveau de certification doit obligatoirement être sélectionné pour chaque attribut renseigné." );
+                    return getModifyIdentity( request );
+                }
+            }
+            
+            
+            // Update API call
             changeRequest.setIdentity( identityToUpdate );
             changeRequest.setOrigin( this.getAuthor( ) );
             final IdentityChangeResponse response = _identityService.updateIdentity( identityToUpdate.getCustomerId( ), changeRequest,
                     _currentClientCode );
+            
+            // prepare response status message
             if ( response.getStatus( ) != IdentityChangeStatus.UPDATE_SUCCESS && response.getStatus( ) != IdentityChangeStatus.UPDATE_INCOMPLETE_SUCCESS )
             {
                 if ( response.getStatus( ) == IdentityChangeStatus.FAILURE )
@@ -403,7 +419,7 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
             else
             {
                 addInfo( "Identité modifiée avec succès" );
-                _searchAttributes.add( new SearchAttributeDto( "customer_id", customerId, true ) );
+                
             }
         }
         catch( final IdentityStoreException e )
@@ -412,6 +428,8 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
             addError( "Erreur lors de la modification de l'identité." );
             return getModifyIdentity( request );
         }
+        
+        
         return getSearchIdentities( request );
     }
 
@@ -423,6 +441,8 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
      */
     private void collectSearchAttributes( final HttpServletRequest request )
     {
+
+    	
         final List<SearchAttributeDto> searchList = _serviceContract.getAttributeDefinitions( ).stream( ).map( AttributeDefinitionDto::getKeyName )
                 .map( attrKey -> {
                     final String value = request.getParameter( SEARCH_PARAMETER_SUFFIX +  attrKey );
@@ -431,8 +451,17 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
                         return new SearchAttributeDto( attrKey, value.trim( ), _searchAttributeKeyStrictList.contains( attrKey ) );
                     }
                     return null;
-                } ).collect( Collectors.toList( ) );
+                } )
+                .filter( searchAttribute -> searchAttribute != null && !searchAttribute.getValue().isBlank() )
+                .collect( Collectors.toList( ) );
 
+        if ( searchList.isEmpty( ) ) 
+        {
+        	// not a new search, keep existing criterias
+        	return ;
+        }
+        
+        
         _searchAttributes.clear( );
         _searchAttributes.addAll( searchList.stream( ).filter( s -> (s != null && StringUtils.isNotBlank( s.getValue( ) ) ) ).collect( Collectors.toList( ) ) );
         
@@ -870,7 +899,7 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
                         meetRequirement = allowedLevel >= Integer.parseInt( requirement.getLevel( ) );
                     }
                     attributeDto.setUpdatable( attributeDto.isUpdatable( ) || ( allowedLevel >= currentLevel && meetRequirement ) );
-                    return allowedLevel >= currentLevel && meetRequirement && !certifiedAttribute.getCertifier( ).equals( cert.getCode( ) );
+                    return allowedLevel >= currentLevel && meetRequirement  ;
                 } ).collect( Collectors.toList( ) ) );
 
                 return attributeDto;
@@ -892,18 +921,21 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
                 final AttributeDto attributeDto = new AttributeDto( certifiedAttribute.getKey( ), attributeDefinition.getName( ),
                         attributeDefinition.getDescription( ), certifiedAttribute.getValue( ), null, null, null,
                         attributeDefinition.getAttributeRequirement( ) != null );
-                attributeDto.getAllowedCertificationList( ).addAll( attributeDefinition.getAttributeCertifications( ).stream( ).filter( cert -> {
-                    final int allowedLevel = cert.getLevel( ) != null ? Integer.parseInt( cert.getLevel( ) ) : 0;
-
-                    final AttributeRequirement requirement = attributeDefinition.getAttributeRequirement( );
-                    boolean meetRequirement = false;
-                    if ( requirement != null && requirement.getLevel( ) != null )
-                    {
-                        meetRequirement = allowedLevel >= Integer.parseInt( requirement.getLevel( ) );
-                    }
-                    attributeDto.setUpdatable( attributeDto.isUpdatable( ) && meetRequirement );
-                    return meetRequirement;
-                } ).collect( Collectors.toList( ) ) );
+                
+                attributeDto.getAllowedCertificationList( ).addAll( 
+                		attributeDefinition.getAttributeCertifications( ).stream( )
+                		.filter( cert -> {
+		                    final int allowedLevel = cert.getLevel( ) != null ? Integer.parseInt( cert.getLevel( ) ) : 0;
+		
+		                    final AttributeRequirement requirement = attributeDefinition.getAttributeRequirement( );
+		                    boolean meetRequirement = false;
+		                    if ( requirement != null && requirement.getLevel( ) != null )
+		                    {
+		                        meetRequirement = allowedLevel >= Integer.parseInt( requirement.getLevel( ) );
+		                    }
+		                    attributeDto.setUpdatable( attributeDto.isUpdatable( ) && meetRequirement );
+		                    return meetRequirement;
+		                } ).collect( Collectors.toList( ) ) );
 
                 return attributeDto;
             }

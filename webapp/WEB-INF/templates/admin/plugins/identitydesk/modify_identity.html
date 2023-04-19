@@ -128,9 +128,8 @@
         	attrInput.toggle( $(this).find("option:selected").val() != "" ) ;
         	if ( $(this).find("option:selected").val() == "" ) attrInput.val( $('#'+ attrKey + '-svg').text() );
         	
-        	console.log( "text:", $('#'+ attrKey + '-svg').text() );
-        	
-            let title = $(this).find("option:selected").attr('title');
+        	// ?
+        	let title = $(this).find("option:selected").attr('title');
             if (title) {
                 $(this).attr('title', title);
             } else {

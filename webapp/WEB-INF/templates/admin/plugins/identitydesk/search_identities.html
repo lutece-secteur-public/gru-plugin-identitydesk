@@ -1,6 +1,6 @@
 <style>
     table.identity-search-table input {
-        min-width: 400px;
+        // min-width: 400px;
     }
     table.identity-result-table, table.identity-search-table {
         width: auto;
@@ -49,16 +49,17 @@
     }
     $(function () {
         $(".identity-result-table span.entity-quality").each(function () {
-            formatPercentages($(this), 'Qualité');
+            formatPercentages($(this), 'Qual.');
         });
         $(".identity-result-table span.entity-coverage").each(function () {
-            formatPercentages($(this), 'Coverage');
+            formatPercentages($(this), 'Couv.');
         });
         $(".identity-result-table span.entity-scoring").each(function () {
-            formatPercentages($(this), 'Scoring');
+            formatPercentages($(this), 'Corresp.');
         });
         $("input[type=text]:not(input[value=''])").each(function () {
-            const name = $(this).attr("name");
+            const name = $(this).attr("name").substring( 7 ); // remove "search_" suffix
+            console.log( name );
             const search = $(this).val().toUpperCase();
             $(".identity-result-table span[class=" + name + "-value]").each(function () {
                 $(this).addClass("font-weight-bold");
@@ -99,7 +100,7 @@
         if ($("input[type=text]:not(input[value=''])").length > 0 && !$("div #messages_infos_div").is(":visible")) {
             $(".create-identity-btn").show();
         }
-        $("input[name='birthplace']").autocomplete({
+        $("input[name='search_birthplace']").autocomplete({
             minLength: 3,
             source: function (request, response) {
                 $.ajax({
@@ -139,10 +140,10 @@
                 $("input[name='birthplace_code']").val(ui.item.value);
             }
         });
-        $("input[name='birthplace']").keyup(function () {
-            $("input[name='birthplace_code']").val('');
+        $("input[name='search_birthplace']").keyup(function () {
+            $("input[name='search_birthplace_code']").val('');
         });
-        $("input[name='birthcountry']").autocomplete({
+        $("input[name='search_birthcountry']").autocomplete({
             minLength: 3,
             source: function (request, response) {
                 $.ajax({
@@ -218,7 +219,7 @@
                 <@tableHeadBodySeparator />
                 <#list service_contract.attributeDefinitions?filter(a -> a.attributeRight.searchable) as searchableAttr>
                     <#if searchableAttr.keyName == 'birthplace_code' || searchableAttr.keyName == 'birthcountry_code'>
-                        <input type="hidden" name="${searchableAttr.keyName}" value="<#list query_search_attributes?filter(a -> a.key == searchableAttr.keyName) as attr>${attr.value}</#list>" />
+                        <input type="hidden" name="search_${searchableAttr.keyName}" value="<#list query_search_attributes?filter(a -> a.key == searchableAttr.keyName) as attr>${attr.value}</#list>" />
                     <#else>
                         <tr>
                             <td>${searchableAttr.name}</td>
@@ -231,6 +232,8 @@
                 <tr>
                     <td>&nbsp;</td>
                     <td>
+                    <input type="hidden" name="new_search" value="true" />
+                  
                         <button id="reset-form-button" class="btn btn-default" type="button">
                             Réinitialiser
                         </button>
