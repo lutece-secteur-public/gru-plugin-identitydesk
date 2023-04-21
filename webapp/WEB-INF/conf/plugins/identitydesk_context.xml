@@ -18,4 +18,8 @@
         <constructor-arg ref="restTransport.httpAccess"/>
     </bean>
 
+    <!-- Cache -->
+    <bean id="identitydesk.serviceContractCache"  class="fr.paris.lutece.plugins.identitydesk.cache.ServiceContractCache"/>
+
+
 </beans>

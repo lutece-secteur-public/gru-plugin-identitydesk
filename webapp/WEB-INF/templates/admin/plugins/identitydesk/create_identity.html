@@ -143,10 +143,10 @@
             <thead>
                 <tr>
                     <th>&nbsp;</th>
-                    <th>Certification</th>
-                    <th>Valeur</th>
+                    <th>#i18n{identitydesk.createmodify_identity.columnValue}</th>
+                    <th>#i18n{identitydesk.createmodify_identity.columnCertif}</th>
                     <#if attribute_statuses?has_content>
-                        <th>Status</th>
+                        <th>#i18n{identitydesk.createmodify_identity.columnStatus}</th>
                     </#if>
                 </tr>
             </thead>
@@ -161,13 +161,13 @@
                             <td class="certification-td">
                                 <#if attr.allowedCertificationList?has_content>
                                     <select class="form-control w-auto" name="${attr.key}-certif">
-                                        <option selected value=""> -- Sélectionner une certification -- </option>
+                                        <option selected value> -- #i18n{identitydesk.create_identity.optionSelectCertif} -- </option>
                                         <#list attr.allowedCertificationList as certif>
                                             <option value="${certif.code}">${certif.code} - ${certif.label}</option>
                                         </#list>
                                     </select>
                                 <#else>
-                                    Aucune certification disponible
+                                    #i18n{identitydesk.createmodify_identity.noAvailableCertif}
                                 </#if>
                             </td>
                              <td>
@@ -193,7 +193,7 @@
 
         <@actionButtons button1Name="action_createIdentity" button2Name="view_manageIdentitys"/>
         <div id="mandatory-msg" class="text-danger" style="display: none">
-            Merci de renseigner tous les attributs obligatoires.
+            #i18n{identitydesk.createmodify_identity.mandatoryFieldsWarning}
         </div>
     </form>
 </@rowBoxHeader>

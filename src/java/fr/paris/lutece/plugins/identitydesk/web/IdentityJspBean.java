@@ -47,6 +47,7 @@ import javax.servlet.http.HttpServletRequest;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 
+import fr.paris.lutece.plugins.identitydesk.cache.ServiceContractCache;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.common.AttributeStatus;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.common.AuthorType;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.common.RequestAuthor;
@@ -98,6 +99,19 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
     private static final String TEMPLATE_CREATE_IDENTITY = "/admin/plugins/identitydesk/create_identity.html";
     private static final String TEMPLATE_MODIFY_IDENTITY = "/admin/plugins/identitydesk/modify_identity.html";
 
+    // Messages
+    private static final String MESSAGE_GET_IDENTITY_ERROR = "identitydesk.message.get_identity.error";
+    private static final String MESSAGE_SEARCH_IDENTITY_NORESULT = "identitydesk.message.search_identity.noresult";
+    private static final String MESSAGE_SEARCH_IDENTITY_ERROR = "identitydesk.message.search_identity.error";
+    private static final String MESSAGE_IDENTITY_MUSTSELECTCERTIFICATION = "identitydesk.message.identity.mustselectcertification";
+    private static final String MESSAGE_CREATE_IDENTITY_SUCCESS = "identitydesk.message.create_identity.success";
+    private static final String MESSAGE_CREATE_IDENTITY_ERROR = "identitydesk.message.create_identity.error";
+    private static final String MESSAGE_UPDATE_IDENTITY_NOCHANGE = "identitydesk.message.update_identity.nochange";
+    private static final String MESSAGE_UPDATE_IDENTITY_SUCCESS = "identitydesk.message.update_identity.success";
+    private static final String MESSAGE_UPDATE_IDENTITY_ERROR = "identitydesk.message.update_identity.error";
+    private static final String MESSAGE_GET_SERVICE_CONTRACT_ERROR = "identitydesk.message.get_service_contract.error";
+    private static final String MESSAGE_SEARCH_IDENTITY_REQUIREDFIELD = "identitydesk.message.search_identity.requiredfield";
+
     // Properties for page titles
     private static final String PROPERTY_PAGE_TITLE_MANAGE_IDENTITIES = "identitydesk.manage_identities.pageTitle";
     private static final String PROPERTY_PAGE_TITLE_MODIFY_IDENTITY = "identitydesk.modify_identity.pageTitle";
@@ -126,6 +140,9 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
     // Actions
     private static final String ACTION_CREATE_IDENTITY = "createIdentity";
     private static final String ACTION_MODIFY_IDENTITY = "modifyIdentity";
+
+    // Cache
+    private static final ServiceContractCache _serviceContractCache = SpringContextService.getBean( "identitydesk.serviceContractCache" );
 
     // Session variable to store working values
     private final List<SearchAttributeDto> _searchAttributes = new ArrayList<>( );
@@ -177,7 +194,7 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
                 catch( final IdentityStoreException e )
                 {
                     AppLogService.error( "Error while retrieving the identity [customerId = " + customerId + "].", e );
-                    addError( "Une erreur est survenue pendant la récupération de l'identité." );
+                    addError( MESSAGE_GET_IDENTITY_ERROR, getLocale( ) );
                 }
             }
             else
@@ -189,16 +206,24 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
                 try
                 {
                     final IdentitySearchResponse searchResponse = _identityService.searchIdentities( searchRequest, _currentClientCode );
-                    qualifiedIdentities.addAll( searchResponse.getIdentities( ) );
+                    if ( Boolean.parseBoolean( request.getParameter( "ignore_approximate" ) ) )
+                    {
+                        qualifiedIdentities.addAll( searchResponse.getIdentities( ).stream( ).filter( i -> Math.round( i.getScoring( ) * 100 ) == 100 )
+                                .collect( Collectors.toList( ) ) );
+                    }
+                    else
+                    {
+                        qualifiedIdentities.addAll( searchResponse.getIdentities( ) );
+                    }
                     if ( qualifiedIdentities.isEmpty( ) )
                     {
-                        addWarning( "Aucun résultat pour votre recherche." );
+                        addWarning( MESSAGE_SEARCH_IDENTITY_NORESULT, getLocale( ) );
                     }
                 }
                 catch( final IdentityStoreException e )
                 {
                     AppLogService.error( "Error while searching identities [IdentitySearchRequest = " + searchRequest + "].", e );
-                    addError( "Une erreur est survenue pendant la recherche d'identités." );
+                    addError( MESSAGE_SEARCH_IDENTITY_ERROR, getLocale( ) );
                 }
             }
         }
@@ -254,7 +279,7 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
             final Identity identity = initNewIdentity( request );
             if ( identity.getAttributes( ).stream( ).anyMatch( a -> StringUtils.isBlank( a.getCertificationProcess( ) ) ) )
             {
-                addWarning( "Un niveau de certification doit obligatoirement être sélectionné pour chaque attribut renseigné." );
+                addWarning( MESSAGE_IDENTITY_MUSTSELECTCERTIFICATION, getLocale( ) );
                 return getCreateIdentity( request );
             }
             identityChangeRequest.setIdentity( identity );
@@ -279,14 +304,14 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
             }
             else
             {
-                addInfo( "Identité créée avec succès" );
+                addInfo( MESSAGE_CREATE_IDENTITY_SUCCESS, getLocale( ) );
                 _searchAttributes.add( new SearchAttributeDto( "customer_id", response.getCustomerId( ), true ) );
             }
         }
         catch( final IdentityStoreException e )
         {
             AppLogService.error( "Error while creating the identity [IdentityChangeRequest = " + identityChangeRequest + "].", e );
-            addError( "Erreur lors de la création de l'identité." );
+            addError( MESSAGE_CREATE_IDENTITY_ERROR, getLocale( ) );
             return getCreateIdentity( request );
         }
         return getSearchIdentities( request );
@@ -309,14 +334,14 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
             qualifiedIdentity = getQualifiedIdentityFromCustomerId( customerId );
             if ( qualifiedIdentity == null )
             {
-                addError( "Erreur lors de la récupération de l'identité sélectionnée" );
+                addError( MESSAGE_GET_IDENTITY_ERROR, getLocale( ) );
                 return getSearchIdentities( request );
             }
         }
         catch( final IdentityStoreException e )
         {
             AppLogService.error( "Error while retrieving selected identity [customerId = " + customerId + "].", e );
-            addError( "Erreur lors de la récupération de l'identité sélectionnée" );
+            addError( MESSAGE_GET_IDENTITY_ERROR, getLocale( ) );
             return getSearchIdentities( request );
         }
 
@@ -352,11 +377,19 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
             final Identity identityToUpdate = this.getIdentityFromCustomerId( customerId );
             if ( identityToUpdate == null )
             {
-                addError( "Erreur lors de la récupération de l'identité sélectionnée" );
+                addError( MESSAGE_GET_IDENTITY_ERROR, getLocale( ) );
                 return getSearchIdentities( request );
             }
-
             final Identity identityFromParams = initNewIdentity( request );
+
+            // check if all attributes to update are certified
+            final List<CertifiedAttribute> attributesWithoutCertif = identityFromParams.getAttributes( ).stream( )
+                    .filter( a -> StringUtils.isBlank( a.getCertificationProcess( ) ) ).collect( Collectors.toList( ) );
+            if ( CollectionUtils.isNotEmpty( attributesWithoutCertif ) )
+            {
+                addWarning( MESSAGE_IDENTITY_MUSTSELECTCERTIFICATION, getLocale( ) );
+                return getModifyIdentity( request );
+            }
 
             // check for updates
             final List<CertifiedAttribute> updatedAttributes = identityFromParams.getAttributes( ).stream( ).map( newAttr -> {
@@ -364,39 +397,22 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
                         .findFirst( ).orElse( null );
                 if ( oldAttr != null && StringUtils.isBlank( newAttr.getCertificationProcess( ) ) )
                 {
-                    if ( oldAttr.getValue( ).equals( newAttr.getValue( ) ) )
+                    if ( oldAttr.getValue( ).equals( newAttr.getValue( ) ) && oldAttr.getCertificationProcess().equals(newAttr.getCertificationProcess()) )
                     {
                         return null;
                     }
-                    newAttr.setCertificationProcess( oldAttr.getCertificationProcess( ) );
-                    newAttr.setCertificationDate( oldAttr.getCertificationDate( ) );
                 }
                 return newAttr;
             } ).filter( Objects::nonNull ).collect( Collectors.toList( ) );
 
             if ( CollectionUtils.isEmpty( updatedAttributes ) )
             {
-                addInfo( "Aucune modification d'attribut détectée, identité non mise à jour." );
+                addInfo( MESSAGE_UPDATE_IDENTITY_NOCHANGE, getLocale( ) );
                 return getSearchIdentities( request );
             }
             else
             {
                 identityToUpdate.setAttributes( updatedAttributes );
-            }
-
-            // check if all attributes to update are certified
-            final List<CertifiedAttribute> attributesWithoutCertif = identityToUpdate.getAttributes( ).stream( )
-                    .filter( a -> StringUtils.isBlank( a.getCertificationProcess( ) ) ).collect( Collectors.toList( ) );
-            if ( CollectionUtils.isNotEmpty( attributesWithoutCertif ) )
-            {
-                final List<String> alreadyCertifiedAttrKeys = identityToUpdate.getAttributes( ).stream( )
-                        .filter( a -> StringUtils.isNotBlank( a.getCertificationProcess( ) ) ).map( CertifiedAttribute::getKey )
-                        .collect( Collectors.toList( ) );
-                if ( attributesWithoutCertif.stream( ).anyMatch( a -> !alreadyCertifiedAttrKeys.contains( a.getKey( ) ) ) )
-                {
-                    addWarning( "Un niveau de certification doit obligatoirement être sélectionné pour chaque attribut renseigné." );
-                    return getModifyIdentity( request );
-                }
             }
 
             // Update API call
@@ -423,14 +439,13 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
             }
             else
             {
-                addInfo( "Identité modifiée avec succès" );
-
+                addInfo( MESSAGE_UPDATE_IDENTITY_SUCCESS, getLocale( ) );
             }
         }
         catch( final IdentityStoreException e )
         {
             AppLogService.error( "Error while updating the identity [IdentityChangeRequest = " + changeRequest + "].", e );
-            addError( "Erreur lors de la modification de l'identité." );
+            addError( MESSAGE_UPDATE_IDENTITY_ERROR, getLocale( ) );
             return getModifyIdentity( request );
         }
 
@@ -499,8 +514,7 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
                     || ( !familyname.isPresent( ) || StringUtils.isBlank( familyname.get( ).getValue( ) ) )
                     || ( !birthdate.isPresent( ) || StringUtils.isBlank( birthdate.get( ).getValue( ) ) ) )
             {
-                addInfo( "Pour lancer une recherche, merci de renseigner au minimum soit :"
-                        + "<ul><li>Le critère Login</li><li>Les critères Prénoms + Nom de naissance + Date de naissance</li></ul>" );
+                addInfo( MESSAGE_SEARCH_IDENTITY_REQUIREDFIELD, getLocale( ) );
                 return false;
             }
         }
@@ -658,17 +672,6 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
         } ).collect( Collectors.toList( ) ) );
 
         return identity;
-    }
-
-    private void sortServiceContractAttributes( final ServiceContractDto contract )
-    {
-        contract.getAttributeDefinitions( ).sort( ( a1, a2 ) -> {
-            final int index1 = _sortedAttributeKeyList.indexOf( a1.getKeyName( ) );
-            final int index2 = _sortedAttributeKeyList.indexOf( a2.getKeyName( ) );
-            final Integer i1 = index1 == -1 ? 999 : index1;
-            final Integer i2 = index2 == -1 ? 999 : index2;
-            return i1.compareTo( i2 );
-        } );
     }
 
     /**
@@ -948,14 +951,12 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
         {
             try
             {
-                final ServiceContractSearchResponse response = _identityService.getServiceContract( clientCode );
-                _serviceContract = response.getServiceContract( );
-                sortServiceContractAttributes( );
+                _serviceContract = _serviceContractCache.get( clientCode );
             }
             catch( final IdentityStoreException e )
             {
                 AppLogService.error( "Error while retrieving service contract [client code = " + clientCode + "].", e );
-                throw new AppException( "Une erreur est survenue pendant la récupération du contrat de service." );
+                addError( MESSAGE_GET_SERVICE_CONTRACT_ERROR, getLocale( ) );
             }
         }
     }

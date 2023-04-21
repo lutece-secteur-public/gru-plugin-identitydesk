@@ -197,121 +197,123 @@
     </@boxHeader>
 
     <@boxBody>
-    <@messages infos=infos />
-    <@messages errors=errors />
-    <@messages warnings=warnings />
+        <@messages infos=infos />
+        <@messages errors=errors />
+        <@messages warnings=warnings />
 
-        <div class="input-group">
-            <@table class="identity-search-table">
-                <tr>
-                    <th>&nbsp;</th>
-                    <th>
-                        Identité recherchée
-                        <div class="col-12">
-                            <#if identity_list?size gt 0>
-                                Résultat(s) trouvé(s) : ${identity_list?size}
-                            <#else>
-                                &nbsp;
-                            </#if>
-                        </div>
-                    </th>
-                </tr>
-                <@tableHeadBodySeparator />
-                <#list service_contract.attributeDefinitions?filter(a -> a.attributeRight.searchable) as searchableAttr>
-                    <#if searchableAttr.keyName == 'birthplace_code' || searchableAttr.keyName == 'birthcountry_code'>
-                        <input type="hidden" name="search_${searchableAttr.keyName}" value="<#list query_search_attributes?filter(a -> a.key == searchableAttr.keyName) as attr>${attr.value}</#list>" />
-                    <#else>
-                        <tr>
-                            <td>${searchableAttr.name}</td>
-                            <td><input class="form-control" type="text" name="search_${searchableAttr.keyName}" 
-                                       value="<#list query_search_attributes?filter(a -> a.key == searchableAttr.keyName) as attr>${attr.value}</#list>" /></td>
-                        </tr>
-                        <@tableHeadBodySeparator />
-                    </#if>
-                </#list>
-                <tr>
-                    <td>&nbsp;</td>
-                    <td>
-                    <input type="hidden" name="new_search" value="true" />
-                  
-                        <button id="reset-form-button" class="btn btn-default" type="button">
-                            Réinitialiser
-                        </button>
-                        <button class="btn btn-default" type="submit">
-                            Rechercher
-                        </button>
-                        <button class="btn btn-outline-warning action-btn create-identity-btn" type="button" style="display: none">
-                            Créer cette identité
-                        </button>
-                    </td>
-                </tr>
-            </@table>
-
-            <!-- RESULTATS -->
-            <div class="table-responsive col" style="display: -webkit-box">
-                <#list identity_list as identity >
-                <@table class="identity-result-table">
-                    <input type="hidden" name="customer_id" value="${identity.customerId}" disabled>
+        <#if service_contract??>
+            <div class="input-group">
+                <@table class="identity-search-table">
                     <tr>
+                        <th>&nbsp;</th>
                         <th>
-                            <span class="id-value always-hidden">${identity.customerId}</span>
-                            <div class="col-12">Identité existante</div>
-                            
-                            <span class="badge entity-scoring">${identity.scoring * 100}</span>
-                            <span class="badge entity-quality">${identity.quality * 100}</span>
-                            <span class="badge entity-coverage ">${identity.coverage * 100}</span>
+                            #i18n{identitydesk.search_identities.columnSeachedIdentity}
+                            <div class="col-12">
+                                <#if identity_list?size gt 0>
+                                    #i18n{identitydesk.search_identities.foundResults} : ${identity_list?size}
+                                <#else>
+                                    &nbsp;
+                                </#if>
+                            </div>
                         </th>
                     </tr>
                     <@tableHeadBodySeparator />
-                    <#list service_contract.attributeDefinitions?filter(a -> a.attributeRight.searchable && a.keyName != 'birthplace_code' && a.keyName != 'birthcountry_code') as searchableAttr>
-                        <tr>
-                            <td>
-                                <#list identity.attributes?filter(a -> a.key == searchableAttr.keyName) as attr>
-                                    <span class="${searchableAttr.keyName}-value">${attr.value}</span>
-                                    <#if attr.certifier??>
-                                        <span class="badge badge-pill badge-info mx-1">${attr.certifier}</span>
-                                    </#if>
-                                    <#if attr.certificationDate??>
-                                        <span class="certification-date">${attr.certificationDate?date}</span>
-                                    </#if>
-                                </#list>
-                            </td>
-                        </tr>
-                        <@tableHeadBodySeparator />
+                    <#list service_contract.attributeDefinitions?filter(a -> a.attributeRight.searchable) as searchableAttr>
+                        <#if searchableAttr.keyName == 'birthplace_code' || searchableAttr.keyName == 'birthcountry_code'>
+                            <input type="hidden" name="${searchableAttr.keyName}" value="<#list query_search_attributes?filter(a -> a.key == searchableAttr.keyName) as attr>${attr.value}</#list>" />
+                        <#else>
+                            <tr>
+                                <td>${searchableAttr.name}</td>
+                                <td><input class="form-control" type="text" name="${searchableAttr.keyName}" placeholder="${searchableAttr.description}"
+                                           value="<#list query_search_attributes?filter(a -> a.key == searchableAttr.keyName) as attr>${attr.value}</#list>" /></td>
+                            </tr>
+                            <@tableHeadBodySeparator />
+                        </#if>
                     </#list>
                     <tr>
+                        <td>#i18n{identitydesk.search_identities.ignoreApproximate}</td>
+                        <td><input type="checkbox" name="ignore_approximate" /></td>
+                    </tr>
+                    <tr>
+                        <td>&nbsp;</td>
                         <td>
-                            <span class="input-group-btn">
-                                <button type="button" class="btn btn-outline-warning action-btn select-identity-btn">
-                                    Sélectionner cette identité
-                                </button>
-                            </span>
+                            <button id="reset-form-button" class="btn btn-default" type="button">
+                                #i18n{identitydesk.search_identities.buttonResetForm}
+                            </button>
+                            <button class="btn btn-default" type="submit">
+                                #i18n{identitydesk.search_identities.buttonSearch}
+                            </button>
+                            <button class="btn btn-outline-warning action-btn create-identity-btn" type="button" style="display: none">
+                                #i18n{identitydesk.search_identities.buttonCreateIdentity}
+                            </button>
                         </td>
                     </tr>
                 </@table>
-                </#list>
-            </div>
-        </div>
 
+                <!-- RESULTATS -->
+                <div class="table-responsive col" style="display: -webkit-box">
+                    <#list identity_list as identity >
+                    <@table class="identity-result-table">
+                        <input type="hidden" name="customer_id" value="${identity.customerId}" disabled>
+                        <tr>
+                            <th>
+                                <span class="id-value always-hidden">${identity.customerId}</span>
+                                <div class="col-12">#i18n{identitydesk.search_identities.columnExistingIdentity}</div>
+                                <span class="badge entity-quality">${identity.quality * 100}</span>
+                                <span class="badge entity-coverage mx-2">${identity.coverage * 100}</span>
+                                <span class="badge entity-scoring">${identity.scoring * 100}</span>
+                            </th>
+                        </tr>
+                        <@tableHeadBodySeparator />
+                        <#list service_contract.attributeDefinitions?filter(a -> a.attributeRight.searchable && a.keyName != 'birthplace_code' && a.keyName != 'birthcountry_code') as searchableAttr>
+                            <tr>
+                                <td>
+                                    <#list identity.attributes?filter(a -> a.key == searchableAttr.keyName) as attr>
+                                        <span class="${searchableAttr.keyName}-value">${attr.value}</span>
+                                        <#if attr.certifier??>
+                                            <span class="badge badge-pill badge-info mx-1">${attr.certifier}</span>
+                                        </#if>
+                                        <#if attr.certificationDate??>
+                                            <span class="certification-date">${attr.certificationDate?date}</span>
+                                        </#if>
+                                    </#list>
+                                </td>
+                            </tr>
+                            <@tableHeadBodySeparator />
+                        </#list>
+                        <tr>
+                            <td>
+                                <span class="input-group-btn">
+                                    <button type="button" class="btn btn-outline-warning action-btn select-identity-btn">
+                                        #i18n{identitydesk.search_identities.buttonSelectIdentity}
+                                    </button>
+                                </span>
+                            </td>
+                        </tr>
+                    </@table>
+                    </#list>
+                </div>
+            </div>
+        </#if>
   </@boxBody>
 </@rowBox>
 
 <@rowBox>
     <@boxBody>
         <button class="btn btn-warning insert-btn" name="view_createIdentity" style="display: none">
-            Insérer une nouvelle identité
+            #i18n{identitydesk.search_identities.buttonInsertIdentity}
         </button>
         <#if return_url?? >
             <button class="btn btn-warning select-btn" type="button" style="display: none">
-                Sélectionner l'identité et retour au site appelant
+                #i18n{identitydesk.search_identities.buttonSelectIdentityAndReturn}
             </button>
         <#else>
-            <button class="btn btn-warning always-hidden select-btn" type="button" style="display: none">
-                Sélectionner l'identité et retour au site appelant
+            <button class="btn btn-warning always-hidden select-btn" type="button">
+                #i18n{identitydesk.search_identities.buttonSelectIdentityAndReturn}
             </button>
         </#if>
         <button class="btn btn-warning modify-btn" name="view_modifyIdentity" style="display: none">
-            Modifier l'identité sélectionnée
+            #i18n{identitydesk.search_identities.buttonModifyIdentity}
         </button>
 </@boxBody>
 </@rowBox>
