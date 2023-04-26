@@ -33,20 +33,6 @@
  */
 package fr.paris.lutece.plugins.identitydesk.web;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.stream.Collectors;
-
-import javax.servlet.http.HttpServletRequest;
-
-import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.lang3.StringUtils;
-
 import fr.paris.lutece.plugins.identitydesk.cache.ServiceContractCache;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.common.AttributeStatus;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.common.AuthorType;
@@ -68,7 +54,6 @@ import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.search.SearchDto;
 import fr.paris.lutece.plugins.identitystore.v3.web.service.IdentityService;
 import fr.paris.lutece.plugins.identitystore.web.exception.IdentityStoreException;
 import fr.paris.lutece.portal.service.spring.SpringContextService;
-import fr.paris.lutece.portal.service.util.AppException;
 import fr.paris.lutece.portal.service.util.AppLogService;
 import fr.paris.lutece.portal.service.util.AppPropertiesService;
 import fr.paris.lutece.portal.util.mvc.admin.annotations.Controller;
@@ -397,7 +382,7 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
                         .findFirst( ).orElse( null );
                 if ( oldAttr != null && StringUtils.isBlank( newAttr.getCertificationProcess( ) ) )
                 {
-                    if ( oldAttr.getValue( ).equals( newAttr.getValue( ) ) && oldAttr.getCertificationProcess().equals(newAttr.getCertificationProcess()) )
+                    if ( oldAttr.getValue( ).equals( newAttr.getValue( ) ) && oldAttr.getCertificationProcess( ).equals( newAttr.getCertificationProcess( ) ) )
                     {
                         return null;
                     }
@@ -469,7 +454,8 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
                         return new SearchAttributeDto( attrKey, value.trim( ), _searchAttributeKeyStrictList.contains( attrKey ) );
                     }
                     return null;
-                } ).filter( searchAttribute -> searchAttribute != null && !searchAttribute.getValue( ).isBlank( ) ).collect( Collectors.toList( ) );
+                } ).filter( searchAttribute -> searchAttribute != null && StringUtils.isNotBlank( searchAttribute.getValue( ) ) )
+                .collect( Collectors.toList( ) );
 
         if ( searchList.isEmpty( ) )
         {
