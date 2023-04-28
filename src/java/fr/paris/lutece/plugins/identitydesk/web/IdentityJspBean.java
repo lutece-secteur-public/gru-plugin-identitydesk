@@ -51,6 +51,7 @@ import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.search.IdentitySearch
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.search.QualifiedIdentity;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.search.SearchAttributeDto;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.search.SearchDto;
+import fr.paris.lutece.plugins.identitystore.v3.web.rs.util.Constants;
 import fr.paris.lutece.plugins.identitystore.v3.web.service.IdentityService;
 import fr.paris.lutece.plugins.identitystore.web.exception.IdentityStoreException;
 import fr.paris.lutece.portal.service.spring.SpringContextService;
@@ -490,15 +491,15 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
      */
     private boolean checkSearchAttributes( )
     {
-        final Optional<SearchAttributeDto> login = _searchAttributes.stream( ).filter( s -> s.getKey( ).equals( "login" ) ).findFirst( );
-        if ( !login.isPresent( ) || StringUtils.isBlank( login.get( ).getValue( ) ) )
+        final Optional<SearchAttributeDto> emailAttr = _searchAttributes.stream( ).filter( s -> s.getKey( ).equals( Constants.PARAM_EMAIL ) ).findFirst( );
+        if ( !emailAttr.isPresent( ) || StringUtils.isBlank( emailAttr.get( ).getValue( ) ) )
         {
-            final Optional<SearchAttributeDto> firstname = _searchAttributes.stream( ).filter( s -> s.getKey( ).equals( "first_name" ) ).findFirst( );
-            final Optional<SearchAttributeDto> familyname = _searchAttributes.stream( ).filter( s -> s.getKey( ).equals( "family_name" ) ).findFirst( );
-            final Optional<SearchAttributeDto> birthdate = _searchAttributes.stream( ).filter( s -> s.getKey( ).equals( "birthdate" ) ).findFirst( );
-            if ( ( !firstname.isPresent( ) || StringUtils.isBlank( firstname.get( ).getValue( ) ) )
-                    || ( !familyname.isPresent( ) || StringUtils.isBlank( familyname.get( ).getValue( ) ) )
-                    || ( !birthdate.isPresent( ) || StringUtils.isBlank( birthdate.get( ).getValue( ) ) ) )
+            final Optional<SearchAttributeDto> firstnameAttr = _searchAttributes.stream( ).filter( s -> s.getKey( ).equals( Constants.PARAM_FIRST_NAME ) ).findFirst( );
+            final Optional<SearchAttributeDto> familynameAttr = _searchAttributes.stream( ).filter( s -> s.getKey( ).equals( Constants.PARAM_FAMILY_NAME ) ).findFirst( );
+            final Optional<SearchAttributeDto> birthdateAttr = _searchAttributes.stream( ).filter( s -> s.getKey( ).equals( Constants.PARAM_BIRTH_DATE ) ).findFirst( );
+            if ( ( !firstnameAttr.isPresent( ) || StringUtils.isBlank( firstnameAttr.get( ).getValue( ) ) )
+                    || ( !familynameAttr.isPresent( ) || StringUtils.isBlank( familynameAttr.get( ).getValue( ) ) )
+                    || ( !birthdateAttr.isPresent( ) || StringUtils.isBlank( birthdateAttr.get( ).getValue( ) ) ) )
             {
                 addInfo( MESSAGE_SEARCH_IDENTITY_REQUIREDFIELD, getLocale( ) );
                 return false;
