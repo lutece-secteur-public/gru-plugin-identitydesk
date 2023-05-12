@@ -220,11 +220,11 @@
                     <@tableHeadBodySeparator />
                     <#list service_contract.attributeDefinitions?filter(a -> a.attributeRight.searchable) as searchableAttr>
                         <#if searchableAttr.keyName == 'birthplace_code' || searchableAttr.keyName == 'birthcountry_code'>
-                            <input type="hidden" name="${searchableAttr.keyName}" value="<#list query_search_attributes?filter(a -> a.key == searchableAttr.keyName) as attr>${attr.value}</#list>" />
+                            <input type="hidden" name="search_${searchableAttr.keyName}" value="<#list query_search_attributes?filter(a -> a.key == searchableAttr.keyName) as attr>${attr.value}</#list>" />
                         <#else>
                             <tr>
                                 <td>${searchableAttr.name}</td>
-                                <td><input class="form-control" type="text" name="${searchableAttr.keyName}" placeholder="${searchableAttr.description}"
+                                <td><input class="form-control" type="text" name="search_${searchableAttr.keyName}" placeholder="${searchableAttr.description}"
                                            value="<#list query_search_attributes?filter(a -> a.key == searchableAttr.keyName) as attr>${attr.value}</#list>" /></td>
                             </tr>
                             <@tableHeadBodySeparator />
@@ -235,7 +235,7 @@
                         <td><input type="checkbox" name="ignore_approximate" /></td>
                     </tr>
                     <tr>
-                        <td>&nbsp;</td>
+                        <td> <input type="hidden" name="new_search" value="true" /> &nbsp;</td>
                         <td>
                             <button id="reset-form-button" class="btn btn-default" type="button">
                                 #i18n{identitydesk.search_identities.buttonResetForm}
