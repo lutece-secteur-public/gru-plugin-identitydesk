@@ -19,7 +19,9 @@
     </bean>
 
     <!-- Cache -->
-    <bean id="identitydesk.serviceContractCache"  class="fr.paris.lutece.plugins.identitydesk.cache.ServiceContractCache"/>
+    <bean id="identitydesk.serviceContractCache"  class="fr.paris.lutece.plugins.identitydesk.cache.ServiceContractCache">
+        <constructor-arg ref="identityService.rest.httpAccess"/>
+    </bean>
 
 
 </beans>

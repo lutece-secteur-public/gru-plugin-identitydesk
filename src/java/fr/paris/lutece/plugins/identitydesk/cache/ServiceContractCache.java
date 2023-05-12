@@ -49,11 +49,12 @@ public class ServiceContractCache extends AbstractCacheableService
     private static final Logger LOGGER = Logger.getLogger( ServiceContractCache.class );
     private static final String SERVICE_NAME = "ServiceContractCache";
 
-    private final IdentityService _identityService = SpringContextService.getBean( "identityService.rest.httpAccess" );
+    private  IdentityService _identityService ;
     private final List<String> _sortedAttributeKeyList = Arrays.asList( AppPropertiesService.getProperty( "identitydesk.attribute.order" ).split( "," ) );
 
-    public ServiceContractCache( )
+    public ServiceContractCache( IdentityService identityService )
     {
+    	_identityService = identityService;
         this.initCache( );
     }
 
