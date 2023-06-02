@@ -7,20 +7,32 @@
     <!-- IHttpTransportProvider declarations -->
     <bean id="httpAccessTransport" class="fr.paris.lutece.plugins.identitystore.v3.web.service.HttpAccessTransport" />
 
-    <bean id="restTransport.httpAccess" class="fr.paris.lutece.plugins.identitystore.v3.web.rs.service.IdentityTransportRest">
+    <bean id="identity.restTransport.httpAccess" class="fr.paris.lutece.plugins.identitystore.v3.web.rs.service.IdentityTransportRest">
         <property name="IdentityStoreEndPoint">
             <value>${identitydesk.identitystore.endpoint}</value>
         </property>
     </bean>
+    
+     <bean id="serviceContract.restTransport.httpAccess" class="fr.paris.lutece.plugins.identitystore.v3.web.rs.service.ServiceContractTransportRest">
+        <property name="IdentityStoreEndPoint">
+            <value>${identitydesk.identitystore.endpoint}</value>
+        </property>
+    </bean>
+    
 
     <!-- IdentityService impl -->
-    <bean id="identityService.rest.httpAccess" class="fr.paris.lutece.plugins.identitystore.v3.web.service.IdentityService">
-        <constructor-arg ref="restTransport.httpAccess"/>
+    <bean id="identity.identityService" class="fr.paris.lutece.plugins.identitystore.v3.web.service.IdentityService">
+        <constructor-arg ref="identity.restTransport.httpAccess"/>
     </bean>
 
+    <!-- ServiceContractService impl -->
+    <bean id="identity.serviceContractService" class="fr.paris.lutece.plugins.identitystore.v3.web.service.ServiceContractService">
+        <constructor-arg ref="serviceContract.restTransport.httpAccess"/>
+    </bean>
+    
     <!-- Cache -->
-    <bean id="identitydesk.serviceContractCache"  class="fr.paris.lutece.plugins.identitydesk.cache.ServiceContractCache">
-        <constructor-arg ref="identityService.rest.httpAccess"/>
+    <bean id="identity.serviceContractCacheService"  class="fr.paris.lutece.plugins.identitydesk.cache.ServiceContractCache">
+        <constructor-arg ref="identity.serviceContractService"/>
     </bean>
 
 

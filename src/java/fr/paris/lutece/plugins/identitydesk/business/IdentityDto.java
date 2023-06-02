@@ -41,11 +41,11 @@ public class IdentityDto
     }
 
     /**
-     * Static builder for update UI.
+     * Static builder for update UI for an IdentityDto, with allowed certification process
      * 
      * @param qualifiedIdentity
      * @param serviceContract
-     * @return
+     * @return the IdentityDto
      */
     public static IdentityDto from( final QualifiedIdentity qualifiedIdentity, final ServiceContractDto serviceContract )
     {
@@ -55,13 +55,16 @@ public class IdentityDto
         }
         final IdentityDto identityDto = new IdentityDto( qualifiedIdentity.getCustomerId( ) );
 
-        serviceContract.getAttributeDefinitions( ).stream( ).filter( a -> a.getAttributeRight( ).isWritable( ) ).forEach( attrRef -> {
-            final fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.search.CertifiedAttribute identityAttr = qualifiedIdentity.getAttributes( ).stream( )
-                    .filter( a -> a.getKey( ).equals( attrRef.getKeyName( ) ) ).findFirst( ).orElse( null );
-            if ( CollectionUtils.isNotEmpty( attrRef.getAttributeCertifications( ) ) )
-            {
-                identityDto.getAttributeList( ).add( AttributeDto.from( identityAttr, attrRef ) );
-            }
+        // add allowed certification process from service contract
+        serviceContract.getAttributeDefinitions( ).stream( ).filter( a -> a.getAttributeRight( ).isWritable( ) )
+        	.forEach( attrRef -> {
+        		final fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.search.CertifiedAttribute identityAttr 
+            		= qualifiedIdentity.getAttributes( ).stream( ).filter( a -> a.getKey( ).equals( attrRef.getKeyName( ) ) ).findFirst( ).orElse( null );
+	            
+        		if ( CollectionUtils.isNotEmpty( attrRef.getAttributeCertifications( ) ) )
+	            {
+	                identityDto.getAttributeList( ).add( AttributeDto.from( identityAttr, attrRef ) );
+	            }
         } );
 
         return identityDto;
@@ -70,9 +73,11 @@ public class IdentityDto
     /**
      * Static builder for create UI.
      * 
+     * get all available certification process filtered by the attributes rights and certificate min level requirements
+     * 
      * @param identity
      * @param serviceContract
-     * @return
+     * @return the IdentityDto
      */
     public static IdentityDto from( final Identity identity, final ServiceContractDto serviceContract )
     {
@@ -81,7 +86,8 @@ public class IdentityDto
             return null;
         }
         final IdentityDto identityDto = new IdentityDto( );
-        serviceContract.getAttributeDefinitions( ).stream( ).filter( a -> a.getAttributeRight( ).isWritable( ) ).forEach( attrDef -> {
+        serviceContract.getAttributeDefinitions( ).stream( ).filter( a -> a.getAttributeRight( ).isWritable( ) )
+        .forEach( attrDef -> {
             final CertifiedAttribute identityAttr = identity.getAttributes( ).stream( ).filter( a -> a.getKey( ).equals( attrDef.getKeyName( ) ) )
                     .findFirst( ).orElse( null );
             if ( CollectionUtils.isNotEmpty( attrDef.getAttributeCertifications( ) ) )

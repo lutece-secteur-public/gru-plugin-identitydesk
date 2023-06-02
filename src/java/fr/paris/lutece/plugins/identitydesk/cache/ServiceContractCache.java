@@ -35,6 +35,7 @@ package fr.paris.lutece.plugins.identitydesk.cache;
 
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.contract.ServiceContractDto;
 import fr.paris.lutece.plugins.identitystore.v3.web.service.IdentityService;
+import fr.paris.lutece.plugins.identitystore.v3.web.service.ServiceContractService;
 import fr.paris.lutece.plugins.identitystore.web.exception.IdentityStoreException;
 import fr.paris.lutece.portal.service.cache.AbstractCacheableService;
 import fr.paris.lutece.portal.service.spring.SpringContextService;
@@ -49,12 +50,12 @@ public class ServiceContractCache extends AbstractCacheableService
     private static final Logger LOGGER = Logger.getLogger( ServiceContractCache.class );
     private static final String SERVICE_NAME = "ServiceContractCache";
 
-    private  IdentityService _identityService ;
+    private  ServiceContractService _serviceContractService ;
     private final List<String> _sortedAttributeKeyList = Arrays.asList( AppPropertiesService.getProperty( "identitydesk.attribute.order" ).split( "," ) );
 
-    public ServiceContractCache( IdentityService identityService )
+    public ServiceContractCache( ServiceContractService scService )
     {
-    	_identityService = identityService;
+    	_serviceContractService = scService;
         this.initCache( );
     }
 
@@ -91,11 +92,17 @@ public class ServiceContractCache extends AbstractCacheableService
 
     public ServiceContractDto getFromAPI( final String clientCode ) throws IdentityStoreException
     {
-        final ServiceContractDto contract = _identityService.getServiceContract( clientCode ).getServiceContract( );
+        final ServiceContractDto contract = _serviceContractService.getActiveServiceContract( clientCode ).getServiceContract( );
         sortServiceContractAttributes( contract );
+        sortServiceContractAttributeCertifications( contract );
         return contract;
     }
 
+    /**
+     * sort attributes according to properties
+     * 
+     * @param contract
+     */
     private void sortServiceContractAttributes( final ServiceContractDto contract )
     {
         if ( contract != null )
@@ -107,6 +114,22 @@ public class ServiceContractCache extends AbstractCacheableService
                 final Integer i2 = index2 == -1 ? 999 : index2;
                 return i1.compareTo( i2 );
             } );
+        }
+    }
+    
+    /**
+     * sort attributes certification process according by level 
+     * 
+     * @param contract
+     */
+    private void sortServiceContractAttributeCertifications( final ServiceContractDto contract )
+    {
+        if ( contract != null )
+        {
+            contract.getAttributeDefinitions( ).forEach( attr -> attr.getAttributeCertifications( ).sort( 
+            		(c1, c2) -> {
+            				return Integer.valueOf( c1.getLevel( ) ).compareTo( Integer.valueOf( c2.getLevel( ) ) );
+            }) ) ;
         }
     }
 

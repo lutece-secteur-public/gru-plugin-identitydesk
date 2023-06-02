@@ -130,7 +130,7 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
     private static final String ACTION_MODIFY_IDENTITY = "modifyIdentity";
 
     // Cache
-    private static final ServiceContractCache _serviceContractCache = SpringContextService.getBean( "identitydesk.serviceContractCache" );
+    private static final ServiceContractCache _serviceContractCache = SpringContextService.getBean( "identity.serviceContractCacheService" );
 
     // Session variable to store working values
     private final List<SearchAttributeDto> _searchAttributes = new ArrayList<>( );
@@ -139,7 +139,7 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
     private String _currentClientCode = AppPropertiesService.getProperty( "identitydesk.default.client.code" );
     private String _currentReturnUrl = AppPropertiesService.getProperty( "identitydesk.default.returnUrl" );
 
-    private final IdentityService _identityService = SpringContextService.getBean( "identityService.rest.httpAccess" );
+    private final IdentityService _identityService = SpringContextService.getBean( "identity.identityService" );
     private final String _autocompleteCityEndpoint = AppPropertiesService.getProperty( "identitydesk.autocomplete.city.endpoint" );
     private final String _autocompleteCountryEndpoint = AppPropertiesService.getProperty( "identitydesk.autocomplete.country.endpoint" );
     private final List<String> _sortedAttributeKeyList = Arrays.asList( AppPropertiesService.getProperty( "identitydesk.attribute.order" ).split( "," ) );
@@ -236,7 +236,7 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
     @View( VIEW_CREATE_IDENTITY )
     public String getCreateIdentity( HttpServletRequest request )
     {
-        final Identity identity = getIdentityToUpdateFromRequest( request );
+        final Identity identity = getIdentityFromRequest( request, SEARCH_PARAMETER_PREFIX );
 
         Map<String, Object> model = getModel( );
 
@@ -264,7 +264,7 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
         _attributeStatuses.clear( );
         try
         {
-            final Identity identity = getIdentityToUpdateFromRequest( request );
+            final Identity identity = getIdentityFromRequest( request, "" );
             if ( identity.getAttributes( ).stream( ).anyMatch( a -> StringUtils.isBlank( a.getCertificationProcess( ) ) ) )
             {
                 addWarning( MESSAGE_IDENTITY_MUSTSELECTCERTIFICATION, getLocale( ) );
@@ -357,7 +357,7 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
     public String doModifyIdentity( HttpServletRequest request )
     {
     	// get values to update
-    	final Identity identityWithUpdates = getIdentityToUpdateFromRequest( request );
+    	final Identity identityWithUpdates = getIdentityFromRequest( request , "" );
     	if ( identityWithUpdates.getCustomerId( ) == null )
     	{
     		 addError( MESSAGE_UPDATE_IDENTITY_ERROR, getLocale( ) );
@@ -575,28 +575,22 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
      * @param request
      * @return the identity with attributes to update
      */
-    private Identity getIdentityToUpdateFromRequest( final HttpServletRequest request )
+    private Identity getIdentityFromRequest( final HttpServletRequest request, String strPrefix )
     {
+    	initServiceContract( _currentClientCode );
         final Identity identity = new Identity( );
         
-        if ( request.getParameter( Constants.PARAM_ID_CUSTOMER ) == null )
-        {
-        	return null;
-        }
-        else
-        {
-        	identity.setCustomerId( request.getParameter( Constants.PARAM_ID_CUSTOMER ) );
-        	
-	        // add attributes (and certification process) to identity if they are present in the request
-	        _serviceContract.getAttributeDefinitions().stream()
-	        	.filter( attr -> !StringUtils.isEmpty( request.getParameter( attr.getKeyName( ) ) ) )
-	        	.forEach( attr -> identity.getAttributes( ).add( buildAttribute( attr.getKeyName( ), 
-	        			request.getParameter( attr.getKeyName( ) ), 
-	        			request.getParameter( attr.getKeyName( ) + ATTR_CERT_SUFFIX) ) ) );
-	
-	        return identity;
-        }
-        
+    	identity.setCustomerId( request.getParameter( Constants.PARAM_ID_CUSTOMER ) );
+    	
+        // add attributes (and certification process) to identity if they are present in the request
+        _serviceContract.getAttributeDefinitions().stream()
+        	.filter( attr -> !StringUtils.isEmpty( request.getParameter( strPrefix + attr.getKeyName( ) ) ) )
+        	.forEach( attr -> identity.getAttributes( ).add( buildAttribute( attr.getKeyName( ), 
+        			request.getParameter( strPrefix + attr.getKeyName( ) ), 
+        			request.getParameter( attr.getKeyName( ) + ATTR_CERT_SUFFIX) ) ) );
+
+        return identity;
+
     }
 
     /**
