@@ -5,18 +5,17 @@
        xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd" >
 
     <!-- IHttpTransportProvider declarations -->
-    <bean id="httpAccessTransport" class="fr.paris.lutece.plugins.identitystore.v3.web.service.HttpAccessTransport" />
+    <bean id="identitystore.httpAccessTransport" class="fr.paris.lutece.plugins.identitystore.v3.web.rs.service.HttpAccessTransport" >
+		<property name="ApiEndPointUrl">
+            <value>${identitydesk.identitystore.ApiEndPointUrl}</value>
+        </property>
+     </bean>
 
     <bean id="identity.restTransport.httpAccess" class="fr.paris.lutece.plugins.identitystore.v3.web.rs.service.IdentityTransportRest">
-        <property name="IdentityStoreEndPoint">
-            <value>${identitydesk.identitystore.endpoint}</value>
-        </property>
+        <constructor-arg ref="identitystore.httpAccessTransport"/>
     </bean>
-    
      <bean id="serviceContract.restTransport.httpAccess" class="fr.paris.lutece.plugins.identitystore.v3.web.rs.service.ServiceContractTransportRest">
-        <property name="IdentityStoreEndPoint">
-            <value>${identitydesk.identitystore.endpoint}</value>
-        </property>
+        <constructor-arg ref="identitystore.httpAccessTransport"/>
     </bean>
     
 
