@@ -1,321 +1,64 @@
-<style>
-    table.identity-search-table input {
-        // min-width: 400px;
-    }
-    table.identity-result-table, table.identity-search-table {
-        width: auto;
-        border: 1px solid transparent;
-    }
-    table tr {
-        height: 45px;
-    }
-    table th {
-        height: 60px;
-    }
-    h4 > ul {
-        margin-bottom: 0;
-    }
-    span.matching-search-value {
-        font-weight: normal;
-        color: green;
-    }
-    span.partial-matching-search-value {
-        font-weight: normal;
-        color: orange;
-    }
-    span.non-matching-search-value {
-        font-weight: normal;
-        color: red;
-    }
-    span.certification-date {
-        color: #aaa;
-    }
-    .always-hidden {
-        display: none !important;
-        visibility: hidden !important;
-    }
-</style>
-<script type="text/javascript">
-    function formatPercentages(element, label) {
-        const value = Math.ceil(parseFloat(element.text()));
-        element.text(label + ' ' + value + '%');
-        if (value > 80) {
-            element.addClass("bg-success");
-        } else if (value >= 50) {
-            element.addClass("bg-warning");
-        } else {
-            element.addClass("bg-danger");
-        }
-    }
-    $(function () {
-        $(".identity-result-table span.entity-quality").each(function () {
-            formatPercentages($(this), 'Qual.');
-        });
-        $(".identity-result-table span.entity-coverage").each(function () {
-            formatPercentages($(this), 'Couv.');
-        });
-        $(".identity-result-table span.entity-scoring").each(function () {
-            formatPercentages($(this), 'Corresp.');
-        });
-        $("input[type=text]:not(input[value=''])").each(function () {
-            const name = $(this).attr("name").substring( 7 ); // remove "search_" suffix
-            console.log( name );
-            const search = $(this).val().toUpperCase();
-            $(".identity-result-table span[class=" + name + "-value]").each(function () {
-                $(this).addClass("font-weight-bold");
-                if ($(this).text().toUpperCase() === search) {
-                    $(this).addClass("matching-search-value");
-                } else if ($(this).text().toUpperCase().includes(search)) {
-                    $(this).addClass("partial-matching-search-value");
-                } else {
-                    $(this).addClass("non-matching-search-value");
-                }
-            });
-        });
-        $(".action-btn").click(function () {
-            $("input[type=hidden]").attr("disabled", true);
-            $("table.identity-result-table").removeAttr("style");
-            $(".action-btn").each(function () {
-                $(this).removeClass("btn-outline-warning");
-                $(this).removeClass("btn-warning");
-                if(!$(this).hasClass("btn-default")) {
-                    $(this).addClass("btn-default");
-                }
-            });
-            $(this).removeClass("btn-default");
-            $(this).addClass("btn-warning");
-            if ($(this).hasClass("select-identity-btn")) {
-                $(".select-btn").show();
-                $(".modify-btn").show();
-                $(".insert-btn").hide();
-                const table = $(this).parents("table.identity-result-table");
-                table.css("border", "1px solid orange");
-                table.children("input[type=hidden]").removeAttr("disabled");
-            } else {
-                $(".select-btn").hide();
-                $(".modify-btn").hide();
-                $(".insert-btn").show();
-            }
-        });
-        if ($("input[type=text]:not(input[value=''])").length > 0 && !$("div #messages_infos_div").is(":visible")) {
-            $(".create-identity-btn").show();
-        }
-        $("input[name='search_birthplace']").autocomplete({
-            minLength: 3,
-            source: function (request, response) {
-                $.ajax({
-                    url: '${autocomplete_city_endpoint}' + request.term,
-                    type: 'GET',
-                    contentType: 'application/json',
-                    dataType: "json",
-                    data: '',
-                    success: function (data) {
-                        if (data.status === 'OK') {
-                            response($.map(data.result, function (city) {
-                                let dpt = city.codeZone;
-                                if (dpt.length === 1) {
-                                    dpt = '0' + dpt;
-                                }
-                                if (dpt) {
-                                    dpt = ' (' + dpt + ')';
-                                } else {
-                                    dpt = '';
-                                }
-                                return {
-                                    label: city.value + dpt,
-                                    value: city.code
-                                };
-                            }));
-                        }
-                    }
-                });
-            },
-            select: function (event, ui) {
-                event.preventDefault();
-                let cityName = ui.item.label;
-                if (cityName.startsWith('(') && cityName.length > 5) {
-                    cityName = cityName.substring(5).trim();
-                }
-                $("input[name='birthplace']").val(cityName);
-                $("input[name='birthplace_code']").val(ui.item.value);
-            }
-        });
-        $("input[name='search_birthplace']").keyup(function () {
-            $("input[name='search_birthplace_code']").val('');
-        });
-        $("input[name='search_birthcountry']").autocomplete({
-            minLength: 3,
-            source: function (request, response) {
-                $.ajax({
-                    url: '${autocomplete_country_endpoint}' + request.term,
-                    type: 'GET',
-                    contentType: 'application/json',
-                    dataType: "json",
-                    data: '',
-                    success: function (data) {
-                        if (data.status === 'OK') {
-                            response($.map(data.result, function (country) {
-                                return {
-                                    label: country.value,
-                                    value: country.code
-                                };
-                            }));
-                        }
-                    }
-                });
-            },
-            select: function (event, ui) {
-                event.preventDefault();
-                $("input[name='birthcountry']").val(ui.item.label);
-                $("input[name='birthcountry_code']").val(ui.item.value);
-            }
-        });
-        $("input[name='birthcountry']").keyup(function () {
-            $("input[name='birthcountry_code']").val('');
-        });
-        $(".select-btn").click(function () {
-            const url = $("input[name='return_url']").val();
-            const cuid = $("input[name='customer_id']").val();
-            if (url && cuid) {
-                window.location.replace(url + '?cuid=' + cuid);
-            }
-        });
-        $("#reset-form-button").click(function() {
-            $(".identity-search-table input").val('');
-        });
-    });
-</script>
-
-<form class="form-inline" action="jsp/admin/plugins/identitydesk/ManageIdentities.jsp">
-<input type="hidden" name="return_url" value="${(return_url)!''}">
-<@rowBox>
-    <@boxHeader i18nTitleKey="identitydesk.search_identities.title">
-
-    <@headerButtons>
-    </@headerButtons>
-
-    </@boxHeader>
-
-    <@boxBody>
-        <@messages infos=infos />
-        <@messages errors=errors />
-        <@messages warnings=warnings />
-
-        <#if service_contract??>
-            <div class="input-group">
-                <@table class="identity-search-table">
-                    <tr>
-                        <th>&nbsp;</th>
-                        <th>
-                            #i18n{identitydesk.search_identities.columnSeachedIdentity}
-                            <div class="col-12">
-                                <#if identity_list?size gt 0>
-                                    #i18n{identitydesk.search_identities.foundResults} : ${identity_list?size}
-                                <#else>
-                                    &nbsp;
-                                </#if>
-                            </div>
-                        </th>
-                    </tr>
-                    <@tableHeadBodySeparator />
-                    <#list service_contract.attributeDefinitions?filter(a -> a.attributeRight.searchable) as searchableAttr>
-                        <#if searchableAttr.keyName == 'birthplace_code' || searchableAttr.keyName == 'birthcountry_code'>
-                            <input type="hidden" name="search_${searchableAttr.keyName}" value="<#list query_search_attributes?filter(a -> a.key == searchableAttr.keyName) as attr>${attr.value}</#list>" />
-                        <#else>
-                            <tr>
-                                <td>${searchableAttr.name}</td>
-                                <td><input class="form-control" type="text" name="search_${searchableAttr.keyName}" placeholder="${searchableAttr.description}"
-                                           value="<#list query_search_attributes?filter(a -> a.key == searchableAttr.keyName) as attr>${attr.value}</#list>" /></td>
-                            </tr>
-                            <@tableHeadBodySeparator />
-                        </#if>
-                    </#list>
-                    <tr>
-                        <td>#i18n{identitydesk.search_identities.ignoreApproximate}</td>
-                        <td><input type="checkbox" name="ignore_approximate" /></td>
-                    </tr>
-                    <tr>
-                        <td> <input type="hidden" name="new_search" value="true" /> &nbsp;</td>
-                        <td>
-                            <button id="reset-form-button" class="btn btn-default" type="button">
-                                #i18n{identitydesk.search_identities.buttonResetForm}
-                            </button>
-                            <button class="btn btn-default" type="submit">
-                                #i18n{identitydesk.search_identities.buttonSearch}
-                            </button>
-                            <button class="btn btn-outline-warning action-btn create-identity-btn" type="button" style="display: none">
-                                #i18n{identitydesk.search_identities.buttonCreateIdentity}
-                            </button>
-                        </td>
-                    </tr>
-                </@table>
-
-                <!-- RESULTATS -->
-                <div class="table-responsive col" style="display: -webkit-box">
-                    <#list identity_list as identity >
-                    <@table class="identity-result-table">
-                        <input type="hidden" name="customer_id" value="${identity.customerId}" disabled>
-                        <tr>
-                            <th>
-                                <span class="id-value always-hidden">${identity.customerId}</span>
-                                <div class="col-12">#i18n{identitydesk.search_identities.columnExistingIdentity}</div>
-                                <span class="badge entity-quality">${identity.quality * 100}</span>
-                                <span class="badge entity-coverage mx-2">${identity.coverage * 100}</span>
-                                <span class="badge entity-scoring">${identity.scoring * 100}</span>
-                            </th>
-                        </tr>
-                        <@tableHeadBodySeparator />
-                        <#list service_contract.attributeDefinitions?filter(a -> a.attributeRight.searchable && a.keyName != 'birthplace_code' && a.keyName != 'birthcountry_code') as searchableAttr>
-                            <tr>
-                                <td>
-                                    <#list identity.attributes?filter(a -> a.key == searchableAttr.keyName) as attr>
-                                        <span class="${searchableAttr.keyName}-value">${attr.value}</span>
-                                        <#if attr.certifier??>
-                                            <span class="badge badge-pill badge-info mx-1">${attr.certifier}</span>
+<#include "search_functions.html" />
+<@pageContainer>
+    <@pageColumn flush=true center=true  id="search-identity-column" class="bg-secondary">
+    <#assign title>#i18n{identitydesk.search_identities.welcomeSearch}</#assign>    
+        <@tform action="jsp/admin/plugins/identitydesk/ManageIdentities.jsp?action_searchIdentity">
+            <@input type="hidden" name="new_search" value=""/>
+            <@input type="hidden" name="return_url" value="${(return_url)!''}"/>
+            <div class="jumbotron jumbotron-fluid d-flex align-items-center justify-content-center text-center">
+                <div>
+                    <@pageHeader title='${title}' description="#i18n{identitydesk.search_identities.description}">
+                    </@pageHeader>
+                    <@messages errors=errors />
+                    <@messages warnings=warnings />
+                    <@messages infos=infos />
+                    <#if search_rules?size gt 0>
+                    <@searchBox id="search-box-identity">
+                            <#list search_rules as rule>
+                                <#list rule as field>
+                                    <#assign fieldValue><#list query_search_attributes?filter(a -> a.key == field) as attr>${attr.value!''}</#list></#assign>
+                                    <#assign fieldType><#if field == "birthdate">date<#else>text</#if></#assign>
+                                    <#if field == "birthdate">
+                                    <#if fieldValue?length gt 0 >
+                                        <#assign date_dd_MM_yyyy = formatDate(fieldValue)>
+                                        <@searchInput name="search_${field}" label="${getName(field)}" value=date_dd_MM_yyyy type=fieldType   />
+                                        <#else>
+                                        <@searchInput name="search_${field}" label="${getName(field)}" value=fieldValue type=fieldType   />
                                         </#if>
-                                        <#if attr.certificationDate??>
-                                            <span class="certification-date">${attr.certificationDate?date}</span>
+                                        <#else>
+                                        <@searchInput name="search_${field}" label="${getName(field)}" value=fieldValue type=fieldType   />
                                         </#if>
-                                    </#list>
-                                </td>
-                            </tr>
-                            <@tableHeadBodySeparator />
-                        </#list>
-                        <tr>
-                            <td>
-                                <span class="input-group-btn">
-                                    <button type="button" class="btn btn-outline-warning action-btn select-identity-btn">
-                                        #i18n{identitydesk.search_identities.buttonSelectIdentity}
-                                    </button>
-                                </span>
-                            </td>
-                        </tr>
-                    </@table>
-                    </#list>
+                                    <#if field_has_next>
+                                        <@searchSeparator type="and" content="+" />
+                                    </#if>
+                                    <#if rule_has_next>
+                                        <@searchSeparator color="dark" type="or" content="#i18n{identitydesk.search_identities.or}" />
+                                    </#if>
+                                </#list>
+                            </#list>
+                        </@searchBox>
+                    </#if>
+                <div class="mb-5 mt-2">   
+                  <div class="float-end">
+                    <#assign checked=true />
+                    <#if approximate?exists>
+                  <#if approximate>
+                  <#assign checked=true />
+                  <#else>
+                  <#assign checked=false />
+                  </#if>
+                  <#else>
+                  <#assign checked=true />
+                  </#if>
+                  <@listGroupItem>
+                  <@checkBox orientation='switch' id='approximate' name='approximate'  labelKey='#i18n{identitydesk.search_identities.approximateSearch}' value='true' mandatory=false  checked=checked />
+              </@listGroupItem></div>
                 </div>
+                <br>
+                <br>
+                <br>
+              </div>
             </div>
-        </#if>
-  </@boxBody>
-</@rowBox>
-
-<@rowBox>
-    <@boxBody>
-        <button class="btn btn-warning insert-btn" name="view_createIdentity" style="display: none">
-            #i18n{identitydesk.search_identities.buttonInsertIdentity}
-        </button>
-        <#if return_url?? >
-            <button class="btn btn-warning select-btn" type="button" style="display: none">
-                #i18n{identitydesk.search_identities.buttonSelectIdentityAndReturn}
-            </button>
-        <#else>
-            <button class="btn btn-warning always-hidden select-btn" type="button">
-                #i18n{identitydesk.search_identities.buttonSelectIdentityAndReturn}
-            </button>
-        </#if>
-        <button class="btn btn-warning modify-btn" name="view_modifyIdentity" style="display: none">
-            #i18n{identitydesk.search_identities.buttonModifyIdentity}
-        </button>
-</@boxBody>
-</@rowBox>
-
-</form>
+        </@tform>
+    </@pageColumn>
+</@pageContainer>

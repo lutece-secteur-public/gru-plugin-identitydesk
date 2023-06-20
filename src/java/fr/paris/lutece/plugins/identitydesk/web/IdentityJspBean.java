@@ -35,18 +35,18 @@ package fr.paris.lutece.plugins.identitydesk.web;
 
 import fr.paris.lutece.plugins.identitydesk.business.IdentityDto;
 import fr.paris.lutece.plugins.identitydesk.cache.ServiceContractCache;
+import fr.paris.lutece.plugins.identitydesk.cache.ServiceReferentialCache;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.common.AttributeStatus;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.common.AuthorType;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.common.RequestAuthor;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.contract.AttributeDefinitionDto;
-import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.contract.AttributeRequirement;
-import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.contract.CertificationProcessus;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.contract.ServiceContractDto;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.crud.CertifiedAttribute;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.crud.Identity;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.crud.IdentityChangeRequest;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.crud.IdentityChangeResponse;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.crud.IdentityChangeStatus;
+import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.referentiel.AttributeCertificationProcessusDto;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.search.IdentitySearchRequest;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.search.IdentitySearchResponse;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.search.QualifiedIdentity;
@@ -65,6 +65,8 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import javax.servlet.http.HttpServletRequest;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -82,7 +84,9 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
 {
     private static final long serialVersionUID = 6053504380426222888L;
     // Templates
+    private static final String TEMPLATE_SEARCH_IDENTITIES_RESULT = "/admin/plugins/identitydesk/search_identities_result.html";
     private static final String TEMPLATE_SEARCH_IDENTITIES = "/admin/plugins/identitydesk/search_identities.html";
+
     private static final String TEMPLATE_CREATE_IDENTITY = "/admin/plugins/identitydesk/create_identity.html";
     private static final String TEMPLATE_MODIFY_IDENTITY = "/admin/plugins/identitydesk/modify_identity.html";
 
@@ -98,6 +102,7 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
     private static final String MESSAGE_UPDATE_IDENTITY_ERROR = "identitydesk.message.update_identity.error";
     private static final String MESSAGE_GET_SERVICE_CONTRACT_ERROR = "identitydesk.message.get_service_contract.error";
     private static final String MESSAGE_SEARCH_IDENTITY_REQUIREDFIELD = "identitydesk.message.search_identity.requiredfield";
+    private static final String MESSAGE_GET_REFERENTIAL_ERROR = "referential error";
 
     // Properties for page titles
     private static final String PROPERTY_PAGE_TITLE_MANAGE_IDENTITIES = "identitydesk.manage_identities.pageTitle";
@@ -105,36 +110,42 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
     private static final String PROPERTY_PAGE_TITLE_CREATE_IDENTITY = "identitydesk.create_identity.pageTitle";
 
     // Constants
-    private static final String SEARCH_PARAMETER_PREFIX = "search_";
-    private static final String ATTR_CERT_SUFFIX = "-certif";
-    private static final String NEW_SEARCH_PARAMETER = "new_search";
+    private static final String PARAMETER_SEARCH_PREFIX = "search_";
+    private static final String PARAMETER_ATTR_CERT_SUFFIX = "-certif";
+    private static final String PARAMETER_APPROXIMATE = "approximate";
 
     // Markers
     private static final String MARK_IDENTITY_LIST = "identity_list";
     private static final String MARK_IDENTITY = "identity";
     private static final String MARK_SERVICE_CONTRACT = "service_contract";
     private static final String MARK_QUERY_SEARCH_ATTRIBUTES = "query_search_attributes";
-    private static final String JSP_MANAGE_IDENTITIES = "jsp/admin/plugins/identitydesk/ManageIdentities.jsp";
     private static final String MARK_AUTOCOMPLETE_CITY_ENDPOINT = "autocomplete_city_endpoint";
     private static final String MARK_AUTOCOMPLETE_COUNTRY_ENDPOINT = "autocomplete_country_endpoint";
     private static final String MARK_RETURN_URL = "return_url";
     private static final String MARK_ATTRIBUTE_STATUSES = "attribute_statuses";
+    private static final String MARK_SEARCH_RULES = "search_rules";
+    private static final String MARK_REFERENTIAL = "referential";
+    private static final String MARK_APPROXIMATE = "approximate";
 
     // Views
-    private static final String VIEW_MANAGE_IDENTITIES = "manageIdentitys";
+    private static final String VIEW_SEARCH_IDENTITY = "searchIdentity";
     private static final String VIEW_CREATE_IDENTITY = "createIdentity";
     private static final String VIEW_MODIFY_IDENTITY = "modifyIdentity";
 
     // Actions
+    private static final String ACTION_SEARCH_IDENTITY = "searchIdentity";
     private static final String ACTION_CREATE_IDENTITY = "createIdentity";
     private static final String ACTION_MODIFY_IDENTITY = "modifyIdentity";
 
     // Cache
     private static final ServiceContractCache _serviceContractCache = SpringContextService.getBean( "identity.serviceContractCacheService" );
+    private static final ServiceReferentialCache _serviceReferentialCache = SpringContextService.getBean( "identitydesk.serviceReferentialCache" );
+
 
     // Session variable to store working values
     private final List<SearchAttributeDto> _searchAttributes = new ArrayList<>( );
     private ServiceContractDto _serviceContract;
+    private List<AttributeCertificationProcessusDto> _referential;
     private List<AttributeStatus> _attributeStatuses = new ArrayList<>( );
     private String _currentClientCode = AppPropertiesService.getProperty( "identitydesk.default.client.code" );
     private String _currentReturnUrl = AppPropertiesService.getProperty( "identitydesk.default.returnUrl" );
@@ -142,33 +153,55 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
     private final IdentityService _identityService = SpringContextService.getBean( "identity.identityService" );
     private final String _autocompleteCityEndpoint = AppPropertiesService.getProperty( "identitydesk.autocomplete.city.endpoint" );
     private final String _autocompleteCountryEndpoint = AppPropertiesService.getProperty( "identitydesk.autocomplete.country.endpoint" );
-    private final List<String> _sortedAttributeKeyList = Arrays.asList( AppPropertiesService.getProperty( "identitydesk.attribute.order" ).split( "," ) );
+    private final List<List<String>> _searchRules = AppPropertiesService.getKeys("identitydesk.search.rule.").stream().map(key -> Arrays.asList(AppPropertiesService.getProperty(key).split(","))).collect(Collectors.toList());
     private final List<String> _searchAttributeKeyStrictList = Arrays
             .asList( AppPropertiesService.getProperty( "identitydesk.search.strict.attributes" ).split( "," ) );
 
     /**
-     * Process the data to send the search request and returns the identity search form and results
+     * Displays the search form
      *
      * @param request
      *            The Http request
-     * @return the html code of the identity form
+     * @return the html code of the search form
      */
-    @View( value = VIEW_MANAGE_IDENTITIES, defaultView = true )
+    @View( value = VIEW_SEARCH_IDENTITY, defaultView = true )
     public String getSearchIdentities( HttpServletRequest request )
     {
-        final List<QualifiedIdentity> qualifiedIdentities = new ArrayList<>( );
-
         initClientCode( request );
         initServiceContract( _currentClientCode );
+        initReferential( _currentClientCode );
 
-        // Search
-        if ( request.getParameter( NEW_SEARCH_PARAMETER ) != null )
-        {
+        Map<String, Object> model = getModel( );
+        model.put( MARK_QUERY_SEARCH_ATTRIBUTES, _searchAttributes );
+        model.put( MARK_SERVICE_CONTRACT, _serviceContract );
+        model.put( MARK_SEARCH_RULES, _searchRules );
+        model.put( MARK_REFERENTIAL, _referential );
+    
+        addReturnUrlMarker( request, model );
+        return getPage( PROPERTY_PAGE_TITLE_MANAGE_IDENTITIES, TEMPLATE_SEARCH_IDENTITIES, model );
+    }
+
+    /**
+     * Process the search request and returns the search results
+     *
+     * @param request
+     *            The Http request
+     * @return the html code of the search results
+     */
+    @Action( ACTION_SEARCH_IDENTITY )
+    public String doSearchIdentities( HttpServletRequest request )
+    {
+        if( _serviceContract == null ) {
+            return getSearchIdentities( request );
+        }
+
+        final List<QualifiedIdentity> qualifiedIdentities = new ArrayList<>( );
+
             // get search criterias
             collectSearchAttributes( request );
 
             // check
-            checkSearchAttributes( );
+            if ( checkSearchAttributes( ) ) {
 
             final String customerId = _searchAttributes.stream( ).filter( a -> a.getKey( ).equals( "customer_id" ) ).map( SearchAttributeDto::getValue )
                     .findFirst( ).orElse( null );
@@ -194,7 +227,7 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
                 try
                 {
                     final IdentitySearchResponse searchResponse = _identityService.searchIdentities( searchRequest, _currentClientCode );
-                    if ( Boolean.parseBoolean( request.getParameter( "ignore_approximate" ) ) )
+                    if ( !Boolean.parseBoolean( request.getParameter( MARK_APPROXIMATE ) ) )
                     {
                         qualifiedIdentities.addAll( searchResponse.getIdentities( ).stream( ).filter( i -> Math.round( i.getScoring( ) * 100 ) == 100 )
                                 .collect( Collectors.toList( ) ) );
@@ -215,16 +248,29 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
                 }
             }
         }
+        
 
-        Map<String, Object> model = getPaginatedListModel( request, MARK_IDENTITY_LIST, qualifiedIdentities, JSP_MANAGE_IDENTITIES );
+        Map<String, Object> model = getModel( );
+        model.put( MARK_IDENTITY_LIST, qualifiedIdentities );
         model.put( MARK_QUERY_SEARCH_ATTRIBUTES, _searchAttributes );
         model.put( MARK_AUTOCOMPLETE_CITY_ENDPOINT, _autocompleteCityEndpoint );
         model.put( MARK_AUTOCOMPLETE_COUNTRY_ENDPOINT, _autocompleteCountryEndpoint );
         model.put( MARK_SERVICE_CONTRACT, _serviceContract );
+        model.put( MARK_SEARCH_RULES, _searchRules );
+        model.put( MARK_REFERENTIAL, _referential );
+        model.put( MARK_APPROXIMATE, Boolean.parseBoolean( request.getParameter( PARAMETER_APPROXIMATE ) ) );
         addReturnUrlMarker( request, model );
 
-        return getPage( PROPERTY_PAGE_TITLE_MANAGE_IDENTITIES, TEMPLATE_SEARCH_IDENTITIES, model );
+        if( qualifiedIdentities.isEmpty( ) )
+        {
+            return getPage( PROPERTY_PAGE_TITLE_MANAGE_IDENTITIES, TEMPLATE_SEARCH_IDENTITIES, model );
+        }
+        else
+        {
+            return getPage( PROPERTY_PAGE_TITLE_MANAGE_IDENTITIES, TEMPLATE_SEARCH_IDENTITIES_RESULT, model );
+        }
     }
+
 
     /**
      * Returns the form to create a identity
@@ -236,7 +282,7 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
     @View( VIEW_CREATE_IDENTITY )
     public String getCreateIdentity( HttpServletRequest request )
     {
-        final Identity identity = getIdentityFromRequest( request, SEARCH_PARAMETER_PREFIX );
+        final Identity identity = getIdentityFromRequest( request, PARAMETER_SEARCH_PREFIX, true );
 
         Map<String, Object> model = getModel( );
 
@@ -245,6 +291,7 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
         model.put( MARK_AUTOCOMPLETE_CITY_ENDPOINT, _autocompleteCityEndpoint );
         model.put( MARK_AUTOCOMPLETE_COUNTRY_ENDPOINT, _autocompleteCountryEndpoint );
         model.put( MARK_ATTRIBUTE_STATUSES, _attributeStatuses );
+        model.put( MARK_REFERENTIAL, _referential );
         addReturnUrlMarker( request, model );
 
         return getPage( PROPERTY_PAGE_TITLE_CREATE_IDENTITY, TEMPLATE_CREATE_IDENTITY, model );
@@ -264,7 +311,7 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
         _attributeStatuses.clear( );
         try
         {
-            final Identity identity = getIdentityFromRequest( request, "" );
+            final Identity identity = getIdentityFromRequest( request, "", true );
             if ( identity.getAttributes( ).stream( ).anyMatch( a -> StringUtils.isBlank( a.getCertificationProcess( ) ) ) )
             {
                 addWarning( MESSAGE_IDENTITY_MUSTSELECTCERTIFICATION, getLocale( ) );
@@ -274,6 +321,7 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
             identityChangeRequest.setOrigin( this.getAuthor( ) );
 
             final IdentityChangeResponse response = _identityService.createIdentity( identityChangeRequest, _currentClientCode );
+
             if ( response.getStatus( ) != IdentityChangeStatus.CREATE_SUCCESS )
             {
                 if ( response.getStatus( ) == IdentityChangeStatus.FAILURE )
@@ -302,7 +350,8 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
             addError( MESSAGE_CREATE_IDENTITY_ERROR, getLocale( ) );
             return getCreateIdentity( request );
         }
-        return getSearchIdentities( request );
+        updateSearchAttributes( request );
+        return doSearchIdentities( request );
     }
 
     /**
@@ -341,6 +390,7 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
         model.put( MARK_AUTOCOMPLETE_CITY_ENDPOINT, _autocompleteCityEndpoint );
         model.put( MARK_AUTOCOMPLETE_COUNTRY_ENDPOINT, _autocompleteCountryEndpoint );
         model.put( MARK_ATTRIBUTE_STATUSES, _attributeStatuses );
+        model.put( MARK_REFERENTIAL, _referential );
         addReturnUrlMarker( request, model );
 
         return getPage( PROPERTY_PAGE_TITLE_MODIFY_IDENTITY, TEMPLATE_MODIFY_IDENTITY, model );
@@ -357,7 +407,7 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
     public String doModifyIdentity( HttpServletRequest request )
     {
     	// get values to update
-    	final Identity identityWithUpdates = getIdentityFromRequest( request , "" );
+    	final Identity identityWithUpdates = getIdentityFromRequest( request , "", false );
     	if ( identityWithUpdates.getCustomerId( ) == null )
     	{
     		 addError( MESSAGE_UPDATE_IDENTITY_ERROR, getLocale( ) );
@@ -432,7 +482,8 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
             return getModifyIdentity( request );
         }
 
-        return getSearchIdentities( request );
+        updateSearchAttributes( request );
+        return doSearchIdentities( request );
     }
 
     /**
@@ -473,45 +524,88 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
      * @param request
      * @return
      */
-    private void collectSearchAttributes( final HttpServletRequest request )
-    {
+    private void collectSearchAttributes(final HttpServletRequest request) {
 
-        final List<SearchAttributeDto> searchList = _serviceContract.getAttributeDefinitions( ).stream( ).map( AttributeDefinitionDto::getKeyName )
-                .map( attrKey -> {
-                    final String value = request.getParameter( SEARCH_PARAMETER_PREFIX + attrKey );
-                    if ( value != null )
-                    {
-                        return new SearchAttributeDto( attrKey, value.trim( ), _searchAttributeKeyStrictList.contains( attrKey ) );
+        final List<SearchAttributeDto> searchList = _serviceContract.getAttributeDefinitions().stream().map(AttributeDefinitionDto::getKeyName)
+                .map(attrKey -> {
+                    String value = request.getParameter(PARAMETER_SEARCH_PREFIX + attrKey);
+                    if (attrKey.equals("birthdate") && value != null && !value.isEmpty()) {
+                        try {
+                            Date date = new SimpleDateFormat("yyyy-MM-dd").parse( value );
+                            value = new SimpleDateFormat("dd/MM/yyyy").format(date);
+                        } catch (ParseException e) {
+                            AppLogService.error("Can't convert the date: " + value, e);
+                        }
+                    }
+                    if (value != null) {
+                        return new SearchAttributeDto(attrKey, value.trim(), _searchAttributeKeyStrictList.contains(attrKey));
                     }
                     return null;
-                } ).filter( searchAttribute -> searchAttribute != null && StringUtils.isNotBlank( searchAttribute.getValue( ) ) )
-                .collect( Collectors.toList( ) );
-
-        if ( searchList.isEmpty( ) )
-        {
+                }).filter(searchAttribute -> searchAttribute != null && StringUtils.isNotBlank(searchAttribute.getValue()))
+                .collect(Collectors.toList());
+    
+        if (searchList.isEmpty()) {
             // not a new search, keep existing criterias
             return;
         }
-
-        _searchAttributes.clear( );
-        _searchAttributes
-                .addAll( searchList.stream( ).filter( s -> ( s != null && StringUtils.isNotBlank( s.getValue( ) ) ) ).collect( Collectors.toList( ) ) );
-
-        if ( _searchAttributes.size( ) > 0 )
-        {
-            if ( _searchAttributes.stream( ).anyMatch( s -> s.getKey( ).equals( Constants.PARAM_BIRTH_PLACE ) ) )
-            {
-                final String value = request.getParameter( SEARCH_PARAMETER_PREFIX + Constants.PARAM_BIRTH_PLACE_CODE );
-                _searchAttributes.add( new SearchAttributeDto( Constants.PARAM_BIRTH_PLACE_CODE, value, _searchAttributeKeyStrictList.contains( Constants.PARAM_BIRTH_PLACE_CODE ) ) );
+    
+        _searchAttributes.clear();
+        _searchAttributes.addAll(searchList);
+    
+        if (_searchAttributes.size() > 0) {
+            if (_searchAttributes.stream().anyMatch(s -> s.getKey().equals(Constants.PARAM_BIRTH_PLACE))) {
+                final String value = request.getParameter(PARAMETER_SEARCH_PREFIX + Constants.PARAM_BIRTH_PLACE_CODE);
+                _searchAttributes.add(new SearchAttributeDto(Constants.PARAM_BIRTH_PLACE_CODE, value, _searchAttributeKeyStrictList.contains(Constants.PARAM_BIRTH_PLACE_CODE)));
             }
-            if ( _searchAttributes.stream( ).anyMatch( s -> s.getKey( ).equals( Constants.PARAM_BIRTH_COUNTRY ) ) )
-            {
-                final String value = request.getParameter( SEARCH_PARAMETER_PREFIX + Constants.PARAM_BIRTH_COUNTRY_CODE );
-                _searchAttributes.add( new SearchAttributeDto( Constants.PARAM_BIRTH_COUNTRY_CODE, value, _searchAttributeKeyStrictList.contains( Constants.PARAM_BIRTH_COUNTRY_CODE ) ) );
+            if (_searchAttributes.stream().anyMatch(s -> s.getKey().equals(Constants.PARAM_BIRTH_COUNTRY))) {
+                final String value = request.getParameter(PARAMETER_SEARCH_PREFIX + Constants.PARAM_BIRTH_COUNTRY_CODE);
+                _searchAttributes.add(new SearchAttributeDto(Constants.PARAM_BIRTH_COUNTRY_CODE, value, _searchAttributeKeyStrictList.contains(Constants.PARAM_BIRTH_COUNTRY_CODE)));
             }
         }
-
     }
+
+
+    /**
+     * collect search attributes from request
+     * 
+     * @param request
+     * @return
+     */
+    private void updateSearchAttributes(final HttpServletRequest request) {
+
+        final List<String> requiredAttrs = Arrays.asList("birthdate", "family_name", "first_name");
+    
+        final List<SearchAttributeDto> searchList = _serviceContract.getAttributeDefinitions().stream()
+                .map(AttributeDefinitionDto::getKeyName)
+                .filter(requiredAttrs::contains) // Check if the key is in the list of required attributes
+                .map(attrKey -> {
+                    String value = request.getParameter( attrKey );
+                    if (attrKey.equals("birthdate") && value != null && !value.isEmpty()) {
+                        try {
+                            Date date = new SimpleDateFormat("yyyy-MM-dd").parse(value);
+                            value = new SimpleDateFormat("dd/MM/yyyy").format(date);
+                        } catch (ParseException e) {
+                            AppLogService.error("Can't convert the date: " + value, e);
+                        }
+                    }
+                    if (value != null) {
+                        return new SearchAttributeDto(attrKey, value.trim(), _searchAttributeKeyStrictList.contains(attrKey));
+                    }
+                    return null;
+                })
+                .filter(Objects::nonNull)
+                .filter(searchAttribute -> StringUtils.isNotBlank(searchAttribute.getValue()))
+                .collect(Collectors.toList());
+    
+        if (searchList.isEmpty()) {
+            // not a new search, keep existing criterias
+            return;
+        }
+    
+        _searchAttributes.clear();
+        _searchAttributes.addAll(searchList);
+    }
+    
 
     /**
      * check search criterias * email or lastname+firstname+birthdate are required
@@ -521,11 +615,12 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
     private boolean checkSearchAttributes( )
     {
         final Optional<SearchAttributeDto> emailAttr = _searchAttributes.stream( ).filter( s -> s.getKey( ).equals( Constants.PARAM_EMAIL ) ).findFirst( );
+        Optional<SearchAttributeDto> birthdateAttr = Optional.empty();
         if ( !emailAttr.isPresent( ) || StringUtils.isBlank( emailAttr.get( ).getValue( ) ) )
         {
             final Optional<SearchAttributeDto> firstnameAttr = _searchAttributes.stream( ).filter( s -> s.getKey( ).equals( Constants.PARAM_FIRST_NAME ) ).findFirst( );
             final Optional<SearchAttributeDto> familynameAttr = _searchAttributes.stream( ).filter( s -> s.getKey( ).equals( Constants.PARAM_FAMILY_NAME ) ).findFirst( );
-            final Optional<SearchAttributeDto> birthdateAttr = _searchAttributes.stream( ).filter( s -> s.getKey( ).equals( Constants.PARAM_BIRTH_DATE ) ).findFirst( );
+            birthdateAttr = _searchAttributes.stream( ).filter( s -> s.getKey( ).equals( Constants.PARAM_BIRTH_DATE ) ).findFirst( );
             if ( ( !firstnameAttr.isPresent( ) || StringUtils.isBlank( firstnameAttr.get( ).getValue( ) ) )
                     || ( !familynameAttr.isPresent( ) || StringUtils.isBlank( familynameAttr.get( ).getValue( ) ) )
                     || ( !birthdateAttr.isPresent( ) || StringUtils.isBlank( birthdateAttr.get( ).getValue( ) ) ) )
@@ -534,6 +629,7 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
                 return false;
             }
         }
+
 
         return true;
     }
@@ -575,23 +671,36 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
      * @param request
      * @return the identity with attributes to update
      */
-    private Identity getIdentityFromRequest( final HttpServletRequest request, String strPrefix )
+    private Identity getIdentityFromRequest( final HttpServletRequest request, String strPrefix, Boolean bCreate )
     {
-    	initServiceContract( _currentClientCode );
+        initServiceContract( _currentClientCode );
         final Identity identity = new Identity( );
         
-    	identity.setCustomerId( request.getParameter( Constants.PARAM_ID_CUSTOMER ) );
-    	
+        identity.setCustomerId( request.getParameter( Constants.PARAM_ID_CUSTOMER ) );
+        
         // add attributes (and certification process) to identity if they are present in the request
         _serviceContract.getAttributeDefinitions().stream()
-        	.filter( attr -> !StringUtils.isEmpty( request.getParameter( strPrefix + attr.getKeyName( ) ) ) )
-        	.forEach( attr -> identity.getAttributes( ).add( buildAttribute( attr.getKeyName( ), 
-        			request.getParameter( strPrefix + attr.getKeyName( ) ), 
-        			request.getParameter( attr.getKeyName( ) + ATTR_CERT_SUFFIX) ) ) );
-
+            .filter( attr -> bCreate 
+                ? !StringUtils.isEmpty(request.getParameter(strPrefix + attr.getKeyName()))  
+                : (request.getParameter(strPrefix + attr.getKeyName()) != null 
+                   && !StringUtils.isEmpty(request.getParameter(attr.getKeyName() + PARAMETER_ATTR_CERT_SUFFIX))))
+            .forEach( attr -> {
+                String attrValue = request.getParameter(strPrefix + attr.getKeyName( ) );
+                if ("birthdate".equals(attr.getKeyName()) && attrValue != null && !attrValue.isEmpty()) {
+                    try {
+                        Date date = new SimpleDateFormat("yyyy-MM-dd").parse( attrValue );
+                        attrValue = new SimpleDateFormat("dd/MM/yyyy").format(date);
+                    } catch (ParseException e) {
+                        AppLogService.error("Can't convert the date: " + attrValue, e);
+                    }
+                }
+                identity.getAttributes().add(buildAttribute( attr.getKeyName( ), attrValue, 
+                    request.getParameter(attr.getKeyName() + PARAMETER_ATTR_CERT_SUFFIX)));
+            });
+        
         return identity;
-
     }
+    
 
     /**
      * Build attribute 
@@ -690,11 +799,7 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
         } ).collect( Collectors.toList( ) ) );
 
         return identity;
-    }
-
-    
-
-        
+    }   
 
     /**
      * init service contract
@@ -713,6 +818,27 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
             {
                 AppLogService.error( "Error while retrieving service contract [client code = " + clientCode + "].", e );
                 addError( MESSAGE_GET_SERVICE_CONTRACT_ERROR, getLocale( ) );
+            }
+        }
+    }
+
+    /**
+     * init referentiel
+     * 
+     * @param clientCode
+     */
+    private void initReferential( String clientCode )
+    {
+        if ( _referential == null )
+        {
+            try
+            {
+                _referential = _serviceReferentialCache.get( clientCode );
+            }
+            catch( final IdentityStoreException e )
+            {
+                AppLogService.error( "Error while retrieving referential [client code = " + clientCode + "].", e );
+                addError( MESSAGE_GET_REFERENTIAL_ERROR, getLocale( ) );
             }
         }
     }

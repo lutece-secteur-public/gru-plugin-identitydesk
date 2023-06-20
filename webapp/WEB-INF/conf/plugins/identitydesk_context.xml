@@ -5,21 +5,20 @@
        xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd" >
 
     <!-- IHttpTransportProvider declarations -->
-    <bean id="httpAccessTransport" class="fr.paris.lutece.plugins.identitystore.v3.web.service.HttpAccessTransport" />
-
-    <bean id="identity.restTransport.httpAccess" class="fr.paris.lutece.plugins.identitystore.v3.web.rs.service.IdentityTransportRest">
-        <property name="IdentityStoreEndPoint">
+    <bean id="identitystore.httpAccessTransport" class="fr.paris.lutece.plugins.identitystore.v3.web.rs.service.HttpAccessTransport" >
+		<property name="ApiEndPointUrl">
             <value>${identitydesk.identitystore.endpoint}</value>
         </property>
+     </bean>
+
+    <bean id="identity.restTransport.httpAccess" class="fr.paris.lutece.plugins.identitystore.v3.web.rs.service.IdentityTransportRest">
+        <constructor-arg ref="identitystore.httpAccessTransport"/>
     </bean>
     
      <bean id="serviceContract.restTransport.httpAccess" class="fr.paris.lutece.plugins.identitystore.v3.web.rs.service.ServiceContractTransportRest">
-        <property name="IdentityStoreEndPoint">
-            <value>${identitydesk.identitystore.endpoint}</value>
-        </property>
+        <constructor-arg ref="identitystore.httpAccessTransport"/>
     </bean>
     
-
     <!-- IdentityService impl -->
     <bean id="identity.identityService" class="fr.paris.lutece.plugins.identitystore.v3.web.service.IdentityService">
         <constructor-arg ref="identity.restTransport.httpAccess"/>
@@ -35,5 +34,15 @@
         <constructor-arg ref="identity.serviceContractService"/>
     </bean>
 
+      <!-- ReferentialService  -->
+    <bean id="identitydesk.serviceReferentialCache"  class="fr.paris.lutece.plugins.identitydesk.cache.ServiceReferentialCache" />
+
+    <bean id="referential.restTransport.httpAccess" class="fr.paris.lutece.plugins.identitystore.v3.web.rs.service.ReferentialTransportRest">
+        <constructor-arg ref="identitystore.httpAccessTransport"/>
+    </bean>
+
+    <bean id="identity.ReferentialService" class="fr.paris.lutece.plugins.identitystore.v3.web.service.ReferentialService">
+        <constructor-arg ref="referential.restTransport.httpAccess"/>
+    </bean>
 
 </beans>

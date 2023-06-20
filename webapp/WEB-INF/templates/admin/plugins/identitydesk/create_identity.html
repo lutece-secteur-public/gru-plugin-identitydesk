@@ -1,199 +1,61 @@
-<#-- include "manageidentities_tabs.html" />
-<@tabs tab="identity" /> -->
+<#include "search_functions.html" />
 
-<style>
-    #identity-create-table select {
-        min-width: 280px;
-        text-align: center;
-    }
-    #identity-create-table input {
-        min-width: 400px;
-    }
-    #identity-create-table th {
-        text-align: center;
-    }
-    td.certifier-td, td.certification-date-td, td.action-td {
-        text-align: center;
-    }
-    #identity-create-table tr {
-        height: 45px;
-    }
-    #identity-create-table td.status-td {
-        font-weight: bold;
-        color: orange;
-    }
-</style>
-<script type="text/javascript">
-    $(function () {
-        $('#identity-create-table td, #identity-create-table th').each(function () {
-            if ($(this).hasClass('certifier-td')) {
-                $(this).addClass('ps-3');
-            } else if ($(this).hasClass('certification-date-td')) {
-                $(this).addClass('pe-4');
-            } else {
-                $(this).addClass("px-3");
-            }
-        });
-        $('button[name="action_createIdentity"]').click(function (e) {
-            $('#mandatory-msg').hide();
-            $('input.mandatory').each(function () {
-                if (!$(this).val().trim()) {
-                    e.preventDefault();
-                    $(this).addClass('border-danger');
-                    $('#mandatory-msg').show();
-                }
-            });
-        });
-        $("input[name='birthplace']").autocomplete({
-            minLength: 3,
-            source: function (request, response) {
-                $.ajax({
-                    url: '${autocomplete_city_endpoint}' + request.term,
-                    type: 'GET',
-                    contentType: 'application/json',
-                    dataType: "json",
-                    data: '',
-                    success: function (data) {
-                        if (data.status === 'OK') {
-                            response($.map(data.result, function (city) {
-                                let dpt = city.codeZone;
-                                if (dpt.length === 1) {
-                                    dpt = '0' + dpt;
-                                }
-                                if (dpt) {
-                                    dpt = ' (' + dpt + ')';
-                                } else {
-                                    dpt = '';
-                                }
-                                return {
-                                    label: city.value + dpt,
-                                    value: city.code
-                                };
-                            }));
-                        }
-                    }
-                });
-            },
-            select: function (event, ui) {
-                event.preventDefault();
-                let cityName = ui.item.label;
-                if (cityName.startsWith('(') && cityName.length > 5) {
-                    cityName = cityName.substring(5).trim();
-                }
-                $("input[name='birthplace']").val(cityName);
-                $("input[name='birthplace_code']").val(ui.item.value);
-            }
-        });
-        $("input[name='birthplace']").keyup(function () {
-            $("input[name='birthplace_code']").val('');
-        });
-        $("input[name='birthcountry']").autocomplete({
-            minLength: 3,
-            source: function (request, response) {
-                $.ajax({
-                    url: '${autocomplete_country_endpoint}' + request.term,
-                    type: 'GET',
-                    contentType: 'application/json',
-                    dataType: "json",
-                    data: '',
-                    success: function (data) {
-                        if (data.status === 'OK') {
-                            response($.map(data.result, function (country) {
-                                return {
-                                    label: country.value,
-                                    value: country.code
-                                };
-                            }));
-                        }
-                    }
-                });
-            },
-            select: function (event, ui) {
-                event.preventDefault();
-                $("input[name='birthcountry']").val(ui.item.label);
-                $("input[name='birthcountry_code']").val(ui.item.value);
-            }
-        });
-        $("input[name='birthcountry']").keyup(function () {
-            $("input[name='birthcountry_code']").val('');
-        });
-        
-        $("select[name$='-certif']").change(function () {
-        	// show input only if a certification process is selected
-        	// restore value if certification is unselect
-        	let attrKey = $(this).prop("name").substring(0, $(this).prop("name").indexOf( '-certif' ));
-        	let attrInput =   $( '#' + attrKey );
-        	attrInput.toggle( $(this).find("option:selected").val() != "" ) ;
-        	if ( $(this).find("option:selected").val() == "" ) attrInput.val( "" );
-        });
-        
-        // init
-        $("select[name$='-certif']").change();
-    });
-</script>
-
-<@rowBoxHeader i18nTitleKey="identitydesk.create_identity.title">
-    <form class="form-horizontal" method="post" name="create_identity" action="jsp/admin/plugins/identitydesk/ManageIdentities.jsp">
-        <@messages infos=infos />
-        <@messages errors=errors />
-        <@messages warnings=warnings />
-        <input type="hidden" name="return_url" value="${(return_url)!''}">
-
-        <table id="identity-create-table" class="mb-4">
-            <thead>
-                <tr>
-                    <th>&nbsp;</th>
-                    <th>#i18n{identitydesk.createmodify_identity.columnValue}</th>
-                    <th>#i18n{identitydesk.createmodify_identity.columnCertif}</th>
-                    <#if attribute_statuses?has_content>
-                        <th>#i18n{identitydesk.createmodify_identity.columnStatus}</th>
-                    </#if>
-                </tr>
-            </thead>
-            <tbody>
-                <#list identity.attributeList as attr>
-                    <#if attr.key == 'birthplace_code' || attr.key == 'birthcountry_code'>
-                        <input type="hidden" name="${attr.key}" value="${(attr.value)!''}" />
-                    <#else>
-                        <tr>
-                            <td>${attr.name}<#if attr.mandatory>&nbsp; *</#if></td>
-                           
-                            <td class="certification-td">
-                                <#if attr.allowedCertificationList?has_content>
-                                    <select class="form-control w-auto" name="${attr.key}-certif">
-                                        <option selected value> -- #i18n{identitydesk.create_identity.optionSelectCertif} -- </option>
-                                        <#list attr.allowedCertificationList as certif>
-                                            <option value="${certif.code}">${certif.code} - ${certif.label}</option>
-                                        </#list>
-                                    </select>
-                                <#else>
-                                    #i18n{identitydesk.createmodify_identity.noAvailableCertif}
+<@pageContainer>
+    <@pageColumn>
+            <@pageHeader title="#i18n{identitydesk.create_identity.title}" />
+            <@tform id="create-identity-form" name="create_identity" action='jsp/admin/plugins/identitydesk/ManageIdentities.jsp'>
+                <@messages infos=infos />
+                <@messages errors=errors />
+                <@messages warnings=warnings />
+                <@input type="hidden" name="return_url" value="${(return_url)!''}" />
+                <div class="card p-5">
+                    <div class="row gx-5 gy-5">
+                        <div class="col-6">
+                            <div class="row gx-2 gy-1">
+                                <h2 class="mb-3"><i class="ti ti-id-badge"></i> #i18n{identitydesk.create_identity.identity}</h2>
+                                <#list identity.attributeList as attr>
+                                    <#if attr.key == 'gender' || attr.key == 'first_name' || attr.key == 'preferred_username' || attr.key == 'family_name'>
+                                        <@generateAttributeHtml attr=attr/>
+                                    </#if>
+                                </#list>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="row gx-2 gy-1">
+                                <h2 class="mb-3"><i class="ti ti-baby-carriage"></i> #i18n{identitydesk.create_identity.birth}</h2>
+                                <#list identity.attributeList as attr>
+                                    <#if attr.key == 'birthdate' || attr.key == 'birthcountry' || attr.key == 'birthplace' || attr.key == 'birthplace_code' || attr.key == 'birthcountry_code'>
+                                        <@generateAttributeHtml attr=attr/>
+                                    </#if>
+                                </#list>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <h2 class="mb-3"><i class="ti ti-map-pin"></i> #i18n{identitydesk.create_identity.address}</h2>
+                            <#list identity.attributeList as attr>
+                                <#if attr.key == 'address' || attr.key == 'address_city' || attr.key == 'address_postal_code'>
+                                    <@generateAttributeHtml attr=attr/>
                                 </#if>
-                            </td>
-                             <td>
-                                <#if attr.updatable>
-                                        <input class="form-control <#if attr.mandatory>mandatory </#if>" type="text" name="${attr.key}" id="${attr.key}" placeholder="${attr.description}" value="${(attr.value)!''}" />
-                                <#else>
-                                    ${(attr.value)!''}
-                                </#if>
-                            </td>
-                            
-                            <#if attribute_statuses?has_content>
-                                <td class="status-td">
-                                    <#list attribute_statuses?filter(s -> s.key == attr.key) as attrStatus>
-                                        ${attrStatus.status.message}
-                                    </#list>
-                                </td>
-                            </#if>
-                        </tr>
-                    </#if>
-                </#list>
-            </tbody>
-        </table>
-
-        <@actionButtons button1Name="action_createIdentity" button2Name="view_manageIdentitys"/>
-        <div id="mandatory-msg" class="text-danger" style="display: none">
-            #i18n{identitydesk.createmodify_identity.mandatoryFieldsWarning}
-        </div>
-    </form>
-</@rowBoxHeader>
+                            </#list>
+                        </div>
+                        <div class="col-6 px-3">
+                            <div class="row gx-2 gy-1 mb-4">
+                                <h2><i class="ti ti-mail"></i> #i18n{identitydesk.create_identity.contact}</h2>
+                                <#list identity.attributeList as attr>
+                                    <#if attr.key == 'mobile_phone' || attr.key == 'email'>
+                                        <@generateAttributeHtml attr=attr/>
+                                    </#if>
+                                </#list>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="float-end">
+                    <@actionButtons button1Name="action_createIdentity" button2Name="view_manageIdentitys" />
+                </div>
+                <div id="mandatory-msg" class="text-danger" style="display: none">
+                    #i18n{identitydesk.createmodify_identity.mandatoryFieldsWarning}
+                </div>
+            </@tform>
+    </@pageColumn>
+</@pageContainer>
