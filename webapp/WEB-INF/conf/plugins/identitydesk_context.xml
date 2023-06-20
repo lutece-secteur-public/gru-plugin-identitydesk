@@ -6,15 +6,14 @@
 
     <!-- IHttpTransportProvider declarations -->
     <bean id="identitystore.httpAccessTransport" class="fr.paris.lutece.plugins.identitystore.v3.web.rs.service.HttpAccessTransport" >
-		<property name="ApiEndPointUrl">
-            <value>${identitydesk.identitystore.endpoint}</value>
+		    <property name="ApiEndPointUrl">
+            <value>${identitydesk.identitystore.ApiEndPointUrl}</value>
         </property>
      </bean>
 
     <bean id="identity.restTransport.httpAccess" class="fr.paris.lutece.plugins.identitystore.v3.web.rs.service.IdentityTransportRest">
         <constructor-arg ref="identitystore.httpAccessTransport"/>
     </bean>
-    
      <bean id="serviceContract.restTransport.httpAccess" class="fr.paris.lutece.plugins.identitystore.v3.web.rs.service.ServiceContractTransportRest">
         <constructor-arg ref="identitystore.httpAccessTransport"/>
     </bean>
