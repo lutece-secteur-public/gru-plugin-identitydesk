@@ -1,15 +1,10 @@
 package fr.paris.lutece.plugins.identitydesk.business;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Date;
 import java.util.List;
-import java.util.stream.Collectors;
-
 import org.apache.commons.collections.CollectionUtils;
-
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.contract.AttributeDefinitionDto;
-import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.contract.AttributeRequirement;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.contract.CertificationProcessus;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.crud.CertifiedAttribute;
 

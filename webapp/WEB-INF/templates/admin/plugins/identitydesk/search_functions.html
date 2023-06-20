@@ -1,0 +1,256 @@
+<#-- Retrieves the highest certification level for a given attribute key -->
+<#-- @param attributeKey The key of the attribute -->
+<#function getHighestLevelForAttributeKey attributeKey>
+    <#assign maxLevel = 0>
+    <#list referential as AttributeCertificationLevelDto>
+        <#list AttributeCertificationLevelDto.attributeCertificationLevels as attributeCertificationLevel>
+            <#if attributeCertificationLevel.attributeKey == attributeKey && (attributeCertificationLevel.level.level?number gt maxLevel)>
+                <#assign maxLevel = attributeCertificationLevel.level.level?number>
+            </#if>
+        </#list>
+    </#list>
+    <#return maxLevel>
+</#function>
+
+<#-- Retrieves the certification level for a given attribute code and attribute key -->
+<#-- @param code The code of the attribute certification level -->
+<#-- @param attributeKey The key of the attribute -->
+<#function getAttributeCertificationLevel code attributeKey>
+    <#list referential as AttributeCertificationLevelDto>
+        <#if AttributeCertificationLevelDto.code == code>
+            <#list AttributeCertificationLevelDto.attributeCertificationLevels as attributeCertificationLevel>
+                <#if attributeCertificationLevel.attributeKey == attributeKey>
+                    <#return attributeCertificationLevel.level.level>
+                </#if>
+            </#list>
+        </#if>
+    </#list>
+    <#return 0>
+</#function>
+
+<#-- Retrieves the value of an attribute from a list of attributes -->
+<#-- @param attrs The list of attributes -->
+<#-- @param key The key of the attribute -->
+<#function getAttributeValue attrs key>
+    <#list attrs as attr>
+        <#if attr.key == key>
+            <#if attr.value?exists>
+                <#if attr.value?length == 0 && (key != "address_detail" && key != "preferred_username")>
+                    <#return "<span class='text-warning'><del>${attr.key}</del></span>">
+                <#elseif key == "gender">
+                    <#switch attr.value>
+                        <#case "0">
+                            <#return "N/A">
+                        <#case "1">
+                            <#return "MME">
+                        <#case "2">
+                            <#return "MR">
+                    </#switch>
+                <#else>
+                    <#return attr.value>
+                </#if>
+            <#else>
+                <#return "">
+            </#if>
+        </#if>
+    </#list>
+    <#return "<span class='text-danger'><del>${key}</del></span>">
+</#function>
+
+<#function isAttributeExists attrs key>
+    <#list attrs as attr>
+        <#if attr.key == key>
+            <#if attr.value?exists>
+                <#return true>
+            </#if>
+        </#if>
+    </#list>
+    <#return false>
+</#function>
+
+
+
+<#-- Retrieves the certifier pivot badge based on the attributes -->
+<#-- @param attrs The list of attributes -->
+<#function getCertifierPivotBadge attrs>
+    <#assign totalAttrs = ["family_name", "first_name", "gender", "birthdate", "birthplace_code", "birthcountry_code"]>
+    <#assign certifierCount = {}> 
+    <#assign uncertifiedCount = 0>
+    <#assign totalCertifiedCount = 0>
+    <#list attrs as attr>
+        <#if totalAttrs?seq_contains(attr.key)>
+            <#if attr.certifier??>
+                <#assign totalCertifiedCount = totalCertifiedCount + 1>
+                <#if certifierCount[attr.certifier]??>
+                    <#assign temp = certifierCount[attr.certifier]>
+                    <#assign temp = temp + 1>
+                    <#assign certifierCount = certifierCount + {attr.certifier : temp}>
+                <#else>
+                    <#assign certifierCount = certifierCount + {attr.certifier : 1}>
+                </#if>
+            <#else>
+                <#assign uncertifiedCount = uncertifiedCount + 1>
+            </#if>
+        </#if>
+    </#list>
+    <#assign result = "">
+    <#if uncertifiedCount == totalAttrs?size>
+        <#assign result = "<span class='badge text-danger-emphasis bg-danger-subtle border border-danger-subtle  rounded-5'>
+            Non certifié</span>">
+    <#elseif totalCertifiedCount == totalAttrs?size>
+        <#if certifierCount?keys?size gt 1>
+            <#assign result = "<span class='badge text-warning-emphasis bg-warning-subtle border border-warning-subtle  rounded-5'>
+                 Mixte</span>">
+        <#else>
+            <#list certifierCount?keys as certifier>
+                <#assign result = "<span class='badge text-success-emphasis bg-success-subtle border border-success-subtle rounded-5'>
+                     ${certifier}</span>">
+            </#list>
+        </#if>
+    <#elseif totalCertifiedCount gt 0>
+        <#if certifierCount?keys?size gt 1>
+            <#assign result = "<span class='badge text-warning-emphasis bg-warning-subtle border border-warning-subtle  rounded-5'>
+                Partielle</span>">
+        <#else>
+            <#list certifierCount?keys as certifier>
+                <#assign result = "<span class='badge text-warning-emphasis bg-warning-subtle border border-warning-subtle rounded-5'>
+                    Partielle</span>">
+            </#list>
+        </#if>
+    </#if>
+    <#return result>
+</#function>
+
+
+
+<#-- Generates data for a chart with attribute certifiers -->
+<#-- @param attrs The list of attributes -->
+<#function generateCertifiersDataForChart attrs>
+    <#assign total_attrs = ["family_name", "first_name", "gender", "birthdate", "birthplace_code", "birthcountry_code"]>
+    <#assign certifier_counter = {}> 
+    <#list attrs as attr>
+        <#if total_attrs?seq_contains(attr.key)>
+            <#if attr.certifier??>
+                <#if certifier_counter[attr.certifier]??>
+                    <#assign temp = certifier_counter[attr.certifier]>
+                    <#assign temp = temp + 1>
+                    <#assign certifier_counter = certifier_counter + {attr.certifier : temp}>
+                <#else>
+                    <#assign certifier_counter = certifier_counter + {attr.certifier : 1}>
+                </#if>
+            </#if>
+        </#if>
+    </#list>
+    <#assign labels = "['" + certifier_counter?keys?join("', '") + "']">
+    <#assign data = "[" + certifier_counter?values?join(", ") + "]">
+    <#return { 'labels': labels, 'data': data }>
+</#function>
+
+<#-- Retrieves the highest level ratio for a given key name and certification code -->
+<#-- @param keyName The key name of the attribute -->
+<#-- @param certCode The code of the certification -->
+<#function highestLevelRatio keyName certCode>
+    <#assign highestLevel = 0>
+    <#assign targetLevel = 0>
+    <#list service_contract.attributeDefinitions as attr>
+        <#list attr.attributeCertifications as certif>
+            <#if certif.level?number gt highestLevel>
+                <#assign highestLevel = certif.level?number>
+            </#if>
+            <#if attr.keyName == keyName && certif.code == certCode>
+                <#assign targetLevel = certif.level?number>
+            </#if>
+        </#list>
+    </#list>
+    <#if highestLevel == 0>
+        <#return 0> <#-- avoid division by zero -->
+    <#else>
+        <#return targetLevel / highestLevel>
+    </#if>
+</#function>
+
+<#-- Retrieves the name of an attribute based on its key name -->
+<#-- @param keyName The key name of the attribute -->
+<#function getName keyName >
+    <#assign targetName = "">
+    <#list service_contract.attributeDefinitions as attr>
+        <#if attr.keyName == keyName>
+            <#assign targetName = "${attr.name}">
+        </#if>
+    </#list>
+    <#return targetName>
+</#function>
+
+<#macro generateAttributeHtml attr>
+    <#assign isUpdateAllowed = attr.updatable && attr.allowedCertificationList?has_content >
+    <#assign disabled=!isUpdateAllowed>
+
+    <#if attr.key != 'birthplace_code' && attr.key != 'birthcountry_code'>
+        <#assign mandatory = attr.mandatory>
+        
+        <div class="col-12">
+            <@inputGroup>
+     
+        <#if attr.key == 'birthplace' & isUpdateAllowed >
+                <@autocomplete id="birthplace" currentValue="${(attr.value)!''}" name="" suggestionsUrl="${autocomplete_city_endpoint}" searchLabel="${attr.name}" itemTitleFieldNames='["value"]' copyFields='[{"inputName":"birthplace_code","resultFieldName":"code"}]' suggestionsPath="result" minimumInputLength=3/>
+            <#elseif attr.key == 'birthcountry' & isUpdateAllowed>
+                    <@autocomplete id="birthcountry" currentValue="${(attr.value)!''}" name="" suggestionsUrl="${autocomplete_country_endpoint}" searchLabel="${attr.name}" itemTitleFieldNames='["value"]' copyFields='[{"inputName":"birthcountry_code","resultFieldName":"code"}]' suggestionsPath="result" minimumInputLength=3/>
+            <#else>
+                    <@formGroup formStyle='floating' labelFor='${attr.key}' labelKey='${attr.name}' mandatory=mandatory rows=2 >
+                        <#if attr.key == 'gender'>
+                            <@select name='gender' disabled=disabled>
+                                <#assign value = "${attr.value!''}">
+                                <option value="">S&#x00E9;l&#x00E9;ctionner un genre</option>
+                                <option value="0" <#if value == "0">selected</#if>>Non d&#x00E9;fini</option>
+                                <option value="1" <#if value == "1">selected</#if>>Femme</option>
+                                <option value="2" <#if value == "2">selected</#if>>Homme</option>
+                            </@select>
+                        <#else>
+                        <#if attr.key == 'birthdate'>
+                        <#if attr.value?has_content>
+                        <#assign date_dd_MM_yyyy = formatDate(attr.value)>
+                        <@input type='dateHTML5' name="${attr.key}" id="${attr.key}" placeHolder="${attr.description}" value=date_dd_MM_yyyy disabled=disabled/>
+                    <#else>
+                        <@input type='dateHTML5' name="${attr.key}" id="${attr.key}" placeHolder="${attr.description}" disabled=disabled/>
+                    </#if>
+                        <#else>
+                        <@input type='text' name="${attr.key}" id="${attr.key}" placeHolder="${attr.description}" value="${(attr.value)!''}" disabled=disabled/>
+
+                        </#if>
+
+                        </#if>
+                    </@formGroup>
+            </#if>
+
+            <#assign certificationFieldName = (attr.key == 'birthplace' || attr.key == 'birthcountry')?then("${attr.key}_code-certif","${attr.key}-certif")>
+            <#assign certifierCode = attr.certifier!''>
+            <#assign found = attr.allowedCertificationList?seq_contains(certifierCode)>
+
+            <@formGroup formStyle='floating' labelKey="Certification" helpKey='' mandatory=mandatory rows=2>
+                <#if attr.allowedCertificationList?has_content>
+                    <@select name=certificationFieldName>
+                        <#if !found>
+                            <option selected value="">Ajouter une certification</option>
+                        </#if>
+                        <#list attr.allowedCertificationList as certif>
+                            <option <#if certif.code == certifierCode>selected</#if> value="${certif.code}">${certif.label} (${certif.code})</option>
+                        </#list>
+                    </@select>
+                <#else>
+                    <@input type='text' name="${attr.key}" id="${attr.key}" placeHolder="${attr.description}" value="${(attr.certifier)!''}" disabled=disabled/>
+                </#if>
+            </@formGroup>
+        </@inputGroup>
+        </div>
+        <div class="col-12 mb-3">
+            <small><i class="ti ti-info-circle"></i> ${attr.description}</small>
+        </div>
+        <#else>
+        <@input type="hidden" name="${attr.key}" value="${(attr.value)!''}" />
+    </#if>
+</#macro>
+
+<#function formatDate inputDate>
+    <#assign parsedDate = inputDate?datetime("dd/MM/yyyy")>
+    <#return parsedDate?string("yyyy-MM-dd")>
+</#function>

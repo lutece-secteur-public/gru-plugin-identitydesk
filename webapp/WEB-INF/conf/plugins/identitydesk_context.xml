@@ -6,7 +6,7 @@
 
     <!-- IHttpTransportProvider declarations -->
     <bean id="identitystore.httpAccessTransport" class="fr.paris.lutece.plugins.identitystore.v3.web.rs.service.HttpAccessTransport" >
-		<property name="ApiEndPointUrl">
+		    <property name="ApiEndPointUrl">
             <value>${identitydesk.identitystore.ApiEndPointUrl}</value>
         </property>
      </bean>
@@ -18,7 +18,6 @@
         <constructor-arg ref="identitystore.httpAccessTransport"/>
     </bean>
     
-
     <!-- IdentityService impl -->
     <bean id="identity.identityService" class="fr.paris.lutece.plugins.identitystore.v3.web.service.IdentityService">
         <constructor-arg ref="identity.restTransport.httpAccess"/>
@@ -34,5 +33,15 @@
         <constructor-arg ref="identity.serviceContractService"/>
     </bean>
 
+      <!-- ReferentialService  -->
+    <bean id="identitydesk.serviceReferentialCache"  class="fr.paris.lutece.plugins.identitydesk.cache.ServiceReferentialCache" />
+
+    <bean id="referential.restTransport.httpAccess" class="fr.paris.lutece.plugins.identitystore.v3.web.rs.service.ReferentialTransportRest">
+        <constructor-arg ref="identitystore.httpAccessTransport"/>
+    </bean>
+
+    <bean id="identity.ReferentialService" class="fr.paris.lutece.plugins.identitystore.v3.web.service.ReferentialService">
+        <constructor-arg ref="referential.restTransport.httpAccess"/>
+    </bean>
 
 </beans>
