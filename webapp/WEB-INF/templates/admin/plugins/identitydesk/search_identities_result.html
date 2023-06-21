@@ -5,10 +5,11 @@
         </#assign>
         <#assign description>Pour effectuer une recherche, vous devez entrer un login ou fournir le nom, le pr&eacute;nom et la date de naissance</#assign>
         <#if identity_list?size gt 0 >
-        <#assign description> Vous ne trouvez pas l'identit&eacute recherch&eacutee dans le r&eacutef&eacuterentiel d'identit&eacute ?  <button type="submit" class="btn btn-link text-decoration-none" name="view_createIdentity">
-            Cr&eacuteer cette identit&eacute
-            <i class="ti ti-arrow-narrow-right"></i>
-        </button></#assign>
+        <#assign description> Vous ne trouvez pas l'identit&eacute recherch&eacutee dans le r&eacutef&eacuterentiel d'identit&eacute ?   <button type="submit" class="btn btn-primary btn-sm text-decoration-none  border rounded-5" name="view_createIdentity">
+            <small><i class="ti ti-user-plus"></i> Cr&eacuteer cette identit&eacute</small>
+        </button>
+        
+        <a class="btn btn-dark btn-sm text-decoration-none  border rounded-5" href="jsp/admin/plugins/identitydesk/ManageIdentities.jsp?plugin_name=identitydesk&new_search=true"><small> <i class="ti ti-search"></i> Nouvelle recherche</small></a>  </#assign>
             <#if identity_list?size gt 1>
             <#assign title>Soyez attentif, <strong>${identity_list?size}</strong> utilisateurs trouv&eacute;s</#assign>
             <#elseif identity_list?size == 1 >
@@ -108,7 +109,7 @@
                                     ${getAttributeValue(identity.attributes, 'mobile_phone')}<br>
                                         ${getAttributeValue(identity.attributes, 'email')}
                                 </@td>
-                                <@td>
+                                <td class="text-center">
                                     <#if identity.connectionId??> 
                                         <#assign colorClass = "success">
                                         <#assign del = "">
@@ -116,12 +117,12 @@
                                         <#assign colorClass = "danger">
                                         <#assign del = "text-decoration-line-through">
                                     </#if>
-                                    <span class="text-${colorClass}-emphasis bg-${colorClass}-subtle border border-${colorClass}-subtle badge shadow-lg rounded-5 ${del}">Mon Paris</span> 
+                                    <span class="text-${colorClass}-emphasis bg-${colorClass}-subtle border border-${colorClass}-subtle badge rounded-5 ${del}">Mon Paris</span> 
                                 </@td>
                                 <td>
-                                    <center>  ${getCertifierPivotBadge(identity.attributes)}</center>
+                                    <center>${getCertifierPivotBadge(identity.attributes)}</center>
                                 </td>
-                                <td class="text-center  ">
+                                <td class="text-center">
                                     <#assign qualityPercent = (identity.quality * 100)?string("0")>
                                     <#if qualityPercent?number gt 80>
                                         <#assign colorClass = "success">
@@ -130,11 +131,11 @@
                                     <#else>
                                         <#assign colorClass = "danger">
                                     </#if>
-                                    <span class="text-${colorClass}-emphasis bg-${colorClass}-subtle border border-${colorClass}-subtle badge shadow-lg rounded-5 ${del}">${qualityPercent}%</span>
+                                    <span class="text-${colorClass}-emphasis bg-${colorClass}-subtle border border-${colorClass}-subtle badge rounded-5 ${del}">${qualityPercent}%</span>
                                 </td>
                                 <@td>
                                     <@offcanvas id="summarize-${identity?index}" title="Bilan de certification"  btnTitle="D&eacute;tails" bodyClass="p-0 px-0 summarize" size="auto">
-                                        <table class="table text-center border-0 table-hover shadow-lg">
+                                        <table class="table table-hover shadow-lg">
                                             <thead>
                                                 <@th>Attribut</@th>
                                                 <@th>Valeur</@th>
@@ -159,7 +160,19 @@
                                                                 <#assign bgColor><#if ratio = 100 >success<#elseif ratio gt 50>warning<#else>danger</#if></#assign>   
                                                                 <tr data-attribute-key="${serviceContractAttr.keyName}" data-attribute-name="${serviceContractAttr.name}"  data-score=${ratio?round}>
                                                                     <@td>${serviceContractAttr.name}</@td>
-                                                                    <@td><strong>${attr.value}</strong></@td>
+                                                                    <@td><strong>
+                                                                        <#if serviceContractAttr.keyName == "gender">
+                                                                        <#if attr.value = "0" >
+                                                                        Non d&#x00E9;fini
+                                                                        <#elseif attr.value = "1">
+                                                                        MME
+                                                                        <#elseif attr.value = "2">
+                                                                        MR
+                                                                        </#if>
+                                                                        <#else>
+                                                                        ${attr.value}
+                                                                        </#if>
+                                                                    </strong></@td>
                                                                     <@td>${mandatory}</@td>
                                                                     <@td>${attr.certifier!'N/A'}</@td>
                                                                     <@td><strong>${level}</strong> / ${levelMax}</@td>

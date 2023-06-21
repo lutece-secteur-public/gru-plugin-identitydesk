@@ -113,6 +113,8 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
     private static final String PARAMETER_SEARCH_PREFIX = "search_";
     private static final String PARAMETER_ATTR_CERT_SUFFIX = "-certif";
     private static final String PARAMETER_APPROXIMATE = "approximate";
+    private static final String PARAMETER_NEW_SEARCH = "new_search";
+
 
     // Markers
     private static final String MARK_IDENTITY_LIST = "identity_list";
@@ -126,6 +128,7 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
     private static final String MARK_SEARCH_RULES = "search_rules";
     private static final String MARK_REFERENTIAL = "referential";
     private static final String MARK_APPROXIMATE = "approximate";
+
 
     // Views
     private static final String VIEW_SEARCH_IDENTITY = "searchIdentity";
@@ -143,7 +146,7 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
 
 
     // Session variable to store working values
-    private final List<SearchAttributeDto> _searchAttributes = new ArrayList<>( );
+    private List<SearchAttributeDto> _searchAttributes = new ArrayList<>( );
     private ServiceContractDto _serviceContract;
     private List<AttributeCertificationProcessusDto> _referential;
     private List<AttributeStatus> _attributeStatuses = new ArrayList<>( );
@@ -170,6 +173,10 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
         initClientCode( request );
         initServiceContract( _currentClientCode );
         initReferential( _currentClientCode );
+
+        if( Boolean.parseBoolean( request.getParameter( PARAMETER_NEW_SEARCH ) ) ) {
+            _searchAttributes = new ArrayList<>( );
+        }
 
         Map<String, Object> model = getModel( );
         model.put( MARK_QUERY_SEARCH_ATTRIBUTES, _searchAttributes );

@@ -1,33 +1,59 @@
 <#include "search_functions.html" />
 <@pageContainer>
-    <@pageColumn flush=true center=true  id="search-identity-column" class="bg-secondary">
-    <#assign title>#i18n{identitydesk.search_identities.welcomeSearch}</#assign>    
+    <@pageColumn flush=true center=true id="search-identity-column" class="bg-secondary">
+        <#assign title>#i18n{identitydesk.search_identities.welcomeSearch}</#assign>
+        <#assign allFieldsFilled=true>
+        <#list search_rules as rule>
+            <#list rule as field>
+                <#assign fieldValue>
+                    <#list query_search_attributes?filter(a -> a.key == field) as attr>
+                        ${attr.value!''}
+                    </#list>
+                </#assign>
+                <#if fieldValue?has_content == false && field != 'email'>
+                    <#assign allFieldsFilled=false>
+                </#if>
+            </#list>
+        </#list>
+        <#if allFieldsFilled>
+            <#assign description>
+                Vous ne trouvez pas l'identité recherchée dans le référentiel d'identité ?
+                <button type="submit" class="btn btn-primary btn-sm text-decoration-none border rounded-5" name="view_createIdentity">
+                    <small><i class="ti ti-user-plus"></i> Créer cette identité</small>
+                </button>
+                <a class="btn btn-dark btn-sm text-decoration-none border rounded-5" href="jsp/admin/plugins/identitydesk/ManageIdentities.jsp?plugin_name=identitydesk&new_search=true">
+                    <small> <i class="ti ti-search"></i> Nouvelle recherche</small>
+                </a>  
+            </#assign>
+        <#else>
+            <#assign description>#i18n{identitydesk.search_identities.description}</#assign>  
+        </#if>
         <@tform action="jsp/admin/plugins/identitydesk/ManageIdentities.jsp?action_searchIdentity">
             <@input type="hidden" name="new_search" value=""/>
             <@input type="hidden" name="return_url" value="${(return_url)!''}"/>
             <div class="jumbotron jumbotron-fluid d-flex align-items-center justify-content-center text-center">
-                <div>
-                    <@pageHeader title='${title}' description="#i18n{identitydesk.search_identities.description}">
+                <div class="mb-5">
+                    <@pageHeader title='${title}' description='${description}'>
                     </@pageHeader>
                     <@messages errors=errors />
                     <@messages warnings=warnings />
                     <@messages infos=infos />
                     <#if search_rules?size gt 0>
-                    <@searchBox id="search-box-identity">
+                        <@searchBox id="search-box-identity">
                             <#list search_rules as rule>
                                 <#list rule as field>
                                     <#assign fieldValue><#list query_search_attributes?filter(a -> a.key == field) as attr>${attr.value!''}</#list></#assign>
                                     <#assign fieldType><#if field == "birthdate">date<#else>text</#if></#assign>
                                     <#if field == "birthdate">
-                                    <#if fieldValue?length gt 0 >
-                                        <#assign date_dd_MM_yyyy = formatDate(fieldValue)>
-                                        <@searchInput name="search_${field}" label="${getName(field)}" value=date_dd_MM_yyyy type=fieldType   />
+                                        <#if fieldValue?length gt 0 >
+                                            <#assign date_dd_MM_yyyy = formatDate(fieldValue)>
+                                            <@searchInput name="search_${field}" label="${getName(field)}" value=date_dd_MM_yyyy type=fieldType/>
                                         <#else>
-                                        <@searchInput name="search_${field}" label="${getName(field)}" value=fieldValue type=fieldType   />
+                                            <@searchInput name="search_${field}" label="${getName(field)}" value=fieldValue type=fieldType/>
                                         </#if>
-                                        <#else>
-                                        <@searchInput name="search_${field}" label="${getName(field)}" value=fieldValue type=fieldType   />
-                                        </#if>
+                                    <#else>
+                                        <@searchInput name="search_${field}" label="${getName(field)}" value=fieldValue type=fieldType/>
+                                    </#if>
                                     <#if field_has_next>
                                         <@searchSeparator type="and" content="+" />
                                     </#if>
@@ -38,26 +64,24 @@
                             </#list>
                         </@searchBox>
                     </#if>
-                <div class="mb-5 mt-2">   
-                  <div class="float-end">
-                    <#assign checked=true />
-                    <#if approximate?exists>
-                  <#if approximate>
-                  <#assign checked=true />
-                  <#else>
-                  <#assign checked=false />
-                  </#if>
-                  <#else>
-                  <#assign checked=true />
-                  </#if>
-                  <@listGroupItem>
-                  <@checkBox orientation='switch' id='approximate' name='approximate'  labelKey='#i18n{identitydesk.search_identities.approximateSearch}' value='true' mandatory=false  checked=checked />
-              </@listGroupItem></div>
+                    <div class="mb-5 mt-2"> 
+                        <div class="float-end">
+                            <#assign checked=true />
+                            <#if approximate?exists>
+                                <#if approximate>
+                                    <#assign checked=true />
+                                <#else>
+                                    <#assign checked=false />
+                                </#if>
+                            <#else>
+                                <#assign checked=true />
+                            </#if>
+                            <@listGroupItem>
+                                <@checkBox orientation='switch' id='approximate' name='approximate' labelKey='#i18n{identitydesk.search_identities.approximateSearch}' value='true' mandatory=false checked=checked/>
+                            </@listGroupItem>
+                        </div>
+                    </div>
                 </div>
-                <br>
-                <br>
-                <br>
-              </div>
             </div>
         </@tform>
     </@pageColumn>
