@@ -42,7 +42,7 @@
                             <div class="row gx-2 gy-1 mb-4">
                                 <h2><i class="ti ti-mail"></i> #i18n{identitydesk.create_identity.contact}</h2>
                                 <#list identity.attributeList as attr>
-                                    <#if attr.key == 'mobile_phone' || attr.key == 'email'>
+                                    <#if attr.key == 'mobile_phone' || attr.key == 'email' || attr.key == 'fixed_phone' >
                                         <@generateAttributeHtml attr=attr/>
                                     </#if>
                                 </#list>
