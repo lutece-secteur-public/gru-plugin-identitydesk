@@ -290,20 +290,42 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
     public String getCreateIdentity( HttpServletRequest request )
     {
         final Identity identity = getIdentityFromRequest( request, PARAMETER_SEARCH_PREFIX, true );
-
-        Map<String, Object> model = getModel( );
-
-        model.put( MARK_IDENTITY, IdentityDto.from( identity, _serviceContract ) );
-        model.put( MARK_SERVICE_CONTRACT, _serviceContract );
-        model.put( MARK_AUTOCOMPLETE_CITY_ENDPOINT, _autocompleteCityEndpoint );
-        model.put( MARK_AUTOCOMPLETE_COUNTRY_ENDPOINT, _autocompleteCountryEndpoint );
-        model.put( MARK_ATTRIBUTE_STATUSES, _attributeStatuses );
-        model.put( MARK_REFERENTIAL, _referential );
-        addReturnUrlMarker( request, model );
-
-        return getPage( PROPERTY_PAGE_TITLE_CREATE_IDENTITY, TEMPLATE_CREATE_IDENTITY, model );
+        return createIdentityPage(identity, request);
     }
 
+    /**
+     * Returns the form to create an identity.
+     *
+     * @param request          The HTTP request.
+     * @param useSearchPrefix  Indicates whether to use the search prefix.
+     * @return The HTML code of the identity form.
+     */
+    public String getCreateIdentity(HttpServletRequest request, boolean useSearchPrefix) {
+        final String parameterPrefix = useSearchPrefix ? PARAMETER_SEARCH_PREFIX : "";
+        final Identity identity = getIdentityFromRequest(request, parameterPrefix, true);
+        return createIdentityPage(identity, request);
+    }
+
+    /**
+     * Creates the identity page.
+     *
+     * @param identity The identity object.
+     * @param request  The HTTP request.
+     * @return The HTML code of the identity page.
+     */
+    private String createIdentityPage(Identity identity, HttpServletRequest request) {
+        Map<String, Object> model = getModel();
+
+        model.put(MARK_IDENTITY, IdentityDto.from(identity, _serviceContract));
+        model.put(MARK_SERVICE_CONTRACT, _serviceContract);
+        model.put(MARK_AUTOCOMPLETE_CITY_ENDPOINT, _autocompleteCityEndpoint);
+        model.put(MARK_AUTOCOMPLETE_COUNTRY_ENDPOINT, _autocompleteCountryEndpoint);
+        model.put(MARK_ATTRIBUTE_STATUSES, _attributeStatuses);
+        model.put(MARK_REFERENTIAL, _referential);
+        addReturnUrlMarker(request, model);
+
+        return getPage(PROPERTY_PAGE_TITLE_CREATE_IDENTITY, TEMPLATE_CREATE_IDENTITY, model);
+    }
     /**
      * Process the data capture form of a new identity
      *
@@ -322,7 +344,7 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
             if ( identity.getAttributes( ).stream( ).anyMatch( a -> StringUtils.isBlank( a.getCertificationProcess( ) ) ) )
             {
                 addWarning( MESSAGE_IDENTITY_MUSTSELECTCERTIFICATION, getLocale( ) );
-                return getCreateIdentity( request );
+                return getCreateIdentity( request, false );
             }
             identityChangeRequest.setIdentity( identity );
             identityChangeRequest.setOrigin( this.getAuthor( ) );
@@ -343,7 +365,7 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
                 {
                     _attributeStatuses.addAll( response.getAttributeStatuses( ) );
                 }
-                return getCreateIdentity( request );
+                return getCreateIdentity( request, false );
             }
             else
             {
@@ -355,7 +377,7 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
         {
             AppLogService.error( "Error while creating the identity [IdentityChangeRequest = " + identityChangeRequest + "].", e );
             addError( MESSAGE_CREATE_IDENTITY_ERROR, getLocale( ) );
-            return getCreateIdentity( request );
+            return getCreateIdentity( request, false );
         }
         updateSearchAttributes( request );
         return doSearchIdentities( request );

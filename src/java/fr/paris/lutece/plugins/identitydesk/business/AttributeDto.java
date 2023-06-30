@@ -167,7 +167,7 @@ public class AttributeDto
         {
             return attributeDto;
         }
-        
+        attributeDto.setCertifier( certifiedAttribute.getCertificationProcess( ) );
         attributeDto.setValue( certifiedAttribute.getValue( ) );
         
         // filter allowed certification list according to  requirement min level 
