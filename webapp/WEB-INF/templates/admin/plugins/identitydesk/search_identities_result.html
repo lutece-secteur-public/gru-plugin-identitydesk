@@ -142,6 +142,7 @@
                                                 <@th>Obligatoire</@th>
                                                 <@th>Certification</@th>
                                                 <@th>Niveau</@th>
+                                                <@th>Minimum requis</@th>
                                                 <@th>Score</@th>
                                             </thead>
                                             <tbody>
@@ -153,42 +154,57 @@
                                                     </#if>
                                                     <#if serviceContractAttr.keyName != "fc_key">
                                                         <#if serviceContractAttr.attributeRight.readable>
-                                                            <#list identity.attributes?filter(a -> a.key == serviceContractAttr.keyName) as attr>
-                                                                <#assign level = "${getAttributeCertificationLevel('${attr.certifier}', '${attr.key}')}" >
-                                                                <#assign levelMax = "${getHighestLevelForAttributeKey('${attr.key}')}" >
-                                                                <#assign ratio = (level?number / levelMax?number) * 100>
-                                                                <#assign bgColor><#if ratio = 100 >success<#elseif ratio gt 50>warning<#else>danger</#if></#assign>   
-                                                                <tr data-attribute-key="${serviceContractAttr.keyName}" data-attribute-name="${serviceContractAttr.name}"  data-score=${ratio?round}>
-                                                                    <@td>${serviceContractAttr.name}</@td>
-                                                                    <@td><strong>
-                                                                        <#if serviceContractAttr.keyName == "gender">
-                                                                        <#if attr.value = "0" >
-                                                                        Non d&#x00E9;fini
-                                                                        <#elseif attr.value = "1">
-                                                                        MME
-                                                                        <#elseif attr.value = "2">
-                                                                        MR
-                                                                        </#if>
-                                                                        <#else>
-                                                                        ${attr.value}
-                                                                        </#if>
-                                                                    </strong></@td>
-                                                                    <@td>${mandatory}</@td>
-                                                                    <@td>${attr.certifier!'N/A'}</@td>
-                                                                    <@td><strong>${level}</strong> / ${levelMax}</@td>
-                                                                    <@td>
-                                                                        <@tag color=bgColor >
-                                                                        <#if ratio = 100 >Certification forte<#elseif ratio gt 50>Certification moyenne<#else>Certification faible</#if>
-                                                                    </@tag>
-                                                                </@td>
-                                                            </tr>
-                                                            </#list>
+                                                        <#list identity.attributes?filter(a -> a.key == serviceContractAttr.keyName) as attr>
+                                                        <#assign level = "${getAttributeCertificationLevel('${attr.certifier}', '${attr.key}')}" >
+                                                        <#assign levelMax = "${getHighestLevelForAttributeKey('${attr.key}')}" >
+                                                        <#assign ratio = (level?number / levelMax?number) * 100>
+                                                        <#assign bgColor><#if ratio = 100 >success<#elseif ratio gt 50>warning<#else>danger</#if></#assign>   
+                                                        <tr data-attribute-key="${serviceContractAttr.keyName}" data-attribute-name="${serviceContractAttr.name}"  data-score=${ratio?round}>
+                                                            <@td>${serviceContractAttr.name}</@td>
+                                                            <@td><strong>
+                                                                <#if serviceContractAttr.keyName == "gender">
+                                                                <#if attr.value = "0" >
+                                                                Non d&#x00E9;fini
+                                                                <#elseif attr.value = "1">
+                                                                MME
+                                                                <#elseif attr.value = "2">
+                                                                MR
+                                                                </#if>
+                                                                <#else>
+                                                                ${attr.value}
+                                                                </#if>
+                                                            </strong></@td>
+                                                            <@td>${mandatory}</@td>
+                                                            <@td>${attr.certifier!'N/A'}</@td>
+                                                            <@td>
+                                                           <strong>${level}</strong> / ${levelMax} 
+                                                              
+                                                            </@td>
+                                                            <td class="text-center">
+                                                                <#if serviceContractAttr.attributeRequirement?exists>
+                                                                <#if level?number gte serviceContractAttr.attributeRequirement.level?number >
+                                                                <@tag color="success"><i class="ti ti-check"></i>  ${getAttributeCodeByLevel('${serviceContractAttr.attributeRequirement.level}', '${attr.key}')} (${serviceContractAttr.attributeRequirement.level})</@tag>
+                                                                <#else>
+                                                                <@tag color="danger"><i class="ti ti-x"></i> ${getAttributeCodeByLevel('${serviceContractAttr.attributeRequirement.level}', '${attr.key}')} (${serviceContractAttr.attributeRequirement.level})</@tag>
+                                                                </#if>
+                                                                <#else>
+                                                                <@tag color="success"><i class="ti ti-check"></i> Aucun</@tag>
+                                                                </#if>
+                                                            </td>
+                                                            <@td>
+                                                                <@tag color=bgColor >
+                                                                <#if ratio = 100 >Certification forte<#elseif ratio gt 50>Certification moyenne<#else>Certification faible</#if>
+                                                                </@tag>
+                                                            </@td>
+                                                        </tr>
+                                                        </#list>
                                                             <#if identity.attributes?filter(a -> a.key == serviceContractAttr.keyName)?size == 0>
                                                                 <#assign levelMax = "${getHighestLevelForAttributeKey('${serviceContractAttr.keyName}')}" >
                                                                 <tr data-attribute-key="${serviceContractAttr.keyName}" data-attribute-name="${serviceContractAttr.name}" data-score=0>
                                                                     <@td>${serviceContractAttr.name}</@td>
                                                                     <@td>inexistant</@td>
                                                                     <@td>${mandatory}</@td>
+                                                                    <@td>-</@td>
                                                                     <@td>-</@td>
                                                                     <@td>-</@td>
                                                                     <@td>-</@td>
@@ -199,6 +215,7 @@
                                                                 <@td>${serviceContractAttr.name}</@td>
                                                                 <@td>non lisible</@td>
                                                                 <@td>${mandatory}</@td>
+                                                                <@td>non lisible</@td>
                                                                 <@td>non lisible</@td>
                                                                 <@td>non lisible</@td>
                                                                 <@td>non lisible</@td>

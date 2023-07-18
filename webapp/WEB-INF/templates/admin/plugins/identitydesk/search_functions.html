@@ -28,6 +28,21 @@
     <#return 0>
 </#function>
 
+<#-- Retrieves the attribute code for a given certification level -->
+<#-- @param level The level of the attribute certification -->
+<#-- @param attributeKey The key of the attribute -->
+<#function getAttributeCodeByLevel level attributeKey>
+    <#list referential as AttributeCertificationLevelDto>
+        <#list AttributeCertificationLevelDto.attributeCertificationLevels as attributeCertificationLevel>
+            <#if attributeCertificationLevel.attributeKey == attributeKey && attributeCertificationLevel.level.level == level>
+                <#return AttributeCertificationLevelDto.code>
+            </#if>
+        </#list>
+    </#list>
+    <#return "N/A">
+</#function>
+
+
 <#-- Retrieves the value of an attribute from a list of attributes -->
 <#-- @param attrs The list of attributes -->
 <#-- @param key The key of the attribute -->
