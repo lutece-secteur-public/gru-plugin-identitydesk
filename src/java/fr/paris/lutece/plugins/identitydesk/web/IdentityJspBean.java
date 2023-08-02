@@ -448,7 +448,7 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
 
         try
         {
-        	// get original Identity
+        	// TODO : do not get another version of the data, it could have been changed by another user
             final Identity originalIdentity = this.getIdentityFromCustomerId( identityWithUpdates.getCustomerId( ) );
             if ( originalIdentity == null )
             {
@@ -477,6 +477,9 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
             
 
             // Update API call
+            
+            // TODO : the last update date should not be set like this, it should come from the getModify call
+            identityWithUpdates.setLastUpdateDate( originalIdentity.getLastUpdateDate( ) );
             identityChangeRequest.setIdentity( identityWithUpdates );
             identityChangeRequest.setOrigin( this.getAuthor( ) );
             
