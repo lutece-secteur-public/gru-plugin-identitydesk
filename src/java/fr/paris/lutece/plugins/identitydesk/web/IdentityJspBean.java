@@ -822,6 +822,8 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
 
         identity.setCustomerId( qualifiedIdentity.getCustomerId( ) );
         identity.setConnectionId( qualifiedIdentity.getConnectionId( ) );
+        identity.setLastUpdateDate( qualifiedIdentity.getLastUpdateDate( ) );
+        
         identity.setAttributes( qualifiedIdentity.getAttributes( ).stream( ).map( a -> {
             final CertifiedAttribute attribute = new CertifiedAttribute( );
             attribute.setKey( a.getKey( ) );

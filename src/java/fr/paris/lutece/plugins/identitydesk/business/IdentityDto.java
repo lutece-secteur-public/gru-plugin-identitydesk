@@ -1,5 +1,6 @@
 package fr.paris.lutece.plugins.identitydesk.business;
 
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -16,18 +17,21 @@ import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.search.QualifiedIdent
 public class IdentityDto
 {
     private final String customerId;
+    private final Timestamp lastUpdateDate;
     private final List<AttributeDto> attributeList;
 
     private IdentityDto( )
     {
         this.customerId = null;
         this.attributeList = new ArrayList<>( );
+        this.lastUpdateDate = null;
     }
 
-    private IdentityDto( final String customerId )
+    private IdentityDto( final String customerId, Timestamp lastUpdate )
     {
         this.customerId = customerId;
         this.attributeList = new ArrayList<>( );
+        this.lastUpdateDate = lastUpdate;
     }
 
     public String getCustomerId( )
@@ -53,8 +57,8 @@ public class IdentityDto
         {
             return null;
         }
-        final IdentityDto identityDto = new IdentityDto( qualifiedIdentity.getCustomerId( ) );
-
+        IdentityDto identityDto = new IdentityDto( qualifiedIdentity.getCustomerId( ), qualifiedIdentity.getLastUpdateDate( ) );
+        
         // add allowed certification process from service contract
         serviceContract.getAttributeDefinitions( ).stream( ).filter( a -> a.getAttributeRight( ).isWritable( ) )
         	.forEach( attrRef -> {
