@@ -228,6 +228,7 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
             else
             {
                 final IdentitySearchRequest searchRequest = new IdentitySearchRequest( );
+                searchRequest.setOrigin( getAuthor( ) );
                 final SearchDto search = new SearchDto( );
                 searchRequest.setSearch( search );
                 search.setAttributes( _searchAttributes );
