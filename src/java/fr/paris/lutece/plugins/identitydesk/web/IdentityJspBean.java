@@ -37,6 +37,7 @@ import fr.paris.lutece.plugins.identitydesk.business.IdentityDto;
 import fr.paris.lutece.plugins.identitydesk.cache.ServiceContractCache;
 import fr.paris.lutece.plugins.identitydesk.cache.ServiceReferentialCache;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.common.AttributeStatus;
+import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.common.AttributeTreatmentType;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.common.AuthorType;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.common.RequestAuthor;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.contract.AttributeDefinitionDto;
@@ -371,7 +372,7 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
             else
             {
                 addInfo( MESSAGE_CREATE_IDENTITY_SUCCESS, getLocale( ) );
-                _searchAttributes.add( new SearchAttributeDto( "customer_id", response.getCustomerId( ), true ) );
+                _searchAttributes.add( new SearchAttributeDto( "customer_id", response.getCustomerId( ), AttributeTreatmentType.STRICT ) );
             }
         }
         catch( final IdentityStoreException e )
@@ -571,7 +572,8 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
                         }
                     }
                     if (value != null) {
-                        return new SearchAttributeDto(attrKey, value.trim(), _searchAttributeKeyStrictList.contains(attrKey));
+                        return new SearchAttributeDto(attrKey, value.trim(), 
+                        		(_searchAttributeKeyStrictList.contains(attrKey)?AttributeTreatmentType.STRICT:AttributeTreatmentType.APPROXIMATED) );
                     }
                     return null;
                 }).filter(searchAttribute -> searchAttribute != null && StringUtils.isNotBlank(searchAttribute.getValue()))
@@ -588,11 +590,11 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
         if (_searchAttributes.size() > 0) {
             if (_searchAttributes.stream().anyMatch(s -> s.getKey().equals(Constants.PARAM_BIRTH_PLACE))) {
                 final String value = request.getParameter(PARAMETER_SEARCH_PREFIX + Constants.PARAM_BIRTH_PLACE_CODE);
-                _searchAttributes.add(new SearchAttributeDto(Constants.PARAM_BIRTH_PLACE_CODE, value, _searchAttributeKeyStrictList.contains(Constants.PARAM_BIRTH_PLACE_CODE)));
+                _searchAttributes.add(new SearchAttributeDto(Constants.PARAM_BIRTH_PLACE_CODE, value, AttributeTreatmentType.STRICT ) );
             }
             if (_searchAttributes.stream().anyMatch(s -> s.getKey().equals(Constants.PARAM_BIRTH_COUNTRY))) {
                 final String value = request.getParameter(PARAMETER_SEARCH_PREFIX + Constants.PARAM_BIRTH_COUNTRY_CODE);
-                _searchAttributes.add(new SearchAttributeDto(Constants.PARAM_BIRTH_COUNTRY_CODE, value, _searchAttributeKeyStrictList.contains(Constants.PARAM_BIRTH_COUNTRY_CODE)));
+                _searchAttributes.add(new SearchAttributeDto(Constants.PARAM_BIRTH_COUNTRY_CODE, value, AttributeTreatmentType.STRICT ));
             }
         }
     }
@@ -622,7 +624,8 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
                         }
                     }
                     if (value != null) {
-                        return new SearchAttributeDto(attrKey, value.trim(), _searchAttributeKeyStrictList.contains(attrKey));
+                        return new SearchAttributeDto(attrKey, value.trim(), 
+                        		(_searchAttributeKeyStrictList.contains(attrKey)?AttributeTreatmentType.STRICT:AttributeTreatmentType.APPROXIMATED));
                     }
                     return null;
                 })
