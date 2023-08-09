@@ -48,12 +48,12 @@ public class ServiceContractCache extends AbstractCacheableService
     private static final Logger LOGGER = Logger.getLogger( ServiceContractCache.class );
     private static final String SERVICE_NAME = "ServiceContractCache";
 
-    private  ServiceContractService _serviceContractService ;
+    private ServiceContractService _serviceContractService;
     private final List<String> _sortedAttributeKeyList = Arrays.asList( AppPropertiesService.getProperty( "identitydesk.attribute.order" ).split( "," ) );
 
     public ServiceContractCache( ServiceContractService scService )
     {
-    	_serviceContractService = scService;
+        _serviceContractService = scService;
         this.initCache( );
     }
 
@@ -114,9 +114,9 @@ public class ServiceContractCache extends AbstractCacheableService
             } );
         }
     }
-    
+
     /**
-     * sort attributes certification process according by level 
+     * sort attributes certification process according by level
      * 
      * @param contract
      */
@@ -124,10 +124,9 @@ public class ServiceContractCache extends AbstractCacheableService
     {
         if ( contract != null )
         {
-            contract.getAttributeDefinitions( ).forEach( attr -> attr.getAttributeCertifications( ).sort( 
-            		(c1, c2) -> {
-            				return Integer.valueOf( c1.getLevel( ) ).compareTo( Integer.valueOf( c2.getLevel( ) ) );
-            }) ) ;
+            contract.getAttributeDefinitions( ).forEach( attr -> attr.getAttributeCertifications( ).sort( ( c1, c2 ) -> {
+                return Integer.valueOf( c1.getLevel( ) ).compareTo( Integer.valueOf( c2.getLevel( ) ) );
+            } ) );
         }
     }
 

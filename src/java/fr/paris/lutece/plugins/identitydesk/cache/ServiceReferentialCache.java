@@ -42,21 +42,17 @@ import fr.paris.lutece.portal.service.cache.AbstractCacheableService;
 import org.apache.log4j.Logger;
 import java.util.List;
 
-
 public class ServiceReferentialCache extends AbstractCacheableService
 {
     private static final Logger LOGGER = Logger.getLogger( ServiceReferentialCache.class );
     private static final String SERVICE_NAME = "ReferentialCacheService";
     private ReferentialService _referentialService;
 
- 
-
     public ServiceReferentialCache( ReferentialService srService )
     {
         _referentialService = srService;
         this.initCache( );
     }
-
 
     public void put( final String clientCode, final List<AttributeCertificationProcessusDto> referential )
     {
@@ -91,4 +87,3 @@ public class ServiceReferentialCache extends AbstractCacheableService
         return SERVICE_NAME;
     }
 }
-
