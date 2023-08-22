@@ -489,7 +489,7 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
                 }
                 else
                 {
-                    addWarning( "Status de la mise à jour : " + response.getStatus( ).getLabel( ) + " : " + response.getMessage( ) );
+                    addWarning( "Status de la mise à jour : " + response.getStatus( ).getMessage( ) + " : " + response.getMessage( ) );
                 }
                 if ( response.getAttributeStatuses( ) != null )
                 {
