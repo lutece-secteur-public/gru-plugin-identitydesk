@@ -33,17 +33,15 @@
  */
 package fr.paris.lutece.plugins.identitydesk.web;
 
-import fr.paris.lutece.plugins.identitydesk.business.IdentityDto;
+import fr.paris.lutece.plugins.identitydesk.business.LocalIdentityDto;
 import fr.paris.lutece.plugins.identitydesk.cache.ServiceContractCache;
 import fr.paris.lutece.plugins.identitydesk.cache.ServiceReferentialCache;
-import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.common.AttributeStatus;
-import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.common.AttributeTreatmentType;
-import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.common.AuthorType;
-import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.common.RequestAuthor;
+import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.common.*;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.contract.AttributeDefinitionDto;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.contract.ServiceContractDto;
-import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.crud.CertifiedAttribute;
-import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.crud.*;
+import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.crud.IdentityChangeRequest;
+import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.crud.IdentityChangeResponse;
+import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.crud.IdentityChangeStatus;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.referentiel.AttributeCertificationProcessusDto;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.search.*;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.util.Constants;
@@ -190,7 +188,7 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
             return getSearchIdentities( request );
         }
 
-        final List<QualifiedIdentity> qualifiedIdentities = new ArrayList<>( );
+        final List<IdentityDto> qualifiedIdentities = new ArrayList<>( );
 
         // get search criterias
         collectSearchAttributes( request );
@@ -205,7 +203,7 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
             {
                 try
                 {
-                    final QualifiedIdentity identity = getQualifiedIdentityFromCustomerId( customerId );
+                    final IdentityDto identity = getQualifiedIdentityFromCustomerId( customerId );
                     qualifiedIdentities.add( identity );
                 }
                 catch( final IdentityStoreException e )
@@ -226,7 +224,8 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
                     final IdentitySearchResponse searchResponse = _identityService.searchIdentities( searchRequest, _currentClientCode );
                     if ( !Boolean.parseBoolean( request.getParameter( MARK_APPROXIMATE ) ) )
                     {
-                        qualifiedIdentities.addAll( searchResponse.getIdentities( ).stream( ).filter( i -> Math.round( i.getScoring( ) * 100 ) == 100 )
+                        qualifiedIdentities.addAll( searchResponse.getIdentities( ).stream( )
+                                .filter( i -> i.getQuality( ) != null && Math.round( i.getQuality( ).getScoring( ) * 100 ) == 100 )
                                 .collect( Collectors.toList( ) ) );
                     }
                     else
@@ -277,7 +276,7 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
     @View( VIEW_CREATE_IDENTITY )
     public String getCreateIdentity( HttpServletRequest request )
     {
-        final Identity identity = getIdentityFromRequest( request, PARAMETER_SEARCH_PREFIX, true );
+        final IdentityDto identity = getIdentityFromRequest( request, PARAMETER_SEARCH_PREFIX, true );
         return createIdentityPage( identity, request );
     }
 
@@ -293,7 +292,7 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
     public String getCreateIdentity( HttpServletRequest request, boolean useSearchPrefix )
     {
         final String parameterPrefix = useSearchPrefix ? PARAMETER_SEARCH_PREFIX : "";
-        final Identity identity = getIdentityFromRequest( request, parameterPrefix, true );
+        final IdentityDto identity = getIdentityFromRequest( request, parameterPrefix, true );
         return createIdentityPage( identity, request );
     }
 
@@ -306,11 +305,11 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
      *            The HTTP request.
      * @return The HTML code of the identity page.
      */
-    private String createIdentityPage( Identity identity, HttpServletRequest request )
+    private String createIdentityPage( IdentityDto identity, HttpServletRequest request )
     {
         Map<String, Object> model = getModel( );
 
-        model.put( MARK_IDENTITY, IdentityDto.from( identity, _serviceContract ) );
+        model.put( MARK_IDENTITY, LocalIdentityDto.from( identity, _serviceContract ) );
         model.put( MARK_SERVICE_CONTRACT, _serviceContract );
         model.put( MARK_AUTOCOMPLETE_CITY_ENDPOINT, _autocompleteCityEndpoint );
         model.put( MARK_AUTOCOMPLETE_COUNTRY_ENDPOINT, _autocompleteCountryEndpoint );
@@ -335,8 +334,8 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
         _attributeStatuses.clear( );
         try
         {
-            final Identity identity = getIdentityFromRequest( request, "", true );
-            if ( identity.getAttributes( ).stream( ).anyMatch( a -> StringUtils.isBlank( a.getCertificationProcess( ) ) ) )
+            final IdentityDto identity = getIdentityFromRequest( request, "", true );
+            if ( identity.getAttributes( ).stream( ).anyMatch( a -> StringUtils.isBlank( a.getCertifier( ) ) ) )
             {
                 addWarning( MESSAGE_IDENTITY_MUSTSELECTCERTIFICATION, getLocale( ) );
                 return getCreateIdentity( request, false );
@@ -389,7 +388,7 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
     public String getModifyIdentity( HttpServletRequest request )
     {
         final String customerId = request.getParameter( "customer_id" );
-        final QualifiedIdentity qualifiedIdentity;
+        final IdentityDto qualifiedIdentity;
         try
         {
             qualifiedIdentity = getQualifiedIdentityFromCustomerId( customerId );
@@ -406,7 +405,7 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
             return getSearchIdentities( request );
         }
 
-        final IdentityDto dto = IdentityDto.from( qualifiedIdentity, _serviceContract );
+        final LocalIdentityDto dto = LocalIdentityDto.from( qualifiedIdentity, _serviceContract );
 
         Map<String, Object> model = getModel( );
         model.put( MARK_IDENTITY, dto );
@@ -431,7 +430,7 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
     public String doModifyIdentity( HttpServletRequest request )
     {
         // get values to update
-        final Identity identityWithUpdates = getIdentityFromRequest( request, "", false );
+        final IdentityDto identityWithUpdates = getIdentityFromRequest( request, "", false );
         if ( identityWithUpdates.getCustomerId( ) == null )
         {
             addError( MESSAGE_UPDATE_IDENTITY_ERROR, getLocale( ) );
@@ -444,7 +443,7 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
         try
         {
             // TODO : do not get another version of the data, it could have been changed by another user
-            final Identity originalIdentity = this.getIdentityFromCustomerId( identityWithUpdates.getCustomerId( ) );
+            final IdentityDto originalIdentity = this.getIdentityFromCustomerId( identityWithUpdates.getCustomerId( ) );
             if ( originalIdentity == null )
             {
                 addError( MESSAGE_GET_IDENTITY_ERROR, getLocale( ) );
@@ -462,8 +461,8 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
             }
 
             // check if all attributes to update are certified
-            final List<CertifiedAttribute> attributesWithoutCertif = identityWithUpdates.getAttributes( ).stream( )
-                    .filter( a -> StringUtils.isBlank( a.getCertificationProcess( ) ) ).collect( Collectors.toList( ) );
+            final List<AttributeDto> attributesWithoutCertif = identityWithUpdates.getAttributes( ).stream( )
+                    .filter( a -> StringUtils.isBlank( a.getCertifier( ) ) ).collect( Collectors.toList( ) );
             if ( CollectionUtils.isNotEmpty( attributesWithoutCertif ) )
             {
                 addWarning( MESSAGE_IDENTITY_MUSTSELECTCERTIFICATION, getLocale( ) );
@@ -524,13 +523,13 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
      * @param updatedAttr
      * @return true if modified
      */
-    private boolean checkIfAttributeIsModified( Identity originalIdentity, CertifiedAttribute updatedAttr )
+    private boolean checkIfAttributeIsModified( IdentityDto originalIdentity, AttributeDto updatedAttr )
     {
-        CertifiedAttribute origAttr = originalIdentity.getAttributes( ).stream( ).filter( a -> a.getKey( ).equals( updatedAttr.getKey( ) ) ).findFirst( )
+        AttributeDto origAttr = originalIdentity.getAttributes( ).stream( ).filter( a -> a.getKey( ).equals( updatedAttr.getKey( ) ) ).findFirst( )
                 .orElse( null );
 
         if ( origAttr == null || !origAttr.getValue( ).equals( updatedAttr.getValue( ) )
-                || ( !origAttr.getCertificationProcess( ).equals( updatedAttr.getCertificationProcess( ) ) && updatedAttr.getCertificationProcess( ) != null ) )
+                || ( !origAttr.getCertifier( ).equals( updatedAttr.getCertifier( ) ) && updatedAttr.getCertifier( ) != null ) )
         {
             return true;
         }
@@ -708,10 +707,10 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
      * @param request
      * @return the identity with attributes to update
      */
-    private Identity getIdentityFromRequest( final HttpServletRequest request, String strPrefix, Boolean bCreate )
+    private IdentityDto getIdentityFromRequest( final HttpServletRequest request, String strPrefix, Boolean bCreate )
     {
         initServiceContract( _currentClientCode );
-        final Identity identity = new Identity( );
+        final IdentityDto identity = new IdentityDto( );
 
         identity.setCustomerId( request.getParameter( Constants.PARAM_ID_CUSTOMER ) );
 
@@ -750,14 +749,14 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
      * @param certificationCode
      * @return the certifiedAttribute
      */
-    private CertifiedAttribute buildAttribute( final String key, final String value, final String certificationCode )
+    private AttributeDto buildAttribute( final String key, final String value, final String certificationCode )
     {
-        final CertifiedAttribute attr = new CertifiedAttribute( );
+        final AttributeDto attr = new AttributeDto( );
         attr.setKey( key );
         attr.setValue( value );
         if ( StringUtils.isNotBlank( certificationCode ) )
         {
-            attr.setCertificationProcess( certificationCode );
+            attr.setCertifier( certificationCode );
             attr.setCertificationDate( new Date( ) );
         }
         return attr;
@@ -783,7 +782,7 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
      * @return the QualifiedIdentity , null otherwise
      * @throws IdentityStoreException
      */
-    private QualifiedIdentity getQualifiedIdentityFromCustomerId( final String customerId ) throws IdentityStoreException
+    private IdentityDto getQualifiedIdentityFromCustomerId( final String customerId ) throws IdentityStoreException
     {
         final IdentitySearchResponse identityResponse = _identityService.getIdentity( customerId, _currentClientCode );
 
@@ -804,9 +803,9 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
      * @return the identity object
      * @throws IdentityStoreException
      */
-    private Identity getIdentityFromCustomerId( final String customerId ) throws IdentityStoreException
+    private IdentityDto getIdentityFromCustomerId( final String customerId ) throws IdentityStoreException
     {
-        QualifiedIdentity qualifiedIdentity = getQualifiedIdentityFromCustomerId( customerId );
+        IdentityDto qualifiedIdentity = getQualifiedIdentityFromCustomerId( customerId );
 
         if ( qualifiedIdentity != null )
         {
@@ -823,19 +822,19 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
      * @param qualifiedIdentity
      * @return an Identity Object
      */
-    private Identity castQualifiedIdentityToIdentity( QualifiedIdentity qualifiedIdentity )
+    private IdentityDto castQualifiedIdentityToIdentity( IdentityDto qualifiedIdentity )
     {
-        final Identity identity = new Identity( );
+        final IdentityDto identity = new IdentityDto( );
 
         identity.setCustomerId( qualifiedIdentity.getCustomerId( ) );
         identity.setConnectionId( qualifiedIdentity.getConnectionId( ) );
         identity.setLastUpdateDate( qualifiedIdentity.getLastUpdateDate( ) );
 
         identity.setAttributes( qualifiedIdentity.getAttributes( ).stream( ).map( a -> {
-            final CertifiedAttribute attribute = new CertifiedAttribute( );
+            final AttributeDto attribute = new AttributeDto( );
             attribute.setKey( a.getKey( ) );
             attribute.setValue( a.getValue( ) );
-            attribute.setCertificationProcess( a.getCertifier( ) );
+            attribute.setCertifier( a.getCertifier( ) );
             attribute.setCertificationDate( a.getCertificationDate( ) );
             return attribute;
         } ).collect( Collectors.toList( ) ) );

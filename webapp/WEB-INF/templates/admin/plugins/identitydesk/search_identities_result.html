@@ -123,7 +123,7 @@
                                     <center>${getCertifierPivotBadge(identity.attributes)}</center>
                                 </td>
                                 <td class="text-center">
-                                    <#assign qualityPercent = (identity.quality * 100)?string("0")>
+                                    <#assign qualityPercent = (identity.quality.quality * 100)?string("0")>
                                     <#if qualityPercent?number gt 80>
                                         <#assign colorClass = "success">
                                     <#elseif qualityPercent?number gt 50>

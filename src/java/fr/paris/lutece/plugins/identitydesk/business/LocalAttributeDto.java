@@ -33,15 +33,15 @@
  */
 package fr.paris.lutece.plugins.identitydesk.business;
 
+import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.contract.AttributeDefinitionDto;
+import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.contract.CertificationProcessusDto;
+import org.apache.commons.collections.CollectionUtils;
+
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import org.apache.commons.collections.CollectionUtils;
-import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.contract.AttributeDefinitionDto;
-import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.contract.CertificationProcessus;
-import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.crud.CertifiedAttribute;
 
-public class AttributeDto
+public class LocalAttributeDto
 {
     private String _strKey;
     private String name;
@@ -51,9 +51,9 @@ public class AttributeDto
     private Integer certificationLevel;
     private Date certificationDate;
     private boolean mandatory;
-    private List<CertificationProcessus> allowedCertificationList;
+    private List<CertificationProcessusDto> allowedCertificationList;
 
-    private AttributeDto( final String key, final String name, final String description, final boolean mandatory )
+    private LocalAttributeDto( final String key, final String name, final String description, final boolean mandatory )
     {
         this._strKey = key;
         this.name = name;
@@ -66,7 +66,7 @@ public class AttributeDto
         this.allowedCertificationList = new ArrayList<>( );
     }
 
-    private AttributeDto( final String key, final String name, final String description, final String value, final String certifier,
+    private LocalAttributeDto( final String key, final String name, final String description, final String value, final String certifier,
             final Integer certificationLevel, final Date certificationDate, final boolean mandatory )
     {
         this._strKey = key;
@@ -120,7 +120,7 @@ public class AttributeDto
         return mandatory;
     }
 
-    public List<CertificationProcessus> getAllowedCertificationList( )
+    public List<CertificationProcessusDto> getAllowedCertificationList( )
     {
         return allowedCertificationList;
     }
@@ -162,51 +162,26 @@ public class AttributeDto
      * @param attributeDefinition
      * @return
      */
-    public static AttributeDto from( final fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.search.CertifiedAttribute certifiedAttribute,
+    public static LocalAttributeDto from( final fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.common.AttributeDto certifiedAttribute,
             final AttributeDefinitionDto attributeDefinition )
     {
-        final AttributeDto attributeDto = buildEmptyGenericAttributeDto( attributeDefinition );
+        final LocalAttributeDto localAttributeDto = buildEmptyGenericAttributeDto( attributeDefinition );
 
         if ( certifiedAttribute == null )
         {
-            return attributeDto;
+            return localAttributeDto;
         }
 
-        attributeDto.setKey( certifiedAttribute.getKey( ) );
-        attributeDto.setValue( certifiedAttribute.getValue( ) );
-        attributeDto.setCertifier( certifiedAttribute.getCertifier( ) );
-        attributeDto.setCertificationLevel( certifiedAttribute.getCertificationLevel( ) );
-        attributeDto.setCertificationDate( certifiedAttribute.getCertificationDate( ) );
+        localAttributeDto.setKey( certifiedAttribute.getKey( ) );
+        localAttributeDto.setValue( certifiedAttribute.getValue( ) );
+        localAttributeDto.setCertifier( certifiedAttribute.getCertifier( ) );
+        localAttributeDto.setCertificationLevel( certifiedAttribute.getCertificationLevel( ) );
+        localAttributeDto.setCertificationDate( certifiedAttribute.getCertificationDate( ) );
 
         // filter allowed certification list according to requirement min level
-        filterAllowedCertificates( attributeDto, attributeDefinition );
+        filterAllowedCertificates( localAttributeDto, attributeDefinition );
 
-        return attributeDto;
-    }
-
-    /**
-     * Static builder for create UI.
-     * 
-     * @param certifiedAttribute
-     * @param attributeDefinition
-     * @return
-     */
-    public static AttributeDto from( final CertifiedAttribute certifiedAttribute, final AttributeDefinitionDto attributeDefinition )
-    {
-
-        final AttributeDto attributeDto = buildEmptyGenericAttributeDto( attributeDefinition );
-
-        if ( certifiedAttribute == null )
-        {
-            return attributeDto;
-        }
-        attributeDto.setCertifier( certifiedAttribute.getCertificationProcess( ) );
-        attributeDto.setValue( certifiedAttribute.getValue( ) );
-
-        // filter allowed certification list according to requirement min level
-        filterAllowedCertificates( attributeDto, attributeDefinition );
-
-        return attributeDto;
+        return localAttributeDto;
     }
 
     /**
@@ -216,32 +191,32 @@ public class AttributeDto
      * @param attributeDefinition
      * @return the AttributeDto
      */
-    private static AttributeDto buildEmptyGenericAttributeDto( final AttributeDefinitionDto attributeDefinition )
+    private static LocalAttributeDto buildEmptyGenericAttributeDto( final AttributeDefinitionDto attributeDefinition )
     {
-        final AttributeDto attributeDto = new AttributeDto( attributeDefinition.getKeyName( ), attributeDefinition.getName( ),
+        final LocalAttributeDto localAttributeDto = new LocalAttributeDto( attributeDefinition.getKeyName( ), attributeDefinition.getName( ),
                 attributeDefinition.getDescription( ), attributeDefinition.getAttributeRight( ).isMandatory( ) );
-        attributeDto.getAllowedCertificationList( ).addAll( attributeDefinition.getAttributeCertifications( ) );
+        localAttributeDto.getAllowedCertificationList( ).addAll( attributeDefinition.getAttributeCertifications( ) );
 
-        return attributeDto;
+        return localAttributeDto;
     }
 
     /**
      * filter allowed certification list according to current certification and requirement min level
      * 
-     * @param attributeDto
+     * @param localAttributeDto
      * @param attributeDefinition
      */
-    private static void filterAllowedCertificates( AttributeDto attributeDto, AttributeDefinitionDto attributeDefinition )
+    private static void filterAllowedCertificates( LocalAttributeDto localAttributeDto, AttributeDefinitionDto attributeDefinition )
     {
 
-        if ( CollectionUtils.isEmpty( attributeDto.getAllowedCertificationList( ) ) )
+        if ( CollectionUtils.isEmpty( localAttributeDto.getAllowedCertificationList( ) ) )
             return;
 
-        attributeDto.getAllowedCertificationList( ).removeIf( cert -> {
+        localAttributeDto.getAllowedCertificationList( ).removeIf( cert -> {
 
             // certification process of level lower than current certification are not allowed
-            if ( attributeDto.getCertificationLevel( ) != null && attributeDto.getCertificationLevel( ) > 0
-                    && Integer.parseInt( cert.getLevel( ) ) < attributeDto.getCertificationLevel( ) )
+            if ( localAttributeDto.getCertificationLevel( ) != null && localAttributeDto.getCertificationLevel( ) > 0
+                    && Integer.parseInt( cert.getLevel( ) ) < localAttributeDto.getCertificationLevel( ) )
                 return true;
 
             // certification process of level lower than min level required are not allowed
