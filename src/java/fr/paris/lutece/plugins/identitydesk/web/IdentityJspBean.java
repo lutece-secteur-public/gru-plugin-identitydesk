@@ -41,7 +41,6 @@ import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.contract.AttributeDef
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.contract.ServiceContractDto;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.crud.IdentityChangeRequest;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.crud.IdentityChangeResponse;
-import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.crud.IdentityChangeStatus;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.referentiel.AttributeCertificationProcessusDto;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.search.*;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.util.Constants;
@@ -345,9 +344,9 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
 
             final IdentityChangeResponse response = _identityService.createIdentity( identityChangeRequest, _currentClientCode );
 
-            if ( response.getStatus( ) != IdentityChangeStatus.CREATE_SUCCESS )
+            if ( response.getStatus( ) != ResponseStatusType.SUCCESS )
             {
-                if ( response.getStatus( ) == IdentityChangeStatus.FAILURE )
+                if ( response.getStatus( ) == ResponseStatusType.FAILURE )
                 {
                     addError( response.getMessage( ) );
                 }
@@ -480,15 +479,15 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
                     _currentClientCode );
 
             // prepare response status message
-            if ( response.getStatus( ) != IdentityChangeStatus.UPDATE_SUCCESS && response.getStatus( ) != IdentityChangeStatus.UPDATE_INCOMPLETE_SUCCESS )
+            if ( response.getStatus( ) != ResponseStatusType.SUCCESS && response.getStatus( ) != ResponseStatusType.INCOMPLETE_SUCCESS )
             {
-                if ( response.getStatus( ) == IdentityChangeStatus.FAILURE )
+                if ( response.getStatus( ) == ResponseStatusType.FAILURE )
                 {
                     addError( "Erreur lors de la mise à jour : " + response.getMessage( ) );
                 }
                 else
                 {
-                    addWarning( "Status de la mise à jour : " + response.getStatus( ).getMessage( ) + " : " + response.getMessage( ) );
+                    addWarning( "Status de la mise à jour : " + response.getStatus( ).getName( ) + " : " + response.getMessage( ) );
                 }
                 if ( response.getAttributeStatuses( ) != null )
                 {
