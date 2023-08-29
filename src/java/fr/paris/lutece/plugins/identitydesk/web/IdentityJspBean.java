@@ -783,7 +783,7 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
      */
     private IdentityDto getQualifiedIdentityFromCustomerId( final String customerId ) throws IdentityStoreException
     {
-        final IdentitySearchResponse identityResponse = _identityService.getIdentity( customerId, _currentClientCode );
+        final IdentitySearchResponse identityResponse = _identityService.getIdentity( customerId, _currentClientCode, getAuthor( ) );
 
         if ( identityResponse.getIdentities( ) != null && identityResponse.getIdentities( ).size( ) == 1 )
         {
