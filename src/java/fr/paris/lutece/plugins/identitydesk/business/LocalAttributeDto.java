@@ -145,7 +145,7 @@ public class LocalAttributeDto
         this.certifier = strCert;
     }
 
-    public void setCertificationLevel( int ilevel )
+    public void setCertificationLevel( Integer ilevel )
     {
         this.certificationLevel = ilevel;
     }
