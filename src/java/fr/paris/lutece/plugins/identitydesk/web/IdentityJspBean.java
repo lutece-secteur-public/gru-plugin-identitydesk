@@ -36,13 +36,22 @@ package fr.paris.lutece.plugins.identitydesk.web;
 import fr.paris.lutece.plugins.identitydesk.business.LocalIdentityDto;
 import fr.paris.lutece.plugins.identitydesk.cache.ServiceContractCache;
 import fr.paris.lutece.plugins.identitydesk.cache.ServiceReferentialCache;
-import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.common.*;
+import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.common.AttributeDto;
+import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.common.AttributeStatus;
+import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.common.AttributeTreatmentType;
+import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.common.AuthorType;
+import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.common.IdentityDto;
+import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.common.RequestAuthor;
+import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.common.ResponseStatus;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.contract.AttributeDefinitionDto;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.contract.ServiceContractDto;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.crud.IdentityChangeRequest;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.crud.IdentityChangeResponse;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.referentiel.AttributeCertificationProcessusDto;
-import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.search.*;
+import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.search.IdentitySearchRequest;
+import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.search.IdentitySearchResponse;
+import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.search.SearchAttribute;
+import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.search.SearchDto;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.util.Constants;
 import fr.paris.lutece.plugins.identitystore.v3.web.service.IdentityService;
 import fr.paris.lutece.plugins.identitystore.web.exception.IdentityStoreException;
@@ -58,7 +67,13 @@ import org.apache.commons.lang3.StringUtils;
 import javax.servlet.http.HttpServletRequest;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -344,15 +359,15 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
 
             final IdentityChangeResponse response = _identityService.createIdentity( identityChangeRequest, _currentClientCode );
 
-            if ( response.getStatus( ) != ResponseStatusType.SUCCESS )
+            if ( !Objects.equals( response.getStatus( ), ResponseStatus.success( ) ) )
             {
-                if ( response.getStatus( ) == ResponseStatusType.FAILURE )
+                if ( Objects.equals( response.getStatus( ), ResponseStatus.failure( ) ) )
                 {
-                    addError( response.getMessage( ) );
+                    addError( response.getStatus( ).getMessage( ) );
                 }
                 else
                 {
-                    addWarning( response.getMessage( ) );
+                    addWarning( response.getStatus( ).getMessage( ) );
                 }
                 if ( response.getAttributeStatuses( ) != null )
                 {
@@ -479,15 +494,16 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
                     _currentClientCode );
 
             // prepare response status message
-            if ( response.getStatus( ) != ResponseStatusType.SUCCESS && response.getStatus( ) != ResponseStatusType.INCOMPLETE_SUCCESS )
+            if ( !Objects.equals( response.getStatus( ), ResponseStatus.success( ) )
+                    && !Objects.equals( response.getStatus( ), ResponseStatus.incompleteSuccess( ) ) )
             {
-                if ( response.getStatus( ) == ResponseStatusType.FAILURE )
+                if ( Objects.equals( response.getStatus( ), ResponseStatus.failure( ) ) )
                 {
-                    addError( "Erreur lors de la mise à jour : " + response.getMessage( ) );
+                    addError( "Erreur lors de la mise à jour : " + response.getStatus( ).getMessage( ) );
                 }
                 else
                 {
-                    addWarning( "Status de la mise à jour : " + response.getStatus( ).getName( ) + " : " + response.getMessage( ) );
+                    addWarning( "Status de la mise à jour : " + response.getStatus( ).getName( ) + " : " + response.getStatus( ).getMessage( ) );
                 }
                 if ( response.getAttributeStatuses( ) != null )
                 {
