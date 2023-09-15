@@ -503,7 +503,7 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
                 }
                 else
                 {
-                    addWarning( "Status de la mise à jour : " + response.getStatus( ).getStatus( ).name() + " : " + response.getStatus( ).getMessage( ) );
+                    addWarning( "Status de la mise à jour : " + response.getStatus( ).getStatus( ).name( ) + " : " + response.getStatus( ).getMessage( ) );
                 }
                 if ( response.getAttributeStatuses( ) != null )
                 {
