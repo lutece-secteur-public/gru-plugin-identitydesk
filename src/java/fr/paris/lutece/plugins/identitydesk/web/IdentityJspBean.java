@@ -42,7 +42,7 @@ import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.common.AttributeTreat
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.common.AuthorType;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.common.IdentityDto;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.common.RequestAuthor;
-import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.common.ResponseStatus;
+import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.common.ResponseStatusType;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.contract.AttributeDefinitionDto;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.contract.ServiceContractDto;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.crud.IdentityChangeRequest;
@@ -359,9 +359,9 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
 
             final IdentityChangeResponse response = _identityService.createIdentity( identityChangeRequest, _currentClientCode );
 
-            if ( !Objects.equals( response.getStatus( ), ResponseStatus.success( ) ) )
+            if ( !Objects.equals( response.getStatus( ).getStatus( ), ResponseStatusType.SUCCESS ) )
             {
-                if ( Objects.equals( response.getStatus( ), ResponseStatus.failure( ) ) )
+                if ( Objects.equals( response.getStatus( ).getStatus( ), ResponseStatusType.FAILURE ) )
                 {
                     addError( response.getStatus( ).getMessage( ) );
                 }
@@ -494,10 +494,10 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
                     _currentClientCode );
 
             // prepare response status message
-            if ( !Objects.equals( response.getStatus( ), ResponseStatus.success( ) )
-                    && !Objects.equals( response.getStatus( ), ResponseStatus.incompleteSuccess( ) ) )
+            if ( !Objects.equals( response.getStatus( ).getStatus( ), ResponseStatusType.SUCCESS )
+                    && !Objects.equals( response.getStatus( ).getStatus( ), ResponseStatusType.INCOMPLETE_SUCCESS ) )
             {
-                if ( Objects.equals( response.getStatus( ), ResponseStatus.failure( ) ) )
+                if ( Objects.equals( response.getStatus( ).getStatus( ), ResponseStatusType.FAILURE ) )
                 {
                     addError( "Erreur lors de la mise à jour : " + response.getStatus( ).getMessage( ) );
                 }
