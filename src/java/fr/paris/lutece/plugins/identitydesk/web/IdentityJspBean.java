@@ -367,9 +367,9 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
                 {
                     addWarning( response.getStatus( ).getMessage( ) );
                 }
-                if ( response.getAttributeStatuses( ) != null )
+                if ( response.getStatus( ).getAttributeStatuses( ) != null )
                 {
-                    _attributeStatuses.addAll( response.getAttributeStatuses( ) );
+                    _attributeStatuses.addAll( response.getStatus( ).getAttributeStatuses( ) );
                 }
                 return getCreateIdentity( request, false );
             }
@@ -502,9 +502,9 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
                 {
                     addWarning( "Status de la mise à jour : " + response.getStatus( ).getStatus( ).name( ) + " : " + response.getStatus( ).getMessage( ) );
                 }
-                if ( response.getAttributeStatuses( ) != null )
+                if ( response.getStatus( ).getAttributeStatuses( ) != null )
                 {
-                    _attributeStatuses.addAll( response.getAttributeStatuses( ) );
+                    _attributeStatuses.addAll( response.getStatus( ).getAttributeStatuses( ) );
                 }
                 return getModifyIdentity( request );
             }
