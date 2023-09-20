@@ -229,13 +229,12 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
             else
             {
                 final IdentitySearchRequest searchRequest = new IdentitySearchRequest( );
-                searchRequest.setOrigin( getAuthor( ) );
                 final SearchDto search = new SearchDto( );
                 searchRequest.setSearch( search );
                 search.setAttributes( _searchAttributes );
                 try
                 {
-                    final IdentitySearchResponse searchResponse = _identityService.searchIdentities( searchRequest, _currentClientCode );
+                    final IdentitySearchResponse searchResponse = _identityService.searchIdentities( searchRequest, _currentClientCode, getAuthor( ) );
                     if ( !Boolean.parseBoolean( request.getParameter( MARK_APPROXIMATE ) ) )
                     {
                         qualifiedIdentities.addAll( searchResponse.getIdentities( ).stream( )
@@ -355,9 +354,8 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
                 return getCreateIdentity( request, false );
             }
             identityChangeRequest.setIdentity( identity );
-            identityChangeRequest.setOrigin( this.getAuthor( ) );
 
-            final IdentityChangeResponse response = _identityService.createIdentity( identityChangeRequest, _currentClientCode );
+            final IdentityChangeResponse response = _identityService.createIdentity( identityChangeRequest, _currentClientCode, this.getAuthor( ) );
 
             if ( !Objects.equals( response.getStatus( ).getStatus( ), ResponseStatusType.SUCCESS ) )
             {
@@ -488,10 +486,9 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
             // TODO : the last update date should not be set like this, it should come from the getModify call
             identityWithUpdates.setLastUpdateDate( originalIdentity.getLastUpdateDate( ) );
             identityChangeRequest.setIdentity( identityWithUpdates );
-            identityChangeRequest.setOrigin( this.getAuthor( ) );
 
             final IdentityChangeResponse response = _identityService.updateIdentity( originalIdentity.getCustomerId( ), identityChangeRequest,
-                    _currentClientCode );
+                    _currentClientCode, this.getAuthor( ) );
 
             // prepare response status message
             if ( !Objects.equals( response.getStatus( ).getStatus( ), ResponseStatusType.SUCCESS )

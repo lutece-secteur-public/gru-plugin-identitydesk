@@ -33,6 +33,8 @@
  */
 package fr.paris.lutece.plugins.identitydesk.cache;
 
+import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.common.AuthorType;
+import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.common.RequestAuthor;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.contract.ServiceContractDto;
 import fr.paris.lutece.plugins.identitystore.v3.web.service.ServiceContractService;
 import fr.paris.lutece.plugins.identitystore.web.exception.IdentityStoreException;
@@ -47,6 +49,8 @@ public class ServiceContractCache extends AbstractCacheableService
 {
     private static final Logger LOGGER = Logger.getLogger( ServiceContractCache.class );
     private static final String SERVICE_NAME = "ServiceContractCache";
+
+    private final String _currentClientCode = AppPropertiesService.getProperty( "identitydesk.default.client.code" );
 
     private ServiceContractService _serviceContractService;
     private final List<String> _sortedAttributeKeyList = Arrays.asList( AppPropertiesService.getProperty( "identitydesk.attribute.order" ).split( "," ) );
@@ -77,20 +81,21 @@ public class ServiceContractCache extends AbstractCacheableService
         LOGGER.info( "ServiceContractDto removed from cache: " + clientCode );
     }
 
-    public ServiceContractDto get( final String clientCode ) throws IdentityStoreException
+    public ServiceContractDto get( final String targetClientCode ) throws IdentityStoreException
     {
-        ServiceContractDto serviceContract = (ServiceContractDto) this.getFromCache( clientCode );
+        ServiceContractDto serviceContract = (ServiceContractDto) this.getFromCache( targetClientCode );
         if ( serviceContract == null )
         {
-            serviceContract = this.getFromAPI( clientCode );
-            this.put( clientCode, serviceContract );
+            serviceContract = this.getFromAPI( targetClientCode );
+            this.put( targetClientCode, serviceContract );
         }
         return serviceContract;
     }
 
-    public ServiceContractDto getFromAPI( final String clientCode ) throws IdentityStoreException
+    public ServiceContractDto getFromAPI( final String targetClientCode ) throws IdentityStoreException
     {
-        final ServiceContractDto contract = _serviceContractService.getActiveServiceContract( clientCode ).getServiceContract( );
+        final ServiceContractDto contract = _serviceContractService.getActiveServiceContract( targetClientCode, _currentClientCode,
+                new RequestAuthor( "IdentityDesk_ServiceContractCache", AuthorType.application.name( ) ) ).getServiceContract( );
         sortServiceContractAttributes( contract );
         sortServiceContractAttributeCertifications( contract );
         return contract;

@@ -34,6 +34,8 @@ package fr.paris.lutece.plugins.identitydesk.cache;
  * License 1.0
  */
 
+import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.common.AuthorType;
+import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.common.RequestAuthor;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.referentiel.AttributeCertificationProcessusDto;
 import fr.paris.lutece.plugins.identitystore.v3.web.service.ReferentialService;
 import fr.paris.lutece.plugins.identitystore.web.exception.IdentityStoreException;
@@ -76,7 +78,8 @@ public class ServiceReferentialCache extends AbstractCacheableService
 
     public List<AttributeCertificationProcessusDto> get( final String clientCode ) throws IdentityStoreException
     {
-        List<AttributeCertificationProcessusDto> processusDtos = _referentialService.getProcessList( ).getProcessus( );
+        List<AttributeCertificationProcessusDto> processusDtos = _referentialService
+                .getProcessList( clientCode, new RequestAuthor( "IdentityDesk_ServiceReferentialCache", AuthorType.application.name( ) ) ).getProcessus( );
         this.put( clientCode + "_referential", processusDtos );
         return processusDtos;
     }
