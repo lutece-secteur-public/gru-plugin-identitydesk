@@ -357,9 +357,9 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
 
             final IdentityChangeResponse response = _identityService.createIdentity( identityChangeRequest, _currentClientCode, this.getAuthor( ) );
 
-            if ( !Objects.equals( response.getStatus( ).getStatus( ), ResponseStatusType.SUCCESS ) )
+            if ( !Objects.equals( response.getStatus( ).getType( ), ResponseStatusType.SUCCESS ) )
             {
-                if ( Objects.equals( response.getStatus( ).getStatus( ), ResponseStatusType.FAILURE ) )
+                if ( Objects.equals( response.getStatus( ).getType( ), ResponseStatusType.FAILURE ) )
                 {
                     addError( response.getStatus( ).getMessage( ) );
                 }
@@ -491,16 +491,16 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
                     _currentClientCode, this.getAuthor( ) );
 
             // prepare response status message
-            if ( !Objects.equals( response.getStatus( ).getStatus( ), ResponseStatusType.SUCCESS )
-                    && !Objects.equals( response.getStatus( ).getStatus( ), ResponseStatusType.INCOMPLETE_SUCCESS ) )
+            if ( !Objects.equals( response.getStatus( ).getType( ), ResponseStatusType.SUCCESS )
+                    && !Objects.equals( response.getStatus( ).getType( ), ResponseStatusType.INCOMPLETE_SUCCESS ) )
             {
-                if ( Objects.equals( response.getStatus( ).getStatus( ), ResponseStatusType.FAILURE ) )
+                if ( Objects.equals( response.getStatus( ).getType( ), ResponseStatusType.FAILURE ) )
                 {
                     addError( "Erreur lors de la mise à jour : " + response.getStatus( ).getMessage( ) );
                 }
                 else
                 {
-                    addWarning( "Status de la mise à jour : " + response.getStatus( ).getStatus( ).name( ) + " : " + response.getStatus( ).getMessage( ) );
+                    addWarning( "Status de la mise à jour : " + response.getStatus( ).getType( ).name( ) + " : " + response.getStatus( ).getMessage( ) );
                 }
                 if ( response.getStatus( ).getAttributeStatuses( ) != null )
                 {
