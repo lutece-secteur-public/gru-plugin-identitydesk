@@ -42,6 +42,7 @@ import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.common.AttributeTreat
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.common.AuthorType;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.common.IdentityDto;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.common.RequestAuthor;
+import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.common.ResponseDto;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.common.ResponseStatusType;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.contract.AttributeDefinitionDto;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.contract.ServiceContractDto;
@@ -201,24 +202,25 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
         {
             return getSearchIdentities( request );
         }
-
         final List<IdentityDto> qualifiedIdentities = new ArrayList<>( );
 
         // get search criterias
         collectSearchAttributes( request );
-
         // check
         if ( checkSearchAttributes( ) )
         {
-
             final String customerId = _searchAttributes.stream( ).filter( a -> a.getKey( ).equals( "customer_id" ) ).map( SearchAttribute::getValue )
                     .findFirst( ).orElse( null );
             if ( StringUtils.isNotBlank( customerId ) )
             {
                 try
                 {
-                    final IdentityDto identity = getQualifiedIdentityFromCustomerId( customerId );
-                    qualifiedIdentities.add( identity );
+                    final IdentitySearchResponse getResponse = _identityService.getIdentity( customerId, _currentClientCode, getAuthor( ) );
+                    logAndDisplayStatusErrorMessage( getResponse );
+                    if ( getResponse.getIdentities( ).size( ) == 1 )
+                    {
+                        qualifiedIdentities.add( getResponse.getIdentities( ).get( 0 ) );
+                    }
                 }
                 catch( final IdentityStoreException e )
                 {
@@ -235,19 +237,20 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
                 try
                 {
                     final IdentitySearchResponse searchResponse = _identityService.searchIdentities( searchRequest, _currentClientCode, getAuthor( ) );
+                    logAndDisplayStatusErrorMessage( searchResponse );
                     if ( !Boolean.parseBoolean( request.getParameter( MARK_APPROXIMATE ) ) )
                     {
                         qualifiedIdentities.addAll( searchResponse.getIdentities( ).stream( )
                                 .filter( i -> i.getQuality( ) != null && Math.round( i.getQuality( ).getScoring( ) * 100 ) == 100 )
                                 .collect( Collectors.toList( ) ) );
+                        if ( qualifiedIdentities.isEmpty( ) )
+                        {
+                            addWarning( MESSAGE_SEARCH_IDENTITY_NORESULT, getLocale( ) );
+                        }
                     }
                     else
                     {
                         qualifiedIdentities.addAll( searchResponse.getIdentities( ) );
-                    }
-                    if ( qualifiedIdentities.isEmpty( ) )
-                    {
-                        addWarning( MESSAGE_SEARCH_IDENTITY_NORESULT, getLocale( ) );
                     }
                 }
                 catch( final IdentityStoreException e )
@@ -357,16 +360,9 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
 
             final IdentityChangeResponse response = _identityService.createIdentity( identityChangeRequest, _currentClientCode, this.getAuthor( ) );
 
-            if ( !Objects.equals( response.getStatus( ).getType( ), ResponseStatusType.SUCCESS ) )
+            if ( response.getStatus( ).getType( ) != ResponseStatusType.SUCCESS )
             {
-                if ( Objects.equals( response.getStatus( ).getType( ), ResponseStatusType.FAILURE ) )
-                {
-                    addError( response.getStatus( ).getMessage( ) );
-                }
-                else
-                {
-                    addWarning( response.getStatus( ).getMessage( ) );
-                }
+                logAndDisplayStatusErrorMessage( response );
                 if ( response.getStatus( ).getAttributeStatuses( ) != null )
                 {
                     _attributeStatuses.addAll( response.getStatus( ).getAttributeStatuses( ) );
@@ -403,12 +399,13 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
         final IdentityDto qualifiedIdentity;
         try
         {
-            qualifiedIdentity = getQualifiedIdentityFromCustomerId( customerId );
-            if ( qualifiedIdentity == null )
+            final IdentitySearchResponse getResponse = _identityService.getIdentity( customerId, _currentClientCode, getAuthor( ) );
+            logAndDisplayStatusErrorMessage( getResponse );
+            if ( getResponse.getIdentities( ).size( ) != 1 )
             {
-                addError( MESSAGE_GET_IDENTITY_ERROR, getLocale( ) );
                 return getSearchIdentities( request );
             }
+            qualifiedIdentity = getResponse.getIdentities( ).get( 0 );
         }
         catch( final IdentityStoreException e )
         {
@@ -455,12 +452,13 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
         try
         {
             // TODO : do not get another version of the data, it could have been changed by another user
-            final IdentityDto originalIdentity = this.getIdentityFromCustomerId( identityWithUpdates.getCustomerId( ) );
-            if ( originalIdentity == null )
+            final IdentitySearchResponse getResponse = _identityService.getIdentity( identityWithUpdates.getCustomerId( ), _currentClientCode, getAuthor( ) );
+            logAndDisplayStatusErrorMessage( getResponse );
+            if ( getResponse.getIdentities( ).size( ) != 1 )
             {
-                addError( MESSAGE_GET_IDENTITY_ERROR, getLocale( ) );
                 return getSearchIdentities( request );
             }
+            final IdentityDto originalIdentity = getResponse.getIdentities( ).get( 0 );
 
             // removal of attributes whose values are not modified
             identityWithUpdates.getAttributes( ).removeIf( updatedAttr -> !checkIfAttributeIsModified( originalIdentity, updatedAttr ) );
@@ -491,17 +489,9 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
                     _currentClientCode, this.getAuthor( ) );
 
             // prepare response status message
-            if ( !Objects.equals( response.getStatus( ).getType( ), ResponseStatusType.SUCCESS )
-                    && !Objects.equals( response.getStatus( ).getType( ), ResponseStatusType.INCOMPLETE_SUCCESS ) )
+            if ( response.getStatus( ).getType( ) != ResponseStatusType.SUCCESS )
             {
-                if ( Objects.equals( response.getStatus( ).getType( ), ResponseStatusType.FAILURE ) )
-                {
-                    addError( "Erreur lors de la mise à jour : " + response.getStatus( ).getMessage( ) );
-                }
-                else
-                {
-                    addWarning( "Status de la mise à jour : " + response.getStatus( ).getType( ).name( ) + " : " + response.getStatus( ).getMessage( ) );
-                }
+                logAndDisplayStatusErrorMessage( response );
                 if ( response.getStatus( ).getAttributeStatuses( ) != null )
                 {
                     _attributeStatuses.addAll( response.getStatus( ).getAttributeStatuses( ) );
@@ -662,14 +652,14 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
     private boolean checkSearchAttributes( )
     {
         final Optional<SearchAttribute> emailAttr = _searchAttributes.stream( ).filter( s -> s.getKey( ).equals( Constants.PARAM_EMAIL ) ).findFirst( );
-        Optional<SearchAttribute> birthdateAttr = Optional.empty( );
         if ( !emailAttr.isPresent( ) || StringUtils.isBlank( emailAttr.get( ).getValue( ) ) )
         {
             final Optional<SearchAttribute> firstnameAttr = _searchAttributes.stream( ).filter( s -> s.getKey( ).equals( Constants.PARAM_FIRST_NAME ) )
                     .findFirst( );
             final Optional<SearchAttribute> familynameAttr = _searchAttributes.stream( ).filter( s -> s.getKey( ).equals( Constants.PARAM_FAMILY_NAME ) )
                     .findFirst( );
-            birthdateAttr = _searchAttributes.stream( ).filter( s -> s.getKey( ).equals( Constants.PARAM_BIRTH_DATE ) ).findFirst( );
+            final Optional<SearchAttribute> birthdateAttr = _searchAttributes.stream( ).filter( s -> s.getKey( ).equals( Constants.PARAM_BIRTH_DATE ) )
+                    .findFirst( );
             if ( ( !firstnameAttr.isPresent( ) || StringUtils.isBlank( firstnameAttr.get( ).getValue( ) ) )
                     || ( !familynameAttr.isPresent( ) || StringUtils.isBlank( familynameAttr.get( ).getValue( ) ) )
                     || ( !birthdateAttr.isPresent( ) || StringUtils.isBlank( birthdateAttr.get( ).getValue( ) ) ) )
@@ -788,73 +778,6 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
     }
 
     /**
-     * get QualifiedIdentity From CustomerId
-     * 
-     * @param customerId
-     * @return the QualifiedIdentity , null otherwise
-     * @throws IdentityStoreException
-     */
-    private IdentityDto getQualifiedIdentityFromCustomerId( final String customerId ) throws IdentityStoreException
-    {
-        final IdentitySearchResponse identityResponse = _identityService.getIdentity( customerId, _currentClientCode, getAuthor( ) );
-
-        if ( identityResponse.getIdentities( ) != null && identityResponse.getIdentities( ).size( ) == 1 )
-        {
-            return identityResponse.getIdentities( ).get( 0 );
-        }
-        else
-        {
-            return null;
-        }
-    }
-
-    /**
-     * get Identity From CustomerId
-     * 
-     * @param customerId
-     * @return the identity object
-     * @throws IdentityStoreException
-     */
-    private IdentityDto getIdentityFromCustomerId( final String customerId ) throws IdentityStoreException
-    {
-        IdentityDto qualifiedIdentity = getQualifiedIdentityFromCustomerId( customerId );
-
-        if ( qualifiedIdentity != null )
-        {
-            return castQualifiedIdentityToIdentity( qualifiedIdentity );
-        }
-
-        return null;
-
-    }
-
-    /**
-     * cast QualifiedIdentity to Identity object
-     * 
-     * @param qualifiedIdentity
-     * @return an Identity Object
-     */
-    private IdentityDto castQualifiedIdentityToIdentity( IdentityDto qualifiedIdentity )
-    {
-        final IdentityDto identity = new IdentityDto( );
-
-        identity.setCustomerId( qualifiedIdentity.getCustomerId( ) );
-        identity.setConnectionId( qualifiedIdentity.getConnectionId( ) );
-        identity.setLastUpdateDate( qualifiedIdentity.getLastUpdateDate( ) );
-
-        identity.setAttributes( qualifiedIdentity.getAttributes( ).stream( ).map( a -> {
-            final AttributeDto attribute = new AttributeDto( );
-            attribute.setKey( a.getKey( ) );
-            attribute.setValue( a.getValue( ) );
-            attribute.setCertifier( a.getCertifier( ) );
-            attribute.setCertificationDate( a.getCertificationDate( ) );
-            return attribute;
-        } ).collect( Collectors.toList( ) ) );
-
-        return identity;
-    }
-
-    /**
      * init service contract
      * 
      * @param clientCode
@@ -892,6 +815,29 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
             {
                 AppLogService.error( "Error while retrieving referential [client code = " + clientCode + "].", e );
                 addError( MESSAGE_GET_REFERENTIAL_ERROR, getLocale( ) );
+            }
+        }
+    }
+
+    /**
+     * log and display in IHM the localized status message if apiResponse is in error
+     * 
+     * @param apiResponse
+     *            the API response
+     */
+    private void logAndDisplayStatusErrorMessage( final ResponseDto apiResponse )
+    {
+        if ( apiResponse.getStatus( ).getType( ) != ResponseStatusType.OK && apiResponse.getStatus( ).getType( ) != ResponseStatusType.SUCCESS )
+        {
+            if ( apiResponse.getStatus( ).getType( ) == ResponseStatusType.INCOMPLETE_SUCCESS )
+            {
+                addWarning( apiResponse.getStatus( ).getMessageKey( ), getLocale( ) );
+                AppLogService.info( apiResponse.getStatus( ).getMessage( ) );
+            }
+            else
+            {
+                addError( apiResponse.getStatus( ).getMessageKey( ), getLocale( ) );
+                AppLogService.error( apiResponse.getStatus( ).getMessage( ) );
             }
         }
     }
