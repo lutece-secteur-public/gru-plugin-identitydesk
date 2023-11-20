@@ -258,7 +258,10 @@
         </@inputGroup>
         </div>
         <div class="col-12 mb-3">
-            <small><i class="ti ti-info-circle"></i> ${attr.description}</small>
+            <p class="m-0"><small><i class="ti ti-info-circle"></i> ${attr.description}</small></p>
+            <#list attribute_statuses?filter(s -> s.key == attr.key) as status>
+                <b class="text-danger"><small>#i18n{${status.messageKey}}</small></b>
+            </#list>
         </div>
         <#else>
         <@input type="hidden" name="${attr.key}" value="${(attr.value)!''}" />
