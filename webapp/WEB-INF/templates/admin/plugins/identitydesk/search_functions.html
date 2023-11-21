@@ -258,9 +258,15 @@
         </@inputGroup>
         </div>
         <div class="col-12 mb-3">
-            <p class="m-0"><small><i class="ti ti-info-circle"></i> ${attr.description}</small></p>
+            <small><i class="ti ti-info-circle"></i> ${attr.description}</small>
             <#list attribute_statuses?filter(s -> s.key == attr.key) as status>
-                <b class="text-danger"><small>#i18n{${status.messageKey}}</small></b>
+                <#if status.status.type == 'SUCCESS'>
+                    <b class="ms-2 text-success"><small>#i18n{${status.messageKey}}</small></b>
+                <#elseif status.status.type == 'WARNING'>
+                    <b class="ms-2 text-warning"><small>#i18n{${status.messageKey}}</small></b>
+                <#else>
+                    <b class="ms-2 text-danger"><small>#i18n{${status.messageKey}}</small></b>
+                </#if>
             </#list>
         </div>
         <#else>
