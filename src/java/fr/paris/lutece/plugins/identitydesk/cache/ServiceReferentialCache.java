@@ -40,15 +40,14 @@ import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.referentiel.Attribute
 import fr.paris.lutece.plugins.identitystore.v3.web.service.ReferentialService;
 import fr.paris.lutece.plugins.identitystore.web.exception.IdentityStoreException;
 import fr.paris.lutece.portal.service.cache.AbstractCacheableService;
+import fr.paris.lutece.portal.service.util.AppLogService;
 
-import org.apache.log4j.Logger;
 import java.util.List;
 
 public class ServiceReferentialCache extends AbstractCacheableService
 {
-    private static final Logger LOGGER = Logger.getLogger( ServiceReferentialCache.class );
     private static final String SERVICE_NAME = "ReferentialCacheService";
-    private ReferentialService _referentialService;
+    private final ReferentialService _referentialService;
 
     public ServiceReferentialCache( ReferentialService srService )
     {
@@ -63,7 +62,7 @@ public class ServiceReferentialCache extends AbstractCacheableService
             this.removeKey( clientCode + "_referential" );
         }
         this.putInCache( clientCode + "_referential", referential );
-        LOGGER.info( "Referential added to cache: " + clientCode + "_referential" );
+        AppLogService.debug( "Referential added to cache: " + clientCode + "_referential" );
     }
 
     public void remove( final String clientCode )
@@ -73,7 +72,7 @@ public class ServiceReferentialCache extends AbstractCacheableService
             this.removeKey( clientCode + "_referential" );
         }
 
-        LOGGER.info( "Referential removed from cache: " + clientCode + "_referential" );
+        AppLogService.debug( "Referential removed from cache: " + clientCode + "_referential" );
     }
 
     public List<AttributeCertificationProcessusDto> get( final String clientCode ) throws IdentityStoreException
