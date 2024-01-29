@@ -1,7 +1,5 @@
-package fr.paris.lutece.plugins.identitydesk.cache;
-
 /*
- * Copyright (c) 2002-2023, City of Paris
+ * Copyright (c) 2002-2024, City of Paris
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -33,6 +31,7 @@ package fr.paris.lutece.plugins.identitydesk.cache;
  *
  * License 1.0
  */
+package fr.paris.lutece.plugins.identitydesk.cache;
 
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.common.AuthorType;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.common.RequestAuthor;
