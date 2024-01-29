@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2002-2023, City of Paris
+ * Copyright (c) 2002-2024, City of Paris
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -56,6 +56,8 @@ import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.search.SearchDto;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.util.Constants;
 import fr.paris.lutece.plugins.identitystore.v3.web.service.IdentityService;
 import fr.paris.lutece.plugins.identitystore.web.exception.IdentityStoreException;
+import fr.paris.lutece.portal.service.admin.AccessDeniedException;
+import fr.paris.lutece.portal.service.security.SecurityTokenService;
 import fr.paris.lutece.portal.service.spring.SpringContextService;
 import fr.paris.lutece.portal.service.util.AppLogService;
 import fr.paris.lutece.portal.service.util.AppPropertiesService;
@@ -167,7 +169,7 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
      * @return the html code of the search form
      */
     @View( value = VIEW_SEARCH_IDENTITY, defaultView = true )
-    public String getSearchIdentities( HttpServletRequest request )
+    public String getSearchIdentities( final HttpServletRequest request )
     {
         initClientCode( request );
         initServiceContract( _currentClientCode );
@@ -178,11 +180,12 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
             _searchAttributes = new ArrayList<>( );
         }
 
-        Map<String, Object> model = getModel( );
+        final Map<String, Object> model = getModel( );
         model.put( MARK_QUERY_SEARCH_ATTRIBUTES, _searchAttributes );
         model.put( MARK_SERVICE_CONTRACT, _serviceContract );
         model.put( MARK_SEARCH_RULES, _searchRules );
         model.put( MARK_REFERENTIAL, _referential );
+        model.put( SecurityTokenService.MARK_TOKEN, SecurityTokenService.getInstance( ).getToken( request, ACTION_SEARCH_IDENTITY ) );
 
         addReturnUrlMarker( request, model );
         return getPage( PROPERTY_PAGE_TITLE_MANAGE_IDENTITIES, TEMPLATE_SEARCH_IDENTITIES, model );
@@ -196,7 +199,17 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
      * @return the html code of the search results
      */
     @Action( ACTION_SEARCH_IDENTITY )
-    public String doSearchIdentities( HttpServletRequest request )
+    public String doSearchIdentities( final HttpServletRequest request ) throws AccessDeniedException
+    {
+        // CSRF Token control
+        if ( !SecurityTokenService.getInstance( ).validate( request, ACTION_SEARCH_IDENTITY ) )
+        {
+            throw new AccessDeniedException( "Invalid security token" );
+        }
+        return searchIdentitiesAndCreatePage( request );
+    }
+
+    private String searchIdentitiesAndCreatePage( final HttpServletRequest request )
     {
         if ( _serviceContract == null )
         {
@@ -270,6 +283,7 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
         model.put( MARK_SEARCH_RULES, _searchRules );
         model.put( MARK_REFERENTIAL, _referential );
         model.put( MARK_APPROXIMATE, Boolean.parseBoolean( request.getParameter( PARAMETER_APPROXIMATE ) ) );
+        model.put( SecurityTokenService.MARK_TOKEN, SecurityTokenService.getInstance( ).getToken( request, ACTION_SEARCH_IDENTITY ) );
         addReturnUrlMarker( request, model );
 
         if ( qualifiedIdentities.isEmpty( ) )
@@ -331,6 +345,7 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
         model.put( MARK_AUTOCOMPLETE_COUNTRY_ENDPOINT, _autocompleteCountryEndpoint );
         model.put( MARK_ATTRIBUTE_STATUSES, _attributeStatuses );
         model.put( MARK_REFERENTIAL, _referential );
+        model.put( SecurityTokenService.MARK_TOKEN, SecurityTokenService.getInstance( ).getToken( request, ACTION_CREATE_IDENTITY ) );
         addReturnUrlMarker( request, model );
 
         return getPage( PROPERTY_PAGE_TITLE_CREATE_IDENTITY, TEMPLATE_CREATE_IDENTITY, model );
@@ -344,8 +359,13 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
      * @return The Jsp URL of the process result
      */
     @Action( ACTION_CREATE_IDENTITY )
-    public String doCreateIdentity( HttpServletRequest request )
+    public String doCreateIdentity( final HttpServletRequest request ) throws AccessDeniedException
     {
+        // CSRF Token control
+        if ( !SecurityTokenService.getInstance( ).validate( request, ACTION_CREATE_IDENTITY ) )
+        {
+            throw new AccessDeniedException( "Invalid security token" );
+        }
         final IdentityChangeRequest identityChangeRequest = new IdentityChangeRequest( );
         _attributeStatuses.clear( );
         try
@@ -382,7 +402,7 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
             return getCreateIdentity( request, false );
         }
         updateSearchAttributes( request );
-        return doSearchIdentities( request );
+        return searchIdentitiesAndCreatePage( request );
     }
 
     /**
@@ -423,6 +443,7 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
         model.put( MARK_AUTOCOMPLETE_COUNTRY_ENDPOINT, _autocompleteCountryEndpoint );
         model.put( MARK_ATTRIBUTE_STATUSES, _attributeStatuses );
         model.put( MARK_REFERENTIAL, _referential );
+        model.put( SecurityTokenService.MARK_TOKEN, SecurityTokenService.getInstance( ).getToken( request, ACTION_MODIFY_IDENTITY ) );
         addReturnUrlMarker( request, model );
 
         return getPage( PROPERTY_PAGE_TITLE_MODIFY_IDENTITY, TEMPLATE_MODIFY_IDENTITY, model );
@@ -436,8 +457,13 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
      * @return The Jsp URL of the process result
      */
     @Action( ACTION_MODIFY_IDENTITY )
-    public String doModifyIdentity( HttpServletRequest request )
+    public String doModifyIdentity( HttpServletRequest request ) throws AccessDeniedException
     {
+        // CSRF Token control
+        if ( !SecurityTokenService.getInstance( ).validate( request, ACTION_MODIFY_IDENTITY ) )
+        {
+            throw new AccessDeniedException( "Invalid security token" );
+        }
         // get values to update
         final IdentityDto identityWithUpdates = getIdentityFromRequest( request, "", false );
         if ( identityWithUpdates.getCustomerId( ) == null )
@@ -511,7 +537,7 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
         }
 
         updateSearchAttributes( request );
-        return doSearchIdentities( request );
+        return searchIdentitiesAndCreatePage( request );
     }
 
     /**

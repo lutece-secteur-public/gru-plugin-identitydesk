@@ -29,6 +29,7 @@
             <#assign description>#i18n{identitydesk.search_identities.description}</#assign>  
         </#if>
         <@tform action="jsp/admin/plugins/identitydesk/ManageIdentities.jsp?action_searchIdentity">
+            <@input type="hidden" name="token" value="${token}"/>
             <@input type="hidden" name="new_search" value=""/>
             <@input type="hidden" name="return_url" value="${(return_url)!''}"/>
             <div class="jumbotron jumbotron-fluid d-flex align-items-center justify-content-center text-center">
