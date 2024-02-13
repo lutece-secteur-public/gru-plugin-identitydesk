@@ -10,6 +10,12 @@
             <value>${identitydesk.identitystore.ApiEndPointUrl}</value>
         </property>
      </bean>
+    <bean id="geocodes.httpAccessTransport" class="fr.paris.lutece.plugins.geocode.v1.web.rs.service.HttpAccessTransport" >
+		    <property name="ApiEndPointUrl">
+            <value>${identitydesk.geocodes.ApiEndPointUrl}</value>
+        </property>
+     </bean>
+
 
     <bean id="identity.restTransport.httpAccess" class="fr.paris.lutece.plugins.identitystore.v3.web.rs.service.IdentityTransportRest">
         <constructor-arg ref="identitystore.httpAccessTransport"/>
@@ -17,6 +23,10 @@
      <bean id="serviceContract.restTransport.httpAccess" class="fr.paris.lutece.plugins.identitystore.v3.web.rs.service.ServiceContractTransportRest">
         <constructor-arg ref="identitystore.httpAccessTransport"/>
     </bean>
+     <bean id="geocodes.restTransport.httpAccess" class="fr.paris.lutece.plugins.geocode.v1.web.rs.service.GeoCodeTransportRest">
+        <constructor-arg ref="geocodes.httpAccessTransport"/>
+    </bean>
+
     
     <!-- IdentityService impl -->
     <bean id="identity.identityService" class="fr.paris.lutece.plugins.identitystore.v3.web.service.IdentityService">
@@ -42,6 +52,11 @@
 
     <bean id="identity.ReferentialService" class="fr.paris.lutece.plugins.identitystore.v3.web.service.ReferentialService">
         <constructor-arg ref="referential.restTransport.httpAccess"/>
+    </bean>
+
+    <!-- Geocode service -->
+    <bean id="geocodes.geoCodesService" class="fr.paris.lutece.plugins.geocode.v1.web.service.GeoCodeService" >
+        <constructor-arg ref="geocodes.restTransport.httpAccess"/>
     </bean>
 
 </beans>

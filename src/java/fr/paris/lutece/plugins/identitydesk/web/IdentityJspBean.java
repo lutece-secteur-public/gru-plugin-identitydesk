@@ -743,11 +743,9 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
         identity.setCustomerId( request.getParameter( Constants.PARAM_ID_CUSTOMER ) );
 
         // add attributes (and certification process) to identity if they are present in the request
-        _serviceContract
-                .getAttributeDefinitions( ).stream( ).filter(
-                        attr -> bCreate ? !StringUtils.isEmpty( request.getParameter( strPrefix + attr.getKeyName( ) ) )
-                                : ( request.getParameter( strPrefix + attr.getKeyName( ) ) != null
-                                        && !StringUtils.isEmpty( request.getParameter( attr.getKeyName( ) + PARAMETER_ATTR_CERT_SUFFIX ) ) ) )
+        _serviceContract.getAttributeDefinitions( ).stream( )
+                .filter( attr -> bCreate ? !StringUtils.isEmpty( request.getParameter( strPrefix + attr.getKeyName( ) ) )
+                        : ( request.getParameter( strPrefix + attr.getKeyName( ) ) != null ) )
                 .forEach( attr -> {
                     String attrValue = request.getParameter( strPrefix + attr.getKeyName( ) );
                     if ( "birthdate".equals( attr.getKeyName( ) ) && attrValue != null && !attrValue.isEmpty( ) )
@@ -766,6 +764,29 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
                             .add( buildAttribute( attr.getKeyName( ), attrValue, request.getParameter( attr.getKeyName( ) + PARAMETER_ATTR_CERT_SUFFIX ) ) );
                 } );
 
+        // Ensure that birthplace and birthcountry certification are the same as their code
+        final AttributeDto birthplaceCodeAttr = identity.getAttributes( ).stream( ).filter( a -> a.getKey( ).equals( Constants.PARAM_BIRTH_PLACE_CODE ) )
+                .findFirst( ).orElse( null );
+        final AttributeDto birthcountryCodeAttr = identity.getAttributes( ).stream( ).filter( a -> a.getKey( ).equals( Constants.PARAM_BIRTH_COUNTRY_CODE ) )
+                .findFirst( ).orElse( null );
+        identity.getAttributes( ).forEach( attr -> {
+            if ( attr.getKey( ).equals( Constants.PARAM_BIRTH_PLACE ) && birthplaceCodeAttr != null
+                    && StringUtils.isNotBlank( birthplaceCodeAttr.getCertifier( ) ) )
+            {
+                attr.setCertifier( birthplaceCodeAttr.getCertifier( ) );
+                attr.setCertificationDate( birthplaceCodeAttr.getCertificationDate( ) );
+            }
+            if ( attr.getKey( ).equals( Constants.PARAM_BIRTH_COUNTRY ) && birthcountryCodeAttr != null
+                    && StringUtils.isNotBlank( birthcountryCodeAttr.getCertifier( ) ) )
+            {
+                attr.setCertifier( birthcountryCodeAttr.getCertifier( ) );
+                attr.setCertificationDate( birthcountryCodeAttr.getCertificationDate( ) );
+            }
+        } );
+        if ( !bCreate )
+        {
+            identity.getAttributes( ).removeIf( a -> StringUtils.isBlank( a.getCertifier( ) ) );
+        }
         return identity;
     }
 

@@ -207,9 +207,13 @@
             <@inputGroup>
      
         <#if attr.key == 'birthplace' & isUpdateAllowed >
-                <@autocomplete id="birthplace" currentValue="${(attr.value)!''}" name="" suggestionsUrl="${autocomplete_city_endpoint}" searchLabel="${attr.name}" itemTitleFieldNames='["value"]' copyFields='[{"inputName":"birthplace_code","resultFieldName":"code"}]' suggestionsPath="result" minimumInputLength=3/>
+            <div class="form-group" id="autocompleteBirthPlaceDiv">
+                <@autocomplete id="birthplace" currentValue="${(attr.value)!''}" name="birthplace" suggestionsUrl="${autocomplete_city_endpoint}" searchLabel="${attr.name}" itemValueFieldName="value" itemTitleFieldNames='["displayValue"]' copyFields='[{"inputName":"birthplace_code","resultFieldName":"code"}]' suggestionsPath="result" minimumInputLength=3 additionnalRequestParamInputId="birthdate"/>
+            </div>
             <#elseif attr.key == 'birthcountry' & isUpdateAllowed>
-                    <@autocomplete id="birthcountry" currentValue="${(attr.value)!''}" name="" suggestionsUrl="${autocomplete_country_endpoint}" searchLabel="${attr.name}" itemTitleFieldNames='["value"]' copyFields='[{"inputName":"birthcountry_code","resultFieldName":"code"}]' suggestionsPath="result" minimumInputLength=3/>
+                <div class="form-group" id="autocompleteBirthCountryDiv">
+                    <@autocomplete id="birthcountry" currentValue="${(attr.value)!''}" name="birthcountry" suggestionsUrl="${autocomplete_country_endpoint}" searchLabel="${attr.name}" itemValueFieldName="value" itemTitleFieldNames='["value"]' copyFields='[{"inputName":"birthcountry_code","resultFieldName":"code"}]' suggestionsPath="result" minimumInputLength=3 additionnalRequestParamInputId="birthdate"/>
+                </div>
             <#else>
                     <@formGroup formStyle='floating' labelFor='${attr.key}' labelKey='${attr.name}' mandatory=mandatory rows=2 >
                         <#if attr.key == 'gender'>
@@ -258,7 +262,14 @@
         </@inputGroup>
         </div>
         <div class="col-12 mb-3">
-            <small><i class="ti ti-info-circle"></i> ${attr.description}</small>
+            <small class="d-block"><i class="ti ti-info-circle"></i> ${attr.description}</small>
+            <#if attr.key == 'birthplace' & isUpdateAllowed >
+                <small class="form-text text-muted d-block">Veuillez au préalable saisir votre date de naissance et votre pays de naissance pour pouvoir modifier votre ville de naissance.</small>
+            </#if>
+            <#if attr.key == 'birthcountry' & isUpdateAllowed >
+                <small class="form-text text-muted d-block">Veuillez au préalable saisir votre date de naissance pour pouvoir modifier votre pays naissance.</small>
+            </#if>
+
             <#list attribute_statuses?filter(s -> s.key == attr.key) as status>
                 <#if status.status.type == 'SUCCESS'>
                     <b class="ms-2 text-success"><small>#i18n{${status.messageKey}}</small></b>
@@ -270,7 +281,7 @@
             </#list>
         </div>
         <#else>
-        <@input type="hidden" name="${attr.key}" value="${(attr.value)!''}" />
+        <@input type="hidden" id="${attr.key}" name="${attr.key}" value="${(attr.value)!''}" />
     </#if>
 </#macro>
 
