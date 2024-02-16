@@ -840,6 +840,9 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
             catch( final IdentityStoreException e )
             {
                 AppLogService.error( "Error while retrieving service contract [client code = " + clientCode + "].", e );
+            }
+            if ( _serviceContract == null )
+            {
                 addError( MESSAGE_GET_SERVICE_CONTRACT_ERROR, getLocale( ) );
             }
         }
@@ -861,6 +864,9 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
             catch( final IdentityStoreException e )
             {
                 AppLogService.error( "Error while retrieving referential [client code = " + clientCode + "].", e );
+            }
+            if ( _referential == null )
+            {
                 addError( MESSAGE_GET_REFERENTIAL_ERROR, getLocale( ) );
             }
         }
