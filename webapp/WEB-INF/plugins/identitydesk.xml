@@ -69,16 +69,14 @@
         <javascript-files-scope>xpage|portal</javascript-files-scope>
         <javascript-file>...</javascript-file>
     </javascript-files>
-    -->    
-    
+    -->
+
     <!-- RBAC Resources -->
-    <!--
     <rbac-resource-types>
         <rbac-resource-type>
-            <rbac-resource-type-class>...</rbac-resource-type-class>
+            <rbac-resource-type-class>fr.paris.lutece.plugins.identitydesk.rbac.AccessIdentityResourceIdService</rbac-resource-type-class>
         </rbac-resource-type>
     </rbac-resource-types>
-    -->
 
     <!-- Admin Dashboard components -->
     <!-- 
