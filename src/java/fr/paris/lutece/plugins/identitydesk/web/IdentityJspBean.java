@@ -172,9 +172,11 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
      * @return the html code of the search form
      */
     @View( value = VIEW_SEARCH_IDENTITY, defaultView = true )
-    public String getSearchIdentities( final HttpServletRequest request ) throws AccessDeniedException {
-        if (!RBACService.isAuthorized(new AccessIdentityResource(), AccessIdentityResource.PERMISSION_READ, (User)getUser())) {
-            throw new AccessDeniedException("You don't have the right to read identities.");
+    public String getSearchIdentities( final HttpServletRequest request ) throws AccessDeniedException
+    {
+        if ( !RBACService.isAuthorized( new AccessIdentityResource( ), AccessIdentityResource.PERMISSION_READ, (User) getUser( ) ) )
+        {
+            throw new AccessDeniedException( "You don't have the right to read identities." );
         }
         initClientCode( request );
         initServiceContract( _currentClientCode );
@@ -214,7 +216,8 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
         return searchIdentitiesAndCreatePage( request );
     }
 
-    private String searchIdentitiesAndCreatePage( final HttpServletRequest request ) throws AccessDeniedException {
+    private String searchIdentitiesAndCreatePage( final HttpServletRequest request ) throws AccessDeniedException
+    {
         if ( _serviceContract == null )
         {
             return getSearchIdentities( request );
@@ -308,9 +311,11 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
      * @return the html code of the identity form
      */
     @View( VIEW_CREATE_IDENTITY )
-    public String getCreateIdentity( HttpServletRequest request ) throws AccessDeniedException {
-        if (!RBACService.isAuthorized(new AccessIdentityResource(), AccessIdentityResource.PERMISSION_WRITE, (User)getUser())) {
-            throw new AccessDeniedException("You don't have the right to create identities.");
+    public String getCreateIdentity( HttpServletRequest request ) throws AccessDeniedException
+    {
+        if ( !RBACService.isAuthorized( new AccessIdentityResource( ), AccessIdentityResource.PERMISSION_WRITE, (User) getUser( ) ) )
+        {
+            throw new AccessDeniedException( "You don't have the right to create identities." );
         }
         final IdentityDto identity = getIdentityFromRequest( request, PARAMETER_SEARCH_PREFIX, true );
         return createIdentityPage( identity, request );
@@ -419,9 +424,11 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
      * @return The HTML form to update info
      */
     @View( VIEW_MODIFY_IDENTITY )
-    public String getModifyIdentity( HttpServletRequest request ) throws AccessDeniedException {
-        if (!RBACService.isAuthorized(new AccessIdentityResource(), AccessIdentityResource.PERMISSION_WRITE, (User)getUser())) {
-            throw new AccessDeniedException("You don't have the right to modify identities.");
+    public String getModifyIdentity( HttpServletRequest request ) throws AccessDeniedException
+    {
+        if ( !RBACService.isAuthorized( new AccessIdentityResource( ), AccessIdentityResource.PERMISSION_WRITE, (User) getUser( ) ) )
+        {
+            throw new AccessDeniedException( "You don't have the right to modify identities." );
         }
         final String customerId = request.getParameter( "customer_id" );
         final IdentityDto qualifiedIdentity;
