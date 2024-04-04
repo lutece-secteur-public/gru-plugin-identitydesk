@@ -114,6 +114,8 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
     private static final String PROPERTY_PAGE_TITLE_MANAGE_IDENTITIES = "identitydesk.manage_identities.pageTitle";
     private static final String PROPERTY_PAGE_TITLE_MODIFY_IDENTITY = "identitydesk.modify_identity.pageTitle";
     private static final String PROPERTY_PAGE_TITLE_CREATE_IDENTITY = "identitydesk.create_identity.pageTitle";
+	private static final String PROPERTY_ALLOW_CLIENT_CODE_DYNAMIC_CHANGE = "identitydesk.client_code.allow_dynamic_change";
+	private static final String PROPERTY_ALLOW_RETURN_URL_DYNAMIC_CHANGE  = "identitydesk.return_url.allow_dynamic_change";
 
     // Constants
     private static final String PARAMETER_SEARCH_PREFIX = "search_";
@@ -714,7 +716,8 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
     private void initClientCode( final HttpServletRequest request )
     {
         String clientCode = request.getParameter( "client_code" );
-        if ( !StringUtils.isBlank( clientCode ) )
+        if ( !StringUtils.isBlank( clientCode ) 
+        		&& AppPropertiesService.getPropertyBoolean( PROPERTY_ALLOW_CLIENT_CODE_DYNAMIC_CHANGE, false))
         {
             _currentClientCode = clientCode;
         }
@@ -729,7 +732,8 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
     private void addReturnUrlMarker( final HttpServletRequest request, final Map<String, Object> model )
     {
         final String returnUrl = request.getParameter( "return_url" );
-        if ( StringUtils.isNotBlank( returnUrl ) )
+        if ( StringUtils.isNotBlank( returnUrl ) 
+        		&& AppPropertiesService.getPropertyBoolean( PROPERTY_ALLOW_RETURN_URL_DYNAMIC_CHANGE, false) )
         {
             _currentReturnUrl = returnUrl;
         }
