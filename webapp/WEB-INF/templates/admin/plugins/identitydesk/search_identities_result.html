@@ -101,10 +101,14 @@
                                     ${getAttributeValue(identity.attributes, 'preferred_username')}
                                 </@td>
                                 <@td>${getAttributeValue(identity.attributes, 'birthdate')}<br>
-                                    ${getAttributeValue(identity.attributes, 'birthplace')}, ${getAttributeValue(identity.attributes, 'birthcountry')}<br>
+                                    ${getAttributeValue(identity.attributes, 'birthplace')}<#if getAttributeValue(identity.attributes, 'birthplace')?length != 0>,
+                                    </#if>
+                                    ${getAttributeValue(identity.attributes, 'birthcountry')}<br>
                                 </@td>
                                 <@td>${getAttributeValue(identity.attributes, 'address')}<br>
-                                    ${getAttributeValue(identity.attributes, 'address_city')}, ${getAttributeValue(identity.attributes, 'address_postal_code')}<br>
+                                    ${getAttributeValue(identity.attributes, 'address_city')}<#if getAttributeValue(identity.attributes, 'address_city')?length != 0>,
+                                    </#if>
+                                    ${getAttributeValue(identity.attributes, 'address_postal_code')}<br>
                                 </@td>
                                 <@td>
                                     ${getAttributeValue(identity.attributes, 'mobile_phone')}<br>
