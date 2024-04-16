@@ -80,7 +80,7 @@
                             <@th>Naissance</@th>
                             <@th>Adresse</@th>
                             <@th>Contact</@th>
-                            <@th><center>Mon Paris</center></@th>
+                            <@th><center>Compte Mon Paris</center></@th>
                             <@th><center>Cert Pivots</center></@th>
                             <@th><center>Qualit&eacute;</center></@th>
                             <@th></@th>
@@ -113,12 +113,12 @@
                                 <td class="text-center">
                                     <#if identity.connectionId??> 
                                         <#assign colorClass = "success">
-                                        <#assign del = "">
+                                        <strong class="text-${colorClass}">OUI</strong>
                                     <#else>
                                         <#assign colorClass = "danger">
-                                        <#assign del = "text-decoration-line-through">
+                                        <strong class="text-${colorClass}">NON</strong>
                                     </#if>
-                                    <span class="text-${colorClass}-emphasis bg-${colorClass}-subtle border border-${colorClass}-subtle badge rounded-5 ${del}">Mon Paris</span> 
+
                                 </td>
                                 <td>
                                     <center>${getCertifierPivotBadge(identity.attributes)}</center>
@@ -132,7 +132,7 @@
                                     <#else>
                                         <#assign colorClass = "danger">
                                     </#if>
-                                    <span class="text-${colorClass}-emphasis bg-${colorClass}-subtle border border-${colorClass}-subtle badge rounded-5 ${del}">${qualityPercent}%</span>
+                                    <span class="text-${colorClass}-emphasis bg-${colorClass}-subtle border border-${colorClass}-subtle badge rounded-5>${qualityPercent}%</span>
                                 </td>
                                 <@td>
                                     <@offcanvas id="summarize-${identity?index}" title="Bilan de certification"  btnTitle="D&eacute;tails" size="auto">
