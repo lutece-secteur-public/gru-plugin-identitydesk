@@ -76,13 +76,13 @@
                     <@table headBody=true class="table-hover">
                         <@tr>
                             <@th>#</@th>
-                            <@th>Nom</@th>
-                            <@th>Naissance</@th>
-                            <@th>Adresse</@th>
-                            <@th>Contact</@th>
-                            <@th><center>Compte Mon Paris</center></@th>
-                            <@th><center>Cert Pivots</center></@th>
-                            <@th><center>Qualit&eacute;</center></@th>
+                            <@th>#i18n{identitydesk.search_identities.name}</@th>
+                            <@th>#i18n{identitydesk.search_identities.birthplace}</@th>
+                            <@th>#i18n{identitydesk.search_identities.adress}</@th>
+                            <@th>#i18n{identitydesk.search_identities.contact}</@th>
+                            <@th><center>#i18n{identitydesk.search_identities.monparis}</center></@th>
+                            <@th><center>#i18n{identitydesk.search_identities.pivot}</center></@th>
+                            <@th><center>#i18n{identitydesk.search_identities.quality}</center></@th>
                             <@th></@th>
                         </@tr>
                         <#list identity_list as identity>
@@ -142,13 +142,13 @@
                                     <@offcanvas id="summarize-${identity?index}" title="Bilan de certification"  btnTitle="D&eacute;tails" size="auto">
                                         <table class="table table-hover shadow-lg">
                                             <thead>
-                                                <@th>Attribut</@th>
-                                                <@th>Valeur</@th>
-                                                <@th>Obligatoire</@th>
-                                                <@th>Certification</@th>
-                                                <@th>Niveau</@th>
-                                                <@th>Minimum requis</@th>
-                                                <@th>Score</@th>
+                                                <@th>#i18n{identitydesk.search_identities.detail.attribut}</@th>
+                                                <@th>#i18n{identitydesk.search_identities.detail.value}</@th>
+                                                <@th>#i18n{identitydesk.search_identities.detail.mandatory}</@th>
+                                                <@th>#i18n{identitydesk.search_identities.detail.certfication}</@th>
+                                                <@th>#i18n{identitydesk.search_identities.detail.level}</@th>
+                                                <@th>#i18n{identitydesk.search_identities.detail.minimum}</@th>
+                                                <@th>#i18n{identitydesk.search_identities.detail.score}</@th>
                                             </thead>
                                             <tbody>
                                                 <#list service_contract.attributeDefinitions as serviceContractAttr>
