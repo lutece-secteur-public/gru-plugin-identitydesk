@@ -48,7 +48,7 @@ import java.util.List;
 
 public class ServiceContractCache extends AbstractCacheableService
 {
-    private static final String SERVICE_NAME = "ServiceContractCache";
+    private static final String SERVICE_NAME = "ServiceContractCache.desk";
 
     private final String _currentClientCode = AppPropertiesService.getProperty( "identitydesk.default.client.code" );
 
