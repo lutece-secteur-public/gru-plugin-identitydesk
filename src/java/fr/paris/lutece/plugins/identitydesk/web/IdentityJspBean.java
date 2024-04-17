@@ -99,6 +99,7 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
     // Messages
     private static final String MESSAGE_GET_IDENTITY_ERROR = "identitydesk.message.get_identity.error";
     private static final String MESSAGE_SEARCH_IDENTITY_NORESULT = "identitydesk.message.search_identity.noresult";
+    private static final String MESSAGE_SEARCH_IDENTITY_NORESULT_DETAIL = "identitydesk.message.search_identity.noresult.detail";
     private static final String MESSAGE_SEARCH_IDENTITY_ERROR = "identitydesk.message.search_identity.error";
     private static final String MESSAGE_IDENTITY_MUSTSELECTCERTIFICATION = "identitydesk.message.identity.mustselectcertification";
     private static final String MESSAGE_CREATE_IDENTITY_SUCCESS = "identitydesk.message.create_identity.success";
@@ -910,6 +911,10 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
             {
                 addError( apiResponse.getStatus( ).getMessageKey( ), getLocale( ) );
                 AppLogService.error( apiResponse.getStatus( ).getMessage( ) );
+            }
+            if ( apiResponse.getStatus( ).getType() == ResponseStatusType.NOT_FOUND )
+            {
+                addInfo(MESSAGE_SEARCH_IDENTITY_NORESULT_DETAIL, getLocale());
             }
         }
     }
