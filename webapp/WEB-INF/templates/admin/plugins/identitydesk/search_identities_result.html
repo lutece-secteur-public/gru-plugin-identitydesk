@@ -117,10 +117,11 @@
                                 <td class="text-center">
                                     <#if identity.connectionId??> 
                                         <#assign colorClass = "success">
-                                        <strong class="text-${colorClass}">OUI</strong>
+                                        <strong class="text-${colorClass}">#i18n{identitydesk.search_identities.yes}</strong><br>
+                                        <span>${getAttributeValue(identity.attributes, 'login')}</span>
                                     <#else>
                                         <#assign colorClass = "danger">
-                                        <strong class="text-${colorClass}">NON</strong>
+                                        <strong class="text-${colorClass}">#i18n{identitydesk.search_identities.no}</strong>
                                     </#if>
 
                                 </td>
@@ -153,9 +154,9 @@
                                             <tbody>
                                                 <#list service_contract.attributeDefinitions as serviceContractAttr>
                                                     <#if serviceContractAttr.attributeRight.mandatory >
-                                                        <#assign mandatory = "oui">
+                                                        <#assign mandatory = "#i18n{identitydesk.search_identities.detail.yes}">
                                                     <#else>
-                                                        <#assign mandatory = "non">
+                                                        <#assign mandatory = "#i18n{identitydesk.search_identities.detail.no}">
                                                     </#if>
                                                     <#if serviceContractAttr.keyName != "fc_key">
                                                         <#if serviceContractAttr.attributeRight.readable>
