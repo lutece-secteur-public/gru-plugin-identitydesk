@@ -181,22 +181,28 @@
                                                                 </#if>
                                                             </strong></@td>
                                                             <@td>${mandatory}</@td>
-                                                            <@td>${attr.certifier!'N/A'}</@td>
+                                                            <td class="text-center">
+                                                                <#if serviceContractAttr.attributeRequirement?exists>
+                                                                    <#if level?number gte serviceContractAttr.attributeRequirement.level?number >
+                                                                        <@tag color="success"><i class="ti ti-check"></i>  ${attr.certifier} (${level})</@tag>
+                                                                    <#else>
+                                                                        <@tag color="danger"><i class="ti ti-x"></i> ${attr.certifier} (${level})</@tag>
+                                                                    </#if>
+                                                                <#else>
+                                                                    <@tag color="success"><i class="ti ti-check"></i>  ${attr.certifier} (${level})</@tag>
+                                                                </#if>
+                                                            </td>
                                                             <@td>
                                                            <strong>${level}</strong> / ${levelMax} 
                                                               
                                                             </@td>
-                                                            <td class="text-center">
+                                                            <@td>
                                                                 <#if serviceContractAttr.attributeRequirement?exists>
-                                                                <#if level?number gte serviceContractAttr.attributeRequirement.level?number >
-                                                                <@tag color="success"><i class="ti ti-check"></i>  ${getAttributeCodeByLevel('${serviceContractAttr.attributeRequirement.level}', '${attr.key}')} (${serviceContractAttr.attributeRequirement.level})</@tag>
+                                                                    ${getAttributeCodeByLevel('${serviceContractAttr.attributeRequirement.level}', '${attr.key}')}
                                                                 <#else>
-                                                                <@tag color="danger"><i class="ti ti-x"></i> ${getAttributeCodeByLevel('${serviceContractAttr.attributeRequirement.level}', '${attr.key}')} (${serviceContractAttr.attributeRequirement.level})</@tag>
+                                                                    #i18n{identitydesk.search_identities.detail.none}
                                                                 </#if>
-                                                                <#else>
-                                                                <@tag color="success"><i class="ti ti-check"></i> Aucun</@tag>
-                                                                </#if>
-                                                            </td>
+                                                            </@td>
                                                             <@td>
                                                                 <@tag color=bgColor >
                                                                 <#if ratio = 100 >Certification forte<#elseif ratio gt 50>Certification moyenne<#else>Certification faible</#if>
