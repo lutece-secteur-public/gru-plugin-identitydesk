@@ -99,8 +99,8 @@
                                     ${identity?index + 1}
                                 </@td>
                                 <@td>
-                                    <strong>${getAttributeValue(identity.attributes, 'family_name')}  ${getAttributeValue(identity.attributes, 'first_name')}</strong> <br>
-                                    ${getAttributeValue(identity.attributes, 'preferred_username')}
+                                    <strong>${getAttributeValue(identity.attributes, 'family_name')}</strong>   ${getAttributeValue(identity.attributes, 'first_name')}<br>
+                                    <i>${getAttributeValue(identity.attributes, 'preferred_username')}</i>
                                 </@td>
                                 <@td>${getAttributeValue(identity.attributes, 'birthdate')}<br>
                                     ${getAttributeValue(identity.attributes, 'birthplace')}<#if getAttributeValue(identity.attributes, 'birthplace')?length != 0>,
