@@ -53,6 +53,12 @@
                                             <#else>
                                                 <@searchInput name="search_${field}" label="${getName(field)}" value=fieldValue type=fieldType/>
                                             </#if>
+                                        <#elseif field == "common_email">
+                                            <@searchInput name="search_common_email" value=fieldValue type=fieldType
+                                            label="${getName('email')} #i18n{identitydesk.search_identities.or} ${getName('login')}" />
+                                        <#elseif field == "common_lastname">
+                                            <@searchInput name="search_common_lastname" value=fieldValue type=fieldType
+                                            label="${getName('family_name')} #i18n{identitydesk.search_identities.or} ${getName('preferred_username')}" />
                                         <#else>
                                             <@searchInput name="search_${field}" label="${getName(field)}" value=fieldValue type=fieldType/>
                                         </#if>

@@ -596,6 +596,17 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
 
         final List<SearchAttribute> searchList = _serviceContract.getAttributeDefinitions( ).stream( ).map( AttributeDefinitionDto::getKeyName )
                 .map( attrKey -> {
+                    switch(attrKey)
+                    {
+                        case "family_name" :
+                            attrKey = "common_lastname";
+                            break;
+                        case "email" :
+                            attrKey = "common_email";
+                            break;
+                        default :
+                            break;
+                    }
                     String value = request.getParameter( PARAMETER_SEARCH_PREFIX + attrKey );
                     if ( attrKey.equals( "birthdate" ) && value != null && !value.isEmpty( ) )
                     {
@@ -651,7 +662,7 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
     private void updateSearchAttributes( final HttpServletRequest request )
     {
 
-        final List<String> requiredAttrs = Arrays.asList( "birthdate", "family_name", "first_name" );
+        final List<String> requiredAttrs = Arrays.asList( "birthdate", "common_lastname", "first_name" );
 
         final List<SearchAttribute> searchList = _serviceContract.getAttributeDefinitions( ).stream( ).map( AttributeDefinitionDto::getKeyName )
                 .filter( requiredAttrs::contains ) // Check if the key is in the list of required attributes
@@ -695,12 +706,12 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
      */
     private boolean checkSearchAttributes( )
     {
-        final Optional<SearchAttribute> emailAttr = _searchAttributes.stream( ).filter( s -> s.getKey( ).equals( Constants.PARAM_EMAIL ) ).findFirst( );
+        final Optional<SearchAttribute> emailAttr = _searchAttributes.stream( ).filter( s -> s.getKey( ).equals( Constants.PARAM_COMMON_EMAIL ) ).findFirst( );
         if ( !emailAttr.isPresent( ) || StringUtils.isBlank( emailAttr.get( ).getValue( ) ) )
         {
             final Optional<SearchAttribute> firstnameAttr = _searchAttributes.stream( ).filter( s -> s.getKey( ).equals( Constants.PARAM_FIRST_NAME ) )
                     .findFirst( );
-            final Optional<SearchAttribute> familynameAttr = _searchAttributes.stream( ).filter( s -> s.getKey( ).equals( Constants.PARAM_FAMILY_NAME ) )
+            final Optional<SearchAttribute> familynameAttr = _searchAttributes.stream( ).filter( s -> s.getKey( ).equals( Constants.PARAM_COMMON_LASTNAME ) )
                     .findFirst( );
             final Optional<SearchAttribute> birthdateAttr = _searchAttributes.stream( ).filter( s -> s.getKey( ).equals( Constants.PARAM_BIRTH_DATE ) )
                     .findFirst( );
