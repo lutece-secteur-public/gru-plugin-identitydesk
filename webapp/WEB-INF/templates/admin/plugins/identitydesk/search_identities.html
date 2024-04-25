@@ -19,9 +19,11 @@
             <#if allFieldsFilled>
                 <#assign description>
                     Vous ne trouvez pas l'identité recherchée dans le référentiel d'identité ?
-                    <button type="submit" class="btn btn-primary btn-sm text-decoration-none border rounded-5" name="view_createIdentity">
-                        <small><i class="ti ti-user-plus"></i> Créer cette identité</small>
-                    </button>
+                    <#if can_create>
+                        <button type="submit" class="btn btn-primary btn-sm text-decoration-none border rounded-5" name="view_createIdentity">
+                            <small><i class="ti ti-user-plus"></i> Créer cette identité</small>
+                        </button>
+                    </#if>
                     <a class="btn btn-dark btn-sm text-decoration-none border rounded-5" href="jsp/admin/plugins/identitydesk/ManageIdentities.jsp?plugin_name=identitydesk&new_search=true">
                         <small> <i class="ti ti-search"></i> Nouvelle recherche</small>
                     </a>

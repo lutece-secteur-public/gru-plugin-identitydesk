@@ -48,6 +48,7 @@ public class AccessIdentityResourceIdService extends ResourceIdService
     private static final String PROPERTY_LABEL_RESOURCE_TYPE = "identitydesk.rbac.access.identity.label";
     private static final String PROPERTY_LABEL_READ = "identitydesk.rbac.access.identity.permission.read";
     private static final String PROPERTY_LABEL_WRITE = "identitydesk.rbac.access.identity.permission.write";
+    private static final String PROPERTY_LABEL_CREATE = "identitydesk.rbac.access.identity.permission.create";
 
     /**
      * {@inheritDoc}
@@ -70,6 +71,11 @@ public class AccessIdentityResourceIdService extends ResourceIdService
         permWrite.setPermissionKey( AccessIdentityResource.PERMISSION_WRITE );
         permWrite.setPermissionTitleKey( PROPERTY_LABEL_WRITE );
         rt.registerPermission( permWrite );
+
+        Permission permCreate = new Permission( );
+        permCreate.setPermissionKey( AccessIdentityResource.PERMISSION_CREATE );
+        permCreate.setPermissionTitleKey( PROPERTY_LABEL_CREATE );
+        rt.registerPermission( permCreate );
 
         ResourceTypeManager.registerResourceType( rt );
     }

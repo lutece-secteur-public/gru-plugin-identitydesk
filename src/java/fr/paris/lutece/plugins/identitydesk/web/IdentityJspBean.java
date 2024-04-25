@@ -136,6 +136,8 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
     private static final String MARK_SEARCH_RULES = "search_rules";
     private static final String MARK_REFERENTIAL = "referential";
     private static final String MARK_APPROXIMATE = "approximate";
+    private static final String MARK_CAN_CREATE = "can_create";
+    private static final String MARK_CAN_WRITE = "can_write";
 
     // Views
     private static final String VIEW_SEARCH_IDENTITY = "searchIdentity";
@@ -158,6 +160,8 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
     private List<AttributeStatus> _attributeStatuses = new ArrayList<>( );
     private String _currentClientCode = AppPropertiesService.getProperty( "identitydesk.default.client.code" );
     private String _currentReturnUrl = AppPropertiesService.getProperty( "identitydesk.default.returnUrl" );
+    boolean _canCreateIdentity = false;
+    boolean _canWriteIdentity = false;
 
     private final IdentityService _identityService = SpringContextService.getBean( "identity.identityService" );
     private final String _autocompleteCityEndpoint = AppPropertiesService.getProperty( "identitydesk.autocomplete.city.endpoint" );
@@ -190,11 +194,15 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
             _searchAttributes = new ArrayList<>( );
         }
 
+        _canCreateIdentity = RBACService.isAuthorized(new AccessIdentityResource(),
+                AccessIdentityResource.PERMISSION_CREATE, (User) getUser());
+
         final Map<String, Object> model = getModel( );
         model.put( MARK_QUERY_SEARCH_ATTRIBUTES, _searchAttributes );
         model.put( MARK_SERVICE_CONTRACT, _serviceContract );
         model.put( MARK_SEARCH_RULES, _searchRules );
         model.put( MARK_REFERENTIAL, _referential );
+        model.put( MARK_CAN_CREATE, _canCreateIdentity );
         model.put( SecurityTokenService.MARK_TOKEN, SecurityTokenService.getInstance( ).getToken( request, ACTION_SEARCH_IDENTITY ) );
 
         addReturnUrlMarker( request, model );
@@ -284,6 +292,8 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
             }
         }
 
+        _canWriteIdentity = RBACService.isAuthorized( new AccessIdentityResource( ),
+                AccessIdentityResource.PERMISSION_WRITE, (User) getUser( ) );
         Map<String, Object> model = getModel( );
         model.put( MARK_IDENTITY_LIST, qualifiedIdentities );
         model.put( MARK_QUERY_SEARCH_ATTRIBUTES, _searchAttributes );
@@ -292,6 +302,8 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
         model.put( MARK_SERVICE_CONTRACT, _serviceContract );
         model.put( MARK_SEARCH_RULES, _searchRules );
         model.put( MARK_REFERENTIAL, _referential );
+        model.put( MARK_CAN_CREATE, _canCreateIdentity );
+        model.put( MARK_CAN_WRITE, _canWriteIdentity );
         model.put( MARK_APPROXIMATE, Boolean.parseBoolean( request.getParameter( PARAMETER_APPROXIMATE ) ) );
         model.put( SecurityTokenService.MARK_TOKEN, SecurityTokenService.getInstance( ).getToken( request, ACTION_SEARCH_IDENTITY ) );
         addReturnUrlMarker( request, model );
@@ -316,7 +328,7 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
     @View( VIEW_CREATE_IDENTITY )
     public String getCreateIdentity( HttpServletRequest request ) throws AccessDeniedException
     {
-        if ( !RBACService.isAuthorized( new AccessIdentityResource( ), AccessIdentityResource.PERMISSION_WRITE, (User) getUser( ) ) )
+        if ( !_canCreateIdentity )
         {
             throw new AccessDeniedException( "You don't have the right to create identities." );
         }
@@ -429,7 +441,7 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
     @View( VIEW_MODIFY_IDENTITY )
     public String getModifyIdentity( HttpServletRequest request ) throws AccessDeniedException
     {
-        if ( !RBACService.isAuthorized( new AccessIdentityResource( ), AccessIdentityResource.PERMISSION_WRITE, (User) getUser( ) ) )
+        if ( !_canWriteIdentity )
         {
             throw new AccessDeniedException( "You don't have the right to modify identities." );
         }

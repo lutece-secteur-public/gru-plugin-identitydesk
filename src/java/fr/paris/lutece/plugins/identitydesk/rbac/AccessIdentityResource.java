@@ -44,6 +44,7 @@ public class AccessIdentityResource implements RBACResource
     // Perimissions
     public static final String PERMISSION_READ = "READ";
     public static final String PERMISSION_WRITE = "WRITE";
+    public static final String PERMISSION_CREATE = "CREATE";
 
     @Override
     public String getResourceTypeCode( )

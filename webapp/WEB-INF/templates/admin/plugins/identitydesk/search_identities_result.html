@@ -7,10 +7,12 @@
         </#assign>
         <#assign description>Pour effectuer une recherche, vous devez entrer un login ou fournir le nom, le pr&eacute;nom et la date de naissance</#assign>
         <#if identity_list?size gt 0 >
-        <#assign description> Vous ne trouvez pas l'identit&eacute recherch&eacutee dans le r&eacutef&eacuterentiel d'identit&eacute ?   <button type="submit" class="btn btn-primary btn-sm text-decoration-none  border rounded-5" name="view_createIdentity">
-            <small><i class="ti ti-user-plus"></i> Cr&eacuteer cette identit&eacute</small>
-        </button>
-        
+        <#assign description> Vous ne trouvez pas l'identit&eacute recherch&eacutee dans le r&eacutef&eacuterentiel d'identit&eacute ?
+        <#if can_create>
+            <button type="submit" class="btn btn-primary btn-sm text-decoration-none  border rounded-5" name="view_createIdentity">
+                <small><i class="ti ti-user-plus"></i> Cr&eacuteer cette identit&eacute</small>
+            </button>
+        </#if>
         <a class="btn btn-dark btn-sm text-decoration-none  border rounded-5" href="jsp/admin/plugins/identitydesk/ManageIdentities.jsp?plugin_name=identitydesk&new_search=true"><small> <i class="ti ti-search"></i> Nouvelle recherche</small></a>  </#assign>
             <#if identity_list?size gt 1>
             <#assign title>Soyez attentif, <strong>${identity_list?size}</strong> utilisateurs trouv&eacute;s</#assign>
@@ -307,11 +309,13 @@
                                         <@offcanvasButton id="btnSummarize-${identity?index}"
                                         idcanvas="summarize-${identity?index}"
                                         title="#i18n{identitydesk.search_identities.buttonCheckIdentity}" />
-                                        <br>
-                                        <br>
-                                        <a class="btn btn-primary btn-sm"
-                                           href='jsp/admin/plugins/identitydesk/ManageIdentities.jsp?view_modifyIdentity&customer_id=${identity.customerId}'
-                                        >#i18n{identitydesk.search_identities.buttonModifyIdentity}</a>
+                                        <#if can_write>
+                                            <br>
+                                            <br>
+                                            <a class="btn btn-primary btn-sm"
+                                               href='jsp/admin/plugins/identitydesk/ManageIdentities.jsp?view_modifyIdentity&customer_id=${identity.customerId}'
+                                            >#i18n{identitydesk.search_identities.buttonModifyIdentity}</a>
+                                        </#if>
                                     </@aButton>
                                 </@td>
                             </tr>
