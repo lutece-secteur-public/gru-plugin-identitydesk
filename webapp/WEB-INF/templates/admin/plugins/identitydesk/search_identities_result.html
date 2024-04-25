@@ -151,28 +151,27 @@
                                 </td>
                                 <@td>
                                     <@offcanvasDesk
-                                    id="summarize-${identity?index}"
-                                    title="#i18n{identitydesk.search_identities.detail}" size="auto">
-
-                                        #i18n{identitydesk.search_identities.detail.cuid}
-                                        <#if identity.connectionId??>
-                                            <strong>${identity.connectionId}</strong>
-                                        </#if><br>
-                                        #i18n{identitydesk.search_identities.detail.guid} <strong>${identity.customerId}</strong> <br>
-                                        #i18n{identitydesk.search_identities.detail.creationdate} <strong>${identity.creationDate}</strong>,
-                                        #i18n{identitydesk.search_identities.detail.modificationdate} <strong>${identity.lastUpdateDate}</strong>,
-                                        #i18n{identitydesk.search_identities.detail.expirationdate}
-                                        <#if identity.expiration??>
-                                            <strong>${identity.expiration}</strong>
-                                        </#if><br>
-                                        #i18n{identitydesk.search_identities.detail.monparis}
-                                        <#if identity.connectionId??>
-                                            <#assign colorClass = "success">
-                                                <strong class="text-${colorClass}">#i18n{identitydesk.search_identities.yes}</strong>
-                                        <#else>
-                                            <#assign colorClass = "danger">
-                                            <strong class="text-${colorClass}">#i18n{identitydesk.search_identities.no}</strong>
-                                        </#if> <br><br>
+                                        id="summarize-${identity?index}"
+                                        title="#i18n{identitydesk.search_identities.detail}" size="auto">
+                                        <div class="container-fluid mt-5 px-5">
+                                            <div>#i18n{identitydesk.search_identities.detail.cuid} <strong>${identity.customerId!''}</strong> </div>
+                                            <div>#i18n{identitydesk.search_identities.detail.guid} <strong>${identity.connectionId!''}</strong> </div>
+                                            <div>
+                                                #i18n{identitydesk.search_identities.detail.creationdate} <strong>${identity.creationDate!''}</strong>,
+                                                #i18n{identitydesk.search_identities.detail.modificationdate} <strong>${identity.lastUpdateDate!''}</strong>,
+                                                #i18n{identitydesk.search_identities.detail.expirationdate} <strong>${identity.expiration!''}</strong>
+                                            </div>
+                                            <div>
+                                                #i18n{identitydesk.search_identities.detail.monparis}
+                                                <#if identity.connectionId??>
+                                                    <#assign colorClass = "success">
+                                                    <strong class="text-${colorClass}">#i18n{identitydesk.search_identities.yes}</strong>
+                                                <#else>
+                                                    <#assign colorClass = "danger">
+                                                    <strong class="text-${colorClass}">#i18n{identitydesk.search_identities.no}</strong>
+                                                </#if>
+                                            </div>
+                                        </div>
                                         <table class="table table-hover shadow-lg">
                                             <thead>
                                                 <@th>#i18n{identitydesk.search_identities.detail.attribut}</@th>
@@ -289,34 +288,25 @@
                                             </tbody>
                                         </table>
                                     </@offcanvasDesk>
-                                    <#if (isAttributeExists(identity.attributes, 'login') = false) || (return_url?exists)>
-                                        <@aButton class='dropdown-toggle rounded-5' size='sm' id='portlet-type' dropdownMenu=true href='#'
-                                        title='#i18n{portal.util.labelActions}' color="light" buttonIcon='th-large'
-                                        hideTitle=['xs','sm','md']>
-                                            <#if isAttributeExists(identity.attributes, 'login') = false >
-                                                <@dropdownItem
-                                                href='jsp/admin/plugins/identitydesk/ManageIdentities.jsp?view_modifyIdentity&customer_id=${identity.customerId}'
-                                                title='#i18n{identitydesk.search_identities.buttonModifyIdentity}' disabled=editDisabled />
-                                            </#if>
-                                            <#if return_url?exists>
-                                                <@dropdownItem
-                                                href='${return_url}?cuid=${identity.customerId}'
-                                                title='#i18n{identitydesk.search_identities.buttonSelectIdentityAndReturn}' />
-                                            </#if>
-                                        </@aButton>
-                                    </#if>
-                                    <@aButton class='dropdown-toggle rounded-5' size='sm' id='portlet-type' dropdownMenu=true title='#i18n{portal.util.labelActions}' >
+                                    <div>
                                         <@offcanvasButton id="btnSummarize-${identity?index}"
-                                        idcanvas="summarize-${identity?index}"
-                                        title="#i18n{identitydesk.search_identities.buttonCheckIdentity}" />
-                                        <#if can_write>
-                                            <br>
-                                            <br>
-                                            <a class="btn btn-primary btn-sm"
+                                            idcanvas="summarize-${identity?index}"
+                                            buttonIcon="eye"
+                                            title="#i18n{identitydesk.search_identities.buttonCheckIdentity}"/>
+                                        <#if can_write && identity.connectionId?exists >
+                                            <a class="btn btn-primary btn-sm custom-tooltip"
                                                href='jsp/admin/plugins/identitydesk/ManageIdentities.jsp?view_modifyIdentity&customer_id=${identity.customerId}'
-                                            >#i18n{identitydesk.search_identities.buttonModifyIdentity}</a>
+                                               title="#i18n{identitydesk.search_identities.buttonModifyIdentity}">
+                                                <i class="fa-solid fa-pen"></i>
+                                            </a>
                                         </#if>
-                                    </@aButton>
+                                        <#if return_url?exists>
+                                            <a class="btn btn-primary btn-sm custom-tooltip" href='${return_url}?cuid=${identity.customerId}'
+                                               title="#i18n{identitydesk.search_identities.buttonSelectIdentityAndReturn}">
+                                                <i class="fa-solid fa-right-long custom-tooltiptext"></i>
+                                            </a>
+                                        </#if>
+                                    </div>
                                 </@td>
                             </tr>
                         </#list>
