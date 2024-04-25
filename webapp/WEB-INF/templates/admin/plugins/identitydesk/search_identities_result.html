@@ -153,22 +153,38 @@
                                     <@offcanvasDesk
                                         id="summarize-${identity?index}"
                                         title="#i18n{identitydesk.search_identities.detail}" size="auto">
-                                        <div class="container-fluid mt-5 px-5">
-                                            <div>#i18n{identitydesk.search_identities.detail.cuid} <strong>${identity.customerId!''}</strong> </div>
-                                            <div>#i18n{identitydesk.search_identities.detail.guid} <strong>${identity.connectionId!''}</strong> </div>
+                                        <div class="container-fluid">
+                                            <div>
+                                                #i18n{identitydesk.search_identities.detail.cuid} <strong>${identity.customerId!''}</strong>,
+                                                #i18n{identitydesk.search_identities.detail.guid} <strong>${identity.connectionId!''}</strong> </div>
                                             <div>
                                                 #i18n{identitydesk.search_identities.detail.creationdate} <strong>${identity.creationDate!''}</strong>,
                                                 #i18n{identitydesk.search_identities.detail.modificationdate} <strong>${identity.lastUpdateDate!''}</strong>,
-                                                #i18n{identitydesk.search_identities.detail.expirationdate} <strong>${identity.expiration!''}</strong>
+                                                #i18n{identitydesk.search_identities.detail.expirationdate}
+                                                <#if identity.expiration?exists>
+                                                    <strong>${identity.expiration.expirationDate!''}</strong>
+                                                </#if>
                                             </div>
-                                            <div>
+                                            <div style="margin-bottom: 10px;">
                                                 #i18n{identitydesk.search_identities.detail.monparis}
                                                 <#if identity.connectionId??>
                                                     <#assign colorClass = "success">
-                                                    <strong class="text-${colorClass}">#i18n{identitydesk.search_identities.yes}</strong>
+                                                    <strong class="text-${colorClass}">#i18n{identitydesk.search_identities.yes}</strong>,
                                                 <#else>
                                                     <#assign colorClass = "danger">
-                                                    <strong class="text-${colorClass}">#i18n{identitydesk.search_identities.no}</strong>
+                                                    <strong class="text-${colorClass}">#i18n{identitydesk.search_identities.no}</strong>,
+                                                </#if>
+                                                #i18n{identitydesk.search_identities.detail.monparis.merged}
+                                                <#if identity.merge??>
+                                                    <strong>#i18n{identitydesk.search_identities.yes}</strong>,
+                                                <#else>
+                                                    <strong>#i18n{identitydesk.search_identities.no}</strong>,
+                                                </#if>
+                                                #i18n{identitydesk.search_identities.detail.monparis.deleted}
+                                                <#if identity.expiration?? && identity.expiration.deleted??>
+                                                        <strong>#i18n{identitydesk.search_identities.yes}</strong>
+                                                    <#else>
+                                                        <strong>#i18n{identitydesk.search_identities.no}</strong>
                                                 </#if>
                                             </div>
                                         </div>
