@@ -208,11 +208,11 @@
      
         <#if attr.key == 'birthplace' & isUpdateAllowed >
             <div class="form-group" id="autocompleteBirthPlaceDiv">
-                <@autocomplete id="birthplace" currentValue="${(attr.value)!''}" name="birthplace" suggestionsUrl="${autocomplete_city_endpoint}" searchLabel="${attr.name}" itemValueFieldName="value" itemTitleFieldNames='["displayValue"]' copyFields='[{"inputName":"birthplace_code","resultFieldName":"code"}]' suggestionsPath="result" minimumInputLength=3 additionnalRequestParamInputId="birthdate"/>
+                <@autocompleteFixPlaceholder id="birthplace" currentValue="${(attr.value)!''}" name="birthplace" suggestionsUrl="${autocomplete_city_endpoint}" searchLabel="${attr.name}" itemValueFieldName="value" itemTitleFieldNames='["displayValue"]' copyFields='[{"inputName":"birthplace_code","resultFieldName":"code"}]' suggestionsPath="result" minimumInputLength=3 additionnalRequestParamInputId="birthdate"/>
             </div>
             <#elseif attr.key == 'birthcountry' & isUpdateAllowed>
                 <div class="form-group" id="autocompleteBirthCountryDiv">
-                    <@autocomplete id="birthcountry" currentValue="${(attr.value)!''}" name="birthcountry" suggestionsUrl="${autocomplete_country_endpoint}" searchLabel="${attr.name}" itemValueFieldName="value" itemTitleFieldNames='["value"]' copyFields='[{"inputName":"birthcountry_code","resultFieldName":"code"}]' suggestionsPath="result" minimumInputLength=3 additionnalRequestParamInputId="birthdate"/>
+                    <@autocompleteFixPlaceholder id="birthcountry" currentValue="${(attr.value)!''}" name="birthcountry" suggestionsUrl="${autocomplete_country_endpoint}" searchLabel="${attr.name}" itemValueFieldName="value" itemTitleFieldNames='["value"]' copyFields='[{"inputName":"birthcountry_code","resultFieldName":"code"}]' suggestionsPath="result" minimumInputLength=3 additionnalRequestParamInputId="birthdate"/>
                 </div>
             <#else>
                     <@formGroup formStyle='floating' labelFor='${attr.key}' labelKey='${attr.name}' mandatory=mandatory rows=2 >
@@ -289,3 +289,73 @@
     <#assign parsedDate = inputDate?datetime("dd/MM/yyyy")>
     <#return parsedDate?string("yyyy-MM-dd")>
 </#function>
+
+<#macro autocompleteFixPlaceholder id name suggestionsUrl suggestionsPath="" itemValueFieldName="value" btnColor="light" btnSize="" itemLabelFieldNames="[]" itemTitleFieldNames=itemLabelFieldNames itemDescriptionFieldNames="[]" itemTagsFieldNames="[]" copyFields="[]" currentValue="" currentLabel="" required=false minimumInputLength=1 minimumInputLenghtLabel="#i18n{portal.util.labelMinimumSearchLenght}" searchLabel="#i18n{portal.util.labelSearch}" emptyLabel="#i18n{portal.util.labelNoItem}" additionnalRequestParamInputId="" >
+    <div id="${id}" class="lutece-autocomplete dropdown form-group form-floating " data-itemTitleFieldNames=${itemTitleFieldNames} data-suggestionsUrl="${suggestionsUrl}" data-suggestionsPath="${suggestionsPath}" data-itemValueFieldName=${itemValueFieldName} data-minimumInputLength=${minimumInputLength} data-itemDescriptionFieldNames=${itemDescriptionFieldNames} data-itemTagsFieldNames=${itemTagsFieldNames} data-copyFields=${copyFields} data-emptyLabel="${emptyLabel}" data-currentValue="${currentValue}" data-currentLabel="${currentLabel}" data-suggestionItemClass='["list-group-item", "p-3"]' data-titleClass='["mb-0", "fw-bolder"]' data-descriptionClass='["text-muted", "mb-0"]' data-tagClass='["badge", "bg-blue-lt", "me-1"]' data-loaderIconClasses='{"loading": ["ti-loader-2", "icon-rotate"], "error": ["ti-zoom-exclamation", "text-danger"], "search": ["ti-search"]}' data-emptyClass='["list-group-item", "p-3", "text-muted", "text-center"]' data-searchLabel="${searchLabel}">
+        <@formGroup formStyle='floating' class='' labelFor='${id}' labelKey='' mandatory=mandatory>
+        <@inputGroup>
+        <@input type='text' name="${name}" placeHolder="${searchLabel}" class="lutece-autocomplete-search-input w-75" value="${currentValue!}"  id="${id}-input" params='role="combobox" autocomplete="off" aria-expanded="false" aria-owns="${id}-list-container" aria-autocomplete="list" aria-describedby="${id}-lutece-autocomplete-assistiveHint"' />
+        <span role="button" class="input-group-text lutece-autocomplete-remove <#if currentValue=''>d-none</#if> text-danger">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M18 6l-12 12" /><path d="M6 6l12 12" /></svg>
+                </span>
+        <span role="button" class="input-group-text lutece-autocomplete-search-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M10 10m-7 0a7 7 0 1 0 14 0a7 7 0 1 0 -14 0" /><path d="M21 21l-6 -6" /></svg>
+                </span>
+    </@inputGroup>
+    <div id="${id}-dropdown" class="lutece-autocomplete-dropdown dropdown-menu p-0" aria-labelledby="dropdownMenuButton">
+        <ul id="${id}-list-container" class="lutece-autocomplete-result-container list-group list-group-flush overflow-auto bg-white" role="listbox" id="suggestions-list" aria-labelledby="${id}-input" style="max-height:15rem;"></ul>
+        <span id="${id}-lutece-autocomplete-default-assistive" class="sr-only visually-hidden">#i18n{portal.util.message.autocomplete.avalailbleResults}</span>
+        <div class="sr-only lutece-autocomplete-status" role="status" aria-atomic="true" aria-live="polite"></div>
+    </div>
+    </@formGroup>
+    </div>
+    <script type="module">
+        import LuteceAutoComplete from "./themes/shared/modules/luteceAutoComplete.js";
+        new LuteceAutoComplete(document.getElementById(`${id}`), document.getElementById(`${additionnalRequestParamInputId}`));
+    </script>
+</#macro>
+
+<#macro formGroup id='' formStyle='horizontal' groupStyle='' class='' rows=1 labelKey='' labelKeyDesc='' labelFor='' labelId='' labelClass='' helpKey='' mandatory=false hideLabel=[] collapsed=false params='' deprecated...>
+    <@deprecatedWarning args=deprecated />
+    <#if groupStyle = 'success'>
+        <#local validation = 'is-valid'>
+    <#elseif groupStyle='error'>
+        <#local validation = 'is-invalid'>
+    </#if>
+    <#if collapsed><#local class += ' collapse' /></#if>
+    <div class="<#if formStyle != 'inline' && formStyle != 'col'>form-group<#elseif formStyle == 'col'>col-sm-12 <#else>col-lg</#if><#if formStyle='horizontal'> mb-3</#if><#if formStyle='floating'> form-floating</#if><#if class!=''> ${class?trim}</#if><#if validation?? && validation!=''> ${validation}</#if>"<#if id!=''> id="${id}"</#if><#if params!=''> ${params}</#if>>
+        <#local displayLabelClass = displaySettings( hideLabel, 'inline-flex') />
+        <#local labelClass = labelClass >
+        <#if rows=1>
+            <#if labelKey!='' && formStyle='horizontal'>
+                <#local labelClass += ' col-sm-12 col-lg-3 form-label text-right'>
+                <#if displayLabelClass?contains('d-none')>
+                    <#local divClass='col'>
+                <#else>
+                    <#local divClass = 'col-lg-6'>
+                </#if>
+            <#elseif formStyle = 'inline'>
+                <#local divClass = 'mb-2 mr-sm-2'>
+                <#local labelClass += ' mr-2' />
+            <#elseif formStyle = 'floating'>
+                <#local labelClass += ' form-label floating'>
+                <#local divClass = 'form-floating'>
+            <#else>
+                <#local divClass='col-sm-12 offset-lg-3 col-lg-6'>
+            </#if>
+        <#else>
+            <#local labelClass += ' form-label'>
+            <#local divClass = 'col-sm-12'>
+        </#if>
+        <#if labelKey!='' && formStyle != 'floating'>
+            <@formLabel class=labelClass?trim labelFor=labelFor labelKeyDesc=labelKeyDesc labelId=labelId labelKey=labelKey hideLabel=hideLabel mandatory=mandatory />
+        </#if>
+        <#assign propagateMandatory = mandatory>
+        <#nested>
+        <#assign propagateMandatory = false>
+        <#if labelKey!='' && formStyle='floating'>
+            <@formLabel class=labelClass?trim labelFor=labelFor labelKeyDesc=labelKeyDesc labelId=labelId labelKey=labelKey hideLabel=hideLabel mandatory=mandatory />
+        </#if>
+        <#if helpKey!=''><small class="text-muted<#if formStyle!='inline'> form-text</#if>" <#if labelFor!=''>aria-describedby="${labelFor}"</#if>>${helpKey}</small></#if>
+    </div>
+</#macro>
