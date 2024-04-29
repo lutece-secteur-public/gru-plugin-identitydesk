@@ -1,6 +1,6 @@
 <#include "search_functions.html" />
 <@pageContainer>
-    <@pageColumn>
+    <@pageColumn class="p-1">
             <#assign title = "${getAttributeValue(identity.attributeList, 'family_name')} ${getAttributeValue(identity.attributeList, 'first_name')} ${getAttributeValue(identity.attributeList, 'preferred_username')}">
             <@pageHeader title=title/>
             <@tform class="form-horizontal" method="post" name="modify_identity" action="jsp/admin/plugins/identitydesk/ManageIdentities.jsp">
@@ -10,10 +10,11 @@
                 <@input type="hidden" name="token" value="${token}"/>
                 <input type="hidden" name="return_url" value="${(return_url)!''}">
                 <input type="hidden" name="customer_id" value="${identity.customerId}"/>
-                <div class="card p-5">
-                    <div class="row gx-5 gy-5">
+                <div class="card p-5"
+                     style="padding-bottom: 0 !important; padding-top: 1rem !important; margin-bottom: 0.5rem !important;">
+                    <div class="row gx-5">
                         <div class="col-6">
-                            <div class="row gx-2 gy-1">
+                            <div class="row gx-2">
                                 <h2 class="mb-3"><i class="ti ti-id-badge"></i> Identit&eacute;</h2>
                                 
                                 <#list identity.attributeList as attr>
@@ -24,7 +25,7 @@
                             </div>
                         </div>
                         <div class="col-6">
-                            <div class="row gx-2 gy-1">
+                            <div class="row gx-2">
                                 <h2 class="mb-3"><i class="ti ti-baby-carriage"></i> Naissance</h2>
                                 <#list identity.attributeList as attr>
                                     <#if attr.key == 'birthdate' || attr.key == 'birthcountry' || attr.key == 'birthplace' || attr.key == 'birthplace_code' || attr.key == 'birthcountry_code'>
@@ -42,7 +43,7 @@
                             </#list>
                         </div>
                         <div class="col-6 px-3">
-                            <div class="row gx-2 gy-1 mb-4">
+                            <div class="row gx-2">
                                 <h2><i class="ti ti-mail"></i> Contact</h2>
                                 <#list identity.attributeList as attr>
                                     <#if attr.key == 'mobile_phone' || attr.key == 'email' || attr.key == 'fixed_phone'>
