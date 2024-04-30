@@ -36,7 +36,7 @@ package fr.paris.lutece.plugins.identitydesk.cache;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.common.AuthorType;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.common.RequestAuthor;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.contract.ServiceContractDto;
-import fr.paris.lutece.plugins.identitystore.v3.web.service.ServiceContractService;
+import fr.paris.lutece.plugins.identitystore.v3.web.service.ServiceContractServiceExtended;
 import fr.paris.lutece.plugins.identitystore.web.exception.IdentityStoreException;
 import fr.paris.lutece.portal.service.cache.AbstractCacheableService;
 import fr.paris.lutece.portal.service.util.AppLogService;
@@ -52,10 +52,10 @@ public class ServiceContractCache extends AbstractCacheableService
 
     private final String _currentClientCode = AppPropertiesService.getProperty( "identitydesk.default.client.code" );
 
-    private final ServiceContractService _serviceContractService;
+    private final ServiceContractServiceExtended _serviceContractService;
     private final List<String> _sortedAttributeKeyList = Arrays.asList( AppPropertiesService.getProperty( "identitydesk.attribute.order" ).split( "," ) );
 
-    public ServiceContractCache( ServiceContractService scService )
+    public ServiceContractCache( ServiceContractServiceExtended scService )
     {
         _serviceContractService = scService;
         this.initCache( );

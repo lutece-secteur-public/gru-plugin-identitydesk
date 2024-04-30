@@ -25,7 +25,7 @@
     </bean>
 
     <!-- ServiceContractService impl -->
-    <bean id="identity.serviceContractService" class="fr.paris.lutece.plugins.identitystore.v3.web.service.ServiceContractService">
+    <bean id="identity.serviceContractService" class="fr.paris.lutece.plugins.identitystore.v3.web.service.ServiceContractServiceExtended">
         <constructor-arg ref="serviceContract.restTransport.httpAccess"/>
     </bean>
     
