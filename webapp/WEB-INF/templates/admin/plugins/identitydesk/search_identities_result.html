@@ -309,7 +309,7 @@
                                             idcanvas="summarize-${identity?index}"
                                             buttonIcon="eye"
                                             title="#i18n{identitydesk.search_identities.buttonCheckIdentity}"/>
-                                        <#if can_write && identity.connectionId?exists >
+                                        <#if can_write  >
                                             <a class="btn btn-primary btn-sm custom-tooltip"
                                                href='jsp/admin/plugins/identitydesk/ManageIdentities.jsp?view_modifyIdentity&customer_id=${identity.customerId}'
                                                title="#i18n{identitydesk.search_identities.buttonModifyIdentity}">
