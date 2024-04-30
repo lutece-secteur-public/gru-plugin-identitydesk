@@ -610,17 +610,17 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
                 .map( attrKey -> {
                     switch(attrKey)
                     {
-                        case "family_name" :
-                            attrKey = "common_lastname";
+                        case Constants.PARAM_FAMILY_NAME :
+                            attrKey = Constants.PARAM_COMMON_LASTNAME;
                             break;
-                        case "email" :
-                            attrKey = "common_email";
+                        case Constants.PARAM_EMAIL :
+                            attrKey = Constants.PARAM_COMMON_EMAIL;
                             break;
                         default :
                             break;
                     }
                     String value = request.getParameter( PARAMETER_SEARCH_PREFIX + attrKey );
-                    if ( attrKey.equals( "birthdate" ) && value != null && !value.isEmpty( ) )
+                    if ( attrKey.equals( Constants.PARAM_BIRTH_DATE ) && value != null && !value.isEmpty( ) )
                     {
                         try
                         {

@@ -63,7 +63,7 @@
                     </#list>
                 </@searchBox>
                 </#if>
-                <div class="mb-5 mt-2">   
+                <div class="mb-5 mt-2">
                     <div class="float-end">
                       <#assign checked=true />
                       <#if approximate?exists>
@@ -125,7 +125,7 @@
                                         ${getAttributeValue(identity.attributes, 'email')}
                                 </@td>
                                 <td class="text-center">
-                                    <#if identity.connectionId??> 
+                                    <#if identity.connectionId??>
                                         <#assign colorClass = "success">
                                         <strong class="text-${colorClass}">#i18n{identitydesk.search_identities.yes}</strong><br>
                                         <span>${getAttributeValue(identity.attributes, 'login')}</span>
@@ -309,7 +309,7 @@
                                             idcanvas="summarize-${identity?index}"
                                             buttonIcon="eye"
                                             title="#i18n{identitydesk.search_identities.buttonCheckIdentity}"/>
-                                        <#if can_write  >
+                                        <#if can_write>
                                             <a class="btn btn-primary btn-sm custom-tooltip"
                                                href='jsp/admin/plugins/identitydesk/ManageIdentities.jsp?view_modifyIdentity&customer_id=${identity.customerId}'
                                                title="#i18n{identitydesk.search_identities.buttonModifyIdentity}">
@@ -326,7 +326,7 @@
                                 </@td>
                             </tr>
                         </#list>
-                    </@table> 
+                    </@table>
                 </#if>
             </div>
         </@tform>
