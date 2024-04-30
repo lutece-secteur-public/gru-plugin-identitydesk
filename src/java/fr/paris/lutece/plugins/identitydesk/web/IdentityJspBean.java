@@ -138,6 +138,7 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
     private static final String MARK_APPROXIMATE = "approximate";
     private static final String MARK_CAN_CREATE = "can_create";
     private static final String MARK_CAN_WRITE = "can_write";
+    private static final String MARK_RULES_REQ_REACHED = "rules_requirements_reached";
 
     // Views
     private static final String VIEW_SEARCH_IDENTITY = "searchIdentity";
@@ -196,6 +197,7 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
 
         _canCreateIdentity = RBACService.isAuthorized(new AccessIdentityResource(),
                 AccessIdentityResource.PERMISSION_CREATE, (User) getUser());
+        final boolean rulesRequirementsReached = _searchRules.stream().anyMatch(rule -> rule.stream().allMatch(key -> _searchAttributes.stream().map(SearchAttribute::getKey).anyMatch(key::equals)));
 
         final Map<String, Object> model = getModel( );
         model.put( MARK_QUERY_SEARCH_ATTRIBUTES, _searchAttributes );
@@ -203,6 +205,7 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
         model.put( MARK_SEARCH_RULES, _searchRules );
         model.put( MARK_REFERENTIAL, _referential );
         model.put( MARK_CAN_CREATE, _canCreateIdentity );
+        model.put( MARK_RULES_REQ_REACHED, rulesRequirementsReached );
         model.put( SecurityTokenService.MARK_TOKEN, SecurityTokenService.getInstance( ).getToken( request, ACTION_SEARCH_IDENTITY ) );
 
         addReturnUrlMarker( request, model );
@@ -294,7 +297,11 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
 
         _canWriteIdentity = RBACService.isAuthorized( new AccessIdentityResource( ),
                 AccessIdentityResource.PERMISSION_WRITE, (User) getUser( ) );
-        Map<String, Object> model = getModel( );
+        _canCreateIdentity = RBACService.isAuthorized(new AccessIdentityResource(),
+                AccessIdentityResource.PERMISSION_CREATE, (User) getUser());
+        final boolean rulesRequirementsReached = _searchRules.stream().anyMatch(rule -> rule.stream().allMatch(key -> _searchAttributes.stream().map(SearchAttribute::getKey).anyMatch(key::equals)));
+
+        final Map<String, Object> model = getModel( );
         model.put( MARK_IDENTITY_LIST, qualifiedIdentities );
         model.put( MARK_QUERY_SEARCH_ATTRIBUTES, _searchAttributes );
         model.put( MARK_AUTOCOMPLETE_CITY_ENDPOINT, _autocompleteCityEndpoint );
@@ -304,6 +311,7 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
         model.put( MARK_REFERENTIAL, _referential );
         model.put( MARK_CAN_CREATE, _canCreateIdentity );
         model.put( MARK_CAN_WRITE, _canWriteIdentity );
+        model.put( MARK_RULES_REQ_REACHED, rulesRequirementsReached );
         model.put( MARK_APPROXIMATE, Boolean.parseBoolean( request.getParameter( PARAMETER_APPROXIMATE ) ) );
         model.put( SecurityTokenService.MARK_TOKEN, SecurityTokenService.getInstance( ).getToken( request, ACTION_SEARCH_IDENTITY ) );
         addReturnUrlMarker( request, model );

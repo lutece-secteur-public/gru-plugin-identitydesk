@@ -3,20 +3,7 @@
     <@pageColumn flush=true center=true id="search-identity-column" class="bg-secondary">
         <#assign title>#i18n{identitydesk.search_identities.welcomeSearch}</#assign>
         <#if service_contract?? && referential??>
-            <#assign areFieldsFilled=false>
-            <#list search_rules as rule>
-                <#list rule as field>
-                    <#assign fieldValue>
-                        <#list query_search_attributes?filter(a -> a.key == field) as attr>
-                            ${attr.value!''}
-                        </#list>
-                    </#assign>
-                    <#if fieldValue?has_content == true>
-                        <#assign areFieldsFilled=true>
-                    </#if>
-                </#list>
-            </#list>
-            <#if areFieldsFilled>
+            <#if rules_requirements_reached>
                 <#assign description>
                     Vous ne trouvez pas l'identité recherchée dans le référentiel d'identité ?
                     <#if can_create>
