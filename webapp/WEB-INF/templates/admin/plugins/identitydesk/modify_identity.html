@@ -1,65 +1,129 @@
 <#include "search_functions.html" />
-<@pageContainer>
-    <@pageColumn class="p-1">
-            <#assign title = "${getAttributeValue(identity.attributeList, 'family_name')} ${getAttributeValue(identity.attributeList, 'first_name')} ${getAttributeValue(identity.attributeList, 'preferred_username')}">
-            <@pageHeader title=title/>
-            <@tform class="form-horizontal" method="post" name="modify_identity" action="jsp/admin/plugins/identitydesk/ManageIdentities.jsp">
-                <@messages infos=infos />
-                <@messages errors=errors />
-                <@messages warnings=warnings />
-                <@input type="hidden" name="token" value="${token}"/>
-                <input type="hidden" name="return_url" value="${(return_url)!''}">
-                <input type="hidden" name="customer_id" value="${identity.customerId}"/>
-                <div class="card p-5"
-                     style="padding-bottom: 0 !important; padding-top: 1rem !important; margin-bottom: 0.5rem !important;">
-                    <div class="row gx-5">
-                        <div class="col-6">
-                            <div class="row gx-2">
-                                <h2 class="mb-3"><i class="ti ti-id-badge"></i> Identit&eacute;</h2>
-                                
-                                <#list identity.attributeList as attr>
-                                    <#if attr.key == 'gender' || attr.key == 'first_name' || attr.key == 'preferred_username' || attr.key == 'family_name'>
-                                        <@generateAttributeHtml attr=attr/>
-                                    </#if>
-                                </#list>
-                            </div>
-                        </div>
-                        <div class="col-6">
-                            <div class="row gx-2">
-                                <h2 class="mb-3"><i class="ti ti-baby-carriage"></i> Naissance</h2>
-                                <#list identity.attributeList as attr>
-                                    <#if attr.key == 'birthdate' || attr.key == 'birthcountry' || attr.key == 'birthplace' || attr.key == 'birthplace_code' || attr.key == 'birthcountry_code'>
-                                        <@generateAttributeHtml attr=attr/>
-                                    </#if>
-                                </#list>
-                            </div>
-                        </div>
-                        <div class="col-6">
-                            <h2 class="mb-3"><i class="ti ti-map-pin"></i> Adresse</h2>
-                            <#list identity.attributeList as attr>
-                                <#if attr.key == 'address' || attr.key == 'address_city' || attr.key == 'address_postal_code'>
-                                    <@generateAttributeHtml attr=attr/>
-                                </#if>
+<@pageContainer class="bg-secondary">
+    <@pageColumn>
+        <@tform class="form-horizontal" id="modify_identity" method="post" name="modify_identity"
+            action="jsp/admin/plugins/identitydesk/ManageIdentities.jsp">
+            <div class="container-xl">
+                <#assign
+                    title="${getAttributeValue(identity.attributeList, 'family_name')} ${getAttributeValue(identity.attributeList, 'first_name')} ${getAttributeValue(identity.attributeList, 'preferred_username')}">
+                    <@pageHeader title=title>
+                        <#assign searchParamsList=[]>
+                            <#list search_params?keys as key>
+                                <#assign searchParamsList +=[key + "=" + (search_params[key]!)]>
                             </#list>
-                        </div>
-                        <div class="col-6 px-3">
-                            <div class="row gx-2">
+                            <@button type='submit' color='primary' name="action_modifyIdentity"
+                                title='${i18n("identitydesk.modify_identity.save")}' buttonIcon='check' />
+                            <@aButton color='light' title='Retour aux r&eacute;sultats' buttonIcon='chevron-left'
+                                href='jsp/admin/plugins/identitydesk/ManageIdentities.jsp?action_searchIdentity&${searchParamsList?join("&")}&approximate=true' />
+                    </@pageHeader>
+                    <@messages errors=errors warnings=warnings infos=infos />
+                    <@input type="hidden" name="token" value="${token}" />
+                    <input type="hidden" name="return_url" value="${(return_url)!''}">
+                    <input type="hidden" name="customer_id" value="${identity.customerId}" />
+                    <input type="hidden" name="action_modifyIdentity" value="submit" />
+                    <div class="card p-5">
+                        <div class="row g-3">
+                            <div class="col-xl-6 px-4 py-2">
+                                <h2><i class="ti ti-id-badge"></i> Identit&eacute;</h2>
+                                <div class="row gx-2">
+                                    <#list identity.attributeList as attr>
+                                        <#if attr.key=='gender' || attr.key=='first_name' ||
+                                            attr.key=='preferred_username' || attr.key=='family_name'>
+                                            <@generateAttributeHtml attr=attr />
+                                        </#if>
+                                    </#list>
+                                </div>
+                                <hr class="my-4">
+                                <h2><i class="ti ti-map-pin"></i> Adresse</h2>
+                                <div class="row gx-2">
+                                    <#list identity.attributeList as attr>
+                                        <#if attr.key=='address' || attr.key=='address_city' ||
+                                            attr.key=='address_postal_code'>
+                                            <@generateAttributeHtml attr=attr />
+                                        </#if>
+                                    </#list>
+                                </div>
+                            </div>
+                            <div class="col-xl-6 px-4 py-2 border-start">
+                                <h2><i class="ti ti-baby-carriage"></i> Naissance</h2>
+                                <div class="row gx-2">
+                                    <#list identity.attributeList as attr>
+                                        <#if attr.key=='birthdate' || attr.key=='birthcountry' || attr.key=='birthplace'
+                                            || attr.key=='birthplace_code' || attr.key=='birthcountry_code'>
+                                            <@generateAttributeHtml attr=attr />
+                                        </#if>
+                                    </#list>
+                                </div>
+                                <hr class="my-4">
                                 <h2><i class="ti ti-mail"></i> Contact</h2>
-                                <#list identity.attributeList as attr>
-                                    <#if attr.key == 'mobile_phone' || attr.key == 'email' || attr.key == 'fixed_phone'>
-                                        <@generateAttributeHtml attr=attr/>
-                                    </#if>
-                                </#list>
+                                <div class="row gx-2">
+                                    <#list identity.attributeList as attr>
+                                        <#if attr.key=='mobile_phone' || attr.key=='email' || attr.key=='fixed_phone'>
+                                            <@generateAttributeHtml attr=attr />
+                                        </#if>
+                                    </#list>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="float-end">
+                        <@button type='submit' color='primary' name="action_modifyIdentity"
+                            title='${i18n("identitydesk.modify_identity.save")}' buttonIcon='check' />
+                        <@aButton color='light' title='Retour aux r&eacute;sultats' buttonIcon='chevron-left'
+                            href='jsp/admin/plugins/identitydesk/ManageIdentities.jsp?action_searchIdentity&${searchParamsList?join("&")}&approximate=true' />
+                    </div>
+                    <div id="mandatory-msg" class="text-danger" style="display: none">
+                        #i18n{identitydesk.createmodify_identity.mandatoryFieldsWarning}
+                    </div>
+            </div>
+            <div class="modal fade" id="summaryModal" tabindex="-1" aria-labelledby="summaryModalLabel"
+                aria-hidden="true">
+                <div class="modal-dialog modal-lg rounded-5">
+                    <div class="modal-content rounded-5">
+                        <div class="modal-header border-0">
+                            <h1 class="modal-title text-center w-100 p-4 pb-0 fs-2" id="summaryModalLabel">
+                                R&eacute;capitulatif</h1>
+                            <button type="button"
+                                class="btn btn-rounded btn-light border position-absolute end-0 me-3 top-0 mt-3"
+                                data-bs-dismiss="modal" aria-label="Close"><i class="ti ti-x fs-2"></i></button>
+                        </div>
+                        <div id="summaryTableModal">
+                            <div class="modal-body text-center border-0">
+                                <@table>
+                                    <thead>
+                                        <tr>
+                                            <th class="text-nowrap">Champ</th>
+                                            <th class="text-nowrap">Valeur initiale</th>
+                                            <th class="text-nowrap">Valeur modifi&eacute;e</th>
+                                            <th class="text-nowrap">Valeur certif initiale</th>
+                                            <th class="text-nowrap">Valeur certif modifi&eacute;e</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="changesList"></tbody>
+                                </@table>
+                            </div>
+                            <div class="modal-footer mt-0 border-0 justify-content-center pb-4 pt-0">
+                                <button type="button" id="confirmSubmit" class="btn btn-danger"><i
+                                        class="ti ti-check"></i>
+                                    Confirmer</button>
+                                <button type="button" id="cancelSubmit" class="btn btn-light"
+                                    data-bs-dismiss="modal">${i18n("portal.admin.message.buttonCancel")}</button>
+                            </div>
+                        </div>
+                        <div id="summaryEmptyModal" class="d-none">
+                            <div class="modal-body text-center px-5">
+                                <h3 class="text-center fw-bolder">
+                                    ${i18n("identitydesk.message.update_identity.nochange")}</h3>
+                            </div>
+                            <div class="modal-footer mt-0 border-0 justify-content-center pb-4 pt-0">
+                                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Fermer</button>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div class="float-end">
-                    <@actionButtons button1Name="action_modifyIdentity" button2Name="view_manageIdentitys"/>
-                </div>
-                <div id="mandatory-msg" class="text-danger" style="display: none">
-                    #i18n{identitydesk.createmodify_identity.mandatoryFieldsWarning}
-                </div>
-            </@tform>
+            </div>
+        </@tform>
     </@pageColumn>
 </@pageContainer>
+<link href="css/admin/plugins/identitydesk/identitydesk.css" rel="stylesheet">
+<script src="js/admin/plugins/identitydesk/identitydesk.js"></script>

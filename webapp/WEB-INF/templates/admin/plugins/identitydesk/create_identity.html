@@ -1,50 +1,59 @@
 <#include "search_functions.html" />
-
 <@pageContainer>
-    <@pageColumn>
-            <@pageHeader title="#i18n{identitydesk.create_identity.title}" />
-            <@tform id="create-identity-form" name="create_identity" action='jsp/admin/plugins/identitydesk/ManageIdentities.jsp'>
+    <@pageColumn class="bg-secondary">
+        <@tform id="create-identity-form" name="create_identity"
+            action='jsp/admin/plugins/identitydesk/ManageIdentities.jsp'>
+            <div class="container-xl">
+                <@pageHeader title="#i18n{identitydesk.create_identity.title}">
+                    <@button type='submit' color='primary' name="action_createIdentity" title='Enregistrer'
+                        buttonIcon='check' />
+                    <@button color='light' title='Retour' buttonIcon='chevron-left'
+                        params='onclick="javascript:window.history.back();"' />
+                </@pageHeader>
                 <@messages infos=infos />
                 <@messages errors=errors />
                 <@messages warnings=warnings />
-                <@input type="hidden" name="token" value="${token}"/>
+                <@input type="hidden" name="token" value="${token}" />
                 <@input type="hidden" name="return_url" value="${(return_url)!''}" />
                 <div class="card p-5">
-                    <div class="row gx-5 gy-5">
-                        <div class="col-6">
-                            <div class="row gx-2 gy-1">
-                                <h2 class="mb-3"><i class="ti ti-id-badge"></i> #i18n{identitydesk.create_identity.identity}</h2>
+                    <div class="row g-3">
+                        <div class="col-xl-6 px-4 py-2">
+                            <h2><i class="ti ti-id-badge"></i> Identit&eacute;</h2>
+                            <div class="row gx-2">
                                 <#list identity.attributeList as attr>
-                                    <#if attr.key == 'gender' || attr.key == 'first_name' || attr.key == 'preferred_username' || attr.key == 'family_name'>
-                                        <@generateAttributeHtml attr=attr/>
+                                    <#if attr.key=='gender' || attr.key=='first_name' || attr.key=='preferred_username'
+                                        || attr.key=='family_name'>
+                                        <@generateAttributeHtml attr=attr />
+                                    </#if>
+                                </#list>
+                            </div>
+                            <hr class="my-4">
+                            <h2><i class="ti ti-map-pin"></i> Adresse</h2>
+                            <div class="row gx-2">
+                                <#list identity.attributeList as attr>
+                                    <#if attr.key=='address' || attr.key=='address_city' ||
+                                        attr.key=='address_postal_code'>
+                                        <@generateAttributeHtml attr=attr />
                                     </#if>
                                 </#list>
                             </div>
                         </div>
-                        <div class="col-6">
-                            <div class="row gx-2 gy-1">
-                                <h2 class="mb-3"><i class="ti ti-baby-carriage"></i> #i18n{identitydesk.create_identity.birth}</h2>
+                        <div class="col-xl-6 px-4 py-2 border-start">
+                            <h2><i class="ti ti-baby-carriage"></i> Naissance</h2>
+                            <div class="row gx-2">
                                 <#list identity.attributeList as attr>
-                                    <#if attr.key == 'birthdate' || attr.key == 'birthcountry' || attr.key == 'birthplace' || attr.key == 'birthplace_code' || attr.key == 'birthcountry_code'>
-                                        <@generateAttributeHtml attr=attr/>
+                                    <#if attr.key=='birthdate' || attr.key=='birthcountry' || attr.key=='birthplace' ||
+                                        attr.key=='birthplace_code' || attr.key=='birthcountry_code'>
+                                        <@generateAttributeHtml attr=attr />
                                     </#if>
                                 </#list>
                             </div>
-                        </div>
-                        <div class="col-6">
-                            <h2 class="mb-3"><i class="ti ti-map-pin"></i> #i18n{identitydesk.create_identity.address}</h2>
-                            <#list identity.attributeList as attr>
-                                <#if attr.key == 'address' || attr.key == 'address_city' || attr.key == 'address_postal_code'>
-                                    <@generateAttributeHtml attr=attr/>
-                                </#if>
-                            </#list>
-                        </div>
-                        <div class="col-6 px-3">
-                            <div class="row gx-2 gy-1 mb-4">
-                                <h2><i class="ti ti-mail"></i> #i18n{identitydesk.create_identity.contact}</h2>
+                            <hr class="my-4">
+                            <h2><i class="ti ti-mail"></i> Contact</h2>
+                            <div class="row gx-2">
                                 <#list identity.attributeList as attr>
-                                    <#if attr.key == 'mobile_phone' || attr.key == 'email' || attr.key == 'fixed_phone' >
-                                        <@generateAttributeHtml attr=attr/>
+                                    <#if attr.key=='mobile_phone' || attr.key=='email' || attr.key=='fixed_phone'>
+                                        <@generateAttributeHtml attr=attr />
                                     </#if>
                                 </#list>
                             </div>
@@ -52,11 +61,17 @@
                     </div>
                 </div>
                 <div class="float-end">
-                    <@actionButtons button1Name="action_createIdentity" button2Name="view_manageIdentitys" />
+                    <@button type='submit' color='primary' name="action_createIdentity" title='Enregistrer'
+                        buttonIcon='check' />
+                    <@button color='light' title='Retour' buttonIcon='chevron-left'
+                        params='onclick="javascript:window.history.back();"' />
                 </div>
                 <div id="mandatory-msg" class="text-danger" style="display: none">
                     #i18n{identitydesk.createmodify_identity.mandatoryFieldsWarning}
                 </div>
-            </@tform>
+            </div>
+        </@tform>
     </@pageColumn>
 </@pageContainer>
+<link href="css/admin/plugins/identitydesk/identitydesk.css" rel="stylesheet">
+<script src="js/admin/plugins/identitydesk/identitydesk.js"></script>

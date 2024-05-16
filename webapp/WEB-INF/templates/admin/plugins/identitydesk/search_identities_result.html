@@ -1,6 +1,4 @@
 <#include "search_functions.html" />
-<#include "offcanvasButton.ftl" />
-<#include "offcanvasDesk.ftl" />
 <@pageContainer>
     <@pageColumn flush=true id="search-identity-column">
         <#assign title><strong>Lancer</strong>une recherche dans notre <strong>referentiel d'identite</strong>
@@ -25,7 +23,7 @@
             <@input type="hidden" name="new_search" value=""/>
             <@input type="hidden" name="return_url" value="${(return_url)!''}"/>
             <div class="jumbotron jumbotron-fluid d-flex align-items-center justify-content-center text-center bg-secondary pb-4">
-                <div class="col-8 mt-5 mb-5">
+                <div class="container-fluid mt-5" style="max-width:1600px !important" >
                     <@pageHeader title='${title}' description='${description}'>
                     </@pageHeader>
                     <@messages infos=infos />
@@ -64,7 +62,7 @@
                 </@searchBox>
                 </#if>
                 <div class="mb-5 mt-2">
-                    <div class="float-end">
+                    <div class="text-end fw-bold">
                       <#assign checked=true />
                       <#if approximate?exists>
                     <#if approximate>
@@ -133,7 +131,6 @@
                                         <#assign colorClass = "danger">
                                         <strong class="text-${colorClass}">#i18n{identitydesk.search_identities.no}</strong>
                                     </#if>
-
                                 </td>
                                 <td>
                                     <center>${getCertifierPivotBadge(identity.attributes)}</center>
@@ -149,45 +146,69 @@
                                     </#if>
                                     <span class="text-${colorClass}-emphasis bg-${colorClass}-subtle border border-${colorClass}-subtle badge rounded-5">${qualityPercent}%</span>
                                 </td>
-                                <@td>
-                                    <@offcanvasDesk
-                                        id="summarize-${identity?index}"
-                                        title="#i18n{identitydesk.search_identities.detail}" size="auto">
-                                        <div class="container-fluid">
-                                            <div>
-                                                #i18n{identitydesk.search_identities.detail.cuid} <strong>${identity.customerId!''}</strong>,
-                                                #i18n{identitydesk.search_identities.detail.guid} <strong>${identity.connectionId!''}</strong> </div>
-                                            <div>
-                                                #i18n{identitydesk.search_identities.detail.creationdate} <strong>${identity.creationDate!''}</strong>,
-                                                #i18n{identitydesk.search_identities.detail.modificationdate} <strong>${identity.lastUpdateDate!''}</strong>,
-                                                #i18n{identitydesk.search_identities.detail.expirationdate}
-                                                <#if identity.expiration?exists>
-                                                    <strong>${identity.expiration.expirationDate!''}</strong>
-                                                </#if>
-                                            </div>
-                                            <div style="margin-bottom: 10px;">
-                                                #i18n{identitydesk.search_identities.detail.monparis}
-                                                <#if identity.connectionId??>
-                                                    <#assign colorClass = "success">
-                                                    <strong class="text-${colorClass}">#i18n{identitydesk.search_identities.yes}</strong>,
-                                                <#else>
-                                                    <#assign colorClass = "danger">
-                                                    <strong class="text-${colorClass}">#i18n{identitydesk.search_identities.no}</strong>,
-                                                </#if>
-                                                #i18n{identitydesk.search_identities.detail.monparis.merged}
-                                                <#if identity.merge??>
-                                                    <strong>#i18n{identitydesk.search_identities.yes}</strong>,
-                                                <#else>
-                                                    <strong>#i18n{identitydesk.search_identities.no}</strong>,
-                                                </#if>
-                                                #i18n{identitydesk.search_identities.detail.monparis.deleted}
-                                                <#if identity.expiration?? && identity.expiration.deleted??>
-                                                        <strong>#i18n{identitydesk.search_identities.yes}</strong>
-                                                    <#else>
-                                                        <strong>#i18n{identitydesk.search_identities.no}</strong>
-                                                </#if>
-                                            </div>
+                                <@td class="text-end">
+                              
+                                <#assign tags> 
+                                ${getAttributeValue(identity.attributes, 'family_name')}  ${getAttributeValue(identity.attributes, 'preferred_username')} ${getAttributeValue(identity.attributes, 'first_name')}
+                                <@tag color="secondary">#i18n{identitydesk.search_identities.detail.cuid} <strong>${identity.customerId!'Absent'}</strong></@tag>
+                                <@tag color="secondary">#i18n{identitydesk.search_identities.detail.guid} <strong>${identity.connectionId!'Absent'}</strong></@tag>
+                            </#assign>
+                            
+                            <@offcanvas id="summarize-${identity?index}" title=tags btnTitle="D&eacute;tails" size="auto" bodyClass="p-0" btnIcon="eye" btnTitle="">
+                            
+                                <div class="jumbotron jumbotron-fluid bg-secondary p-4 shadow-lg text-center">              
+                                    <div>
+                                        <div class="d-inline-block bg-light rounded-5 p-4 py-2 shadow-lg m-1">
+                                            #i18n{identitydesk.search_identities.detail.creationdate}
+                                            <br>
+                                            <strong>${identity.creationDate!''}</strong>
                                         </div>
+                                        <div class="d-inline-block bg-light rounded-5 p-4 py-2 shadow-lg m-1">
+                                            #i18n{identitydesk.search_identities.detail.modificationdate}<br>
+                                            <strong>${identity.lastUpdateDate!''}</strong>
+                                        </div>
+                                        <div class="d-inline-block bg-light rounded-5 p-4 py-2 shadow-lg m-1">
+                                            #i18n{identitydesk.search_identities.detail.expirationdate}
+                                            <br>
+                                            <#if identity.expiration?exists>
+                                                <strong>${identity.expiration.expirationDate!''}</strong>
+                                            <#else>
+                                                <strong>-</strong>
+                                            </#if>
+                                        </div>
+                                        <div class="d-inline-block bg-light rounded-5 p-4 py-2 shadow-lg m-1">
+                                            #i18n{identitydesk.search_identities.detail.monparis}
+                                            <br>
+                                            <#if identity.connectionId??>
+                                                <span class="text-success fw-bold">#i18n{identitydesk.search_identities.yes}</span>
+                                            <#else>
+                                                <span class="text-danger fw-bold">#i18n{identitydesk.search_identities.no}</span>
+                                            </#if>
+                                        </div>
+                                        <div class="d-inline-block bg-light rounded-5 p-4 py-2 shadow-lg m-1">
+                                            #i18n{identitydesk.search_identities.detail.monparis.merged}
+                                            <br>
+                                            <#if identity.merge??>
+                                                    <span class="fw-bold">#i18n{identitydesk.search_identities.yes}</span>
+                                            <#else>
+                                                <span class="text-info fw-bold">#i18n{identitydesk.search_identities.no}</span>
+                                            </#if>
+                                        </div>
+                                        <div class="d-inline-block bg-light rounded-5 p-4 py-2 shadow-lg m-1">
+                                            #i18n{identitydesk.search_identities.detail.monparis.deleted}
+                                            <br>
+                                            <#if identity.expiration??>
+                                                <#if identity.expiration.deleted??>
+                                                <span class="text-danger fw-bold">#i18n{identitydesk.search_identities.yes}</span>
+                                                <#else>
+                                                <span class="text-success fw-bold">#i18n{identitydesk.search_identities.no}</span>
+                                                </#if>
+                                            <#else>
+                                            <span class="text-success fw-bold">#i18n{identitydesk.search_identities.no}</span>
+                                            </#if>
+                                        </div>
+                                    </div>
+                                </div>
                                         <table class="table table-hover shadow-lg">
                                             <thead>
                                                 <@th>#i18n{identitydesk.search_identities.detail.attribut}</@th>
@@ -196,7 +217,7 @@
                                                 <@th>#i18n{identitydesk.search_identities.detail.certfication}</@th>
                                                 <@th>#i18n{identitydesk.search_identities.detail.level}</@th>
                                                 <@th>#i18n{identitydesk.search_identities.detail.minimum}</@th>
-                                                <@th>#i18n{identitydesk.search_identities.detail.score}</@th>
+                                                <@th params='style="min-width:200px"'>#i18n{identitydesk.search_identities.detail.score}</@th>
                                             </thead>
                                             <tbody>
                                                 <#list service_contract.attributeDefinitions as serviceContractAttr>
@@ -295,26 +316,13 @@
                                                 </#list>
                                             </tbody>
                                         </table>
-                                    </@offcanvasDesk>
-                                    <div>
-                                        <@offcanvasButton id="btnSummarize-${identity?index}"
-                                            idcanvas="summarize-${identity?index}"
-                                            buttonIcon="eye"
-                                            title="#i18n{identitydesk.search_identities.buttonCheckIdentity}"/>
+                                    </@offcanvas>
                                         <#if can_write>
-                                            <a class="btn btn-primary btn-sm custom-tooltip"
-                                               href='jsp/admin/plugins/identitydesk/ManageIdentities.jsp?view_modifyIdentity&customer_id=${identity.customerId}'
-                                               title="#i18n{identitydesk.search_identities.buttonModifyIdentity}">
-                                                <i class="fa-solid fa-pen"></i>
-                                            </a>
+                                        <@aButton href='jsp/admin/plugins/identitydesk/ManageIdentities.jsp?view_modifyIdentity&customer_id=${identity.customerId}' buttonIcon='edit' title='#i18n{identitydesk.search_identities.buttonModifyIdentity}'  hideTitle=['all'] />
                                         </#if>
                                         <#if return_url?exists>
-                                            <a class="btn btn-primary btn-sm custom-tooltip" href='${return_url}?cuid=${identity.customerId}'
-                                               title="#i18n{identitydesk.search_identities.buttonSelectIdentityAndReturn}">
-                                                <i class="fa-solid fa-right-long custom-tooltiptext"></i>
-                                            </a>
+                                        <@aButton href='${return_url}?cuid=${identity.customerId}' buttonIcon='external-link' title='#i18n{identitydesk.search_identities.buttonSelectIdentityAndReturn}'  hideTitle=['all'] />
                                         </#if>
-                                    </div>
                                 </@td>
                             </tr>
                         </#list>
@@ -324,3 +332,5 @@
         </@tform>
     </@pageColumn>
 </@pageContainer>
+<link href="css/admin/plugins/identitydesk/identitydesk.css" rel="stylesheet">
+<script src="js/admin/plugins/identitydesk/identitydesk.js"></script>

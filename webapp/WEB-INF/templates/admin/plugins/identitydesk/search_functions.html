@@ -11,7 +11,6 @@
     </#list>
     <#return maxLevel>
 </#function>
-
 <#-- Retrieves the certification level for a given attribute code and attribute key -->
 <#-- @param code The code of the attribute certification level -->
 <#-- @param attributeKey The key of the attribute -->
@@ -27,7 +26,6 @@
     </#list>
     <#return 0>
 </#function>
-
 <#-- Retrieves the attribute code for a given certification level -->
 <#-- @param level The level of the attribute certification -->
 <#-- @param attributeKey The key of the attribute -->
@@ -41,8 +39,6 @@
     </#list>
     <#return "N/A">
 </#function>
-
-
 <#-- Retrieves the value of an attribute from a list of attributes -->
 <#-- @param attrs The list of attributes -->
 <#-- @param key The key of the attribute -->
@@ -71,7 +67,6 @@
     </#list>
     <#return "">
 </#function>
-
 <#function isAttributeExists attrs key>
     <#list attrs as attr>
         <#if attr.key == key>
@@ -82,9 +77,6 @@
     </#list>
     <#return false>
 </#function>
-
-
-
 <#-- Retrieves the certifier pivot badge based on the attributes -->
 <#-- @param attrs The list of attributes -->
 <#function getCertifierPivotBadge attrs>
@@ -111,7 +103,7 @@
     <#assign result = "">
     <#if uncertifiedCount == totalAttrs?size>
         <#assign result = "<span class='badge text-danger-emphasis bg-danger-subtle border border-danger-subtle  rounded-5'>
-            Non certifié</span>">
+            Non certifi&eacute;</span>">
     <#elseif totalCertifiedCount == totalAttrs?size>
         <#if certifierCount?keys?size gt 1>
             <#assign result = "<span class='badge text-warning-emphasis bg-warning-subtle border border-warning-subtle  rounded-5'>
@@ -135,9 +127,6 @@
     </#if>
     <#return result>
 </#function>
-
-
-
 <#-- Generates data for a chart with attribute certifiers -->
 <#-- @param attrs The list of attributes -->
 <#function generateCertifiersDataForChart attrs>
@@ -160,7 +149,6 @@
     <#assign data = "[" + certifier_counter?values?join(", ") + "]">
     <#return { 'labels': labels, 'data': data }>
 </#function>
-
 <#-- Retrieves the highest level ratio for a given key name and certification code -->
 <#-- @param keyName The key name of the attribute -->
 <#-- @param certCode The code of the certification -->
@@ -183,7 +171,6 @@
         <#return targetLevel / highestLevel>
     </#if>
 </#function>
-
 <#-- Retrieves the name of an attribute based on its key name -->
 <#-- @param keyName The key name of the attribute -->
 <#function getName keyName >
@@ -195,31 +182,52 @@
     </#list>
     <#return targetName>
 </#function>
-
 <#macro generateAttributeHtml attr>
     <#assign isUpdateAllowed = attr.updatable && attr.allowedCertificationList?has_content >
     <#assign disabled=!isUpdateAllowed>
-
     <#if attr.key != 'birthplace_code' && attr.key != 'birthcountry_code'>
+        <#assign certificationFieldName = (attr.key == 'birthplace' || attr.key == 'birthcountry')?then("${attr.key}_code-certif","${attr.key}-certif")>
+        <#assign certifierCode = attr.certifier!''>
+        <#assign certifierFound = false>
+        <#list attr.allowedCertificationList as certif>
+            <#if certif.code == certifierCode>
+                <#assign certifierFound = true>
+            </#if>
+        </#list>        
         <#assign mandatory = attr.mandatory>
-        
-        <div class="col-12">
-            <@inputGroup>
-     
-        <#if attr.key == 'birthplace' & isUpdateAllowed >
-            <div class="form-group" id="autocompleteBirthPlaceDiv">
-                <@autocompleteFixPlaceholder id="birthplace" currentValue="${(attr.value)!''}" name="birthplace" suggestionsUrl="${autocomplete_city_endpoint}" searchLabel="${attr.name}" itemValueFieldName="value" itemTitleFieldNames='["displayValue"]' copyFields='[{"inputName":"birthplace_code","resultFieldName":"code"}]' suggestionsPath="result" minimumInputLength=3 additionnalRequestParamInputId="birthdate"/>
+        <#assign certMandatory><#if mandatory>true<#elseif certifierFound>true<#else>false</#if></#assign>
+        <#assign noRequiredClass> <#if !mandatory & !certMandatory?boolean>identitydesk-js-rules</#if> </#assign>
+        <#assign class>identitydesk-attribute ${noRequiredClass} </#assign>
+            <#if attr.key == 'birthplace' & isUpdateAllowed >
+            <div class="col-12">
+                <@alert id="birthplace_required_msg" color="primary" iconTitle='arrow-big-up-line' class="d-none my-1" dismissible=false  title="Veuillez d'abord saisir le pays de naissance pour modifier le ville de naissance.">
+                </@alert>
             </div>
-            <#elseif attr.key == 'birthcountry' & isUpdateAllowed>
-                <div class="form-group" id="autocompleteBirthCountryDiv">
-                    <@autocompleteFixPlaceholder id="birthcountry" currentValue="${(attr.value)!''}" name="birthcountry" suggestionsUrl="${autocomplete_country_endpoint}" searchLabel="${attr.name}" itemValueFieldName="value" itemTitleFieldNames='["value"]' copyFields='[{"inputName":"birthcountry_code","resultFieldName":"code"}]' suggestionsPath="result" minimumInputLength=3 additionnalRequestParamInputId="birthdate"/>
+            </#if>
+            <#if attr.key == 'birthcountry' & isUpdateAllowed >
+            <div class="col-12">
+          <@alert id="birthcountry_required_msg" color="primary" iconTitle='arrow-big-up-line' class="d-none my-1" dismissible=false  title="Veuillez d'abord saisir la date de naissance pour modifier le pays de naissance.">
+            </@alert>
+            </div>
+            </#if>
+        <div class="col-6 p-1">
+        <#if attr.key == 'birthplace' & isUpdateAllowed >
+                <@autocomplete id="birthplace" class="identitydesk-attribute" currentValue="${(attr.value)!''}" name="birthplace" suggestionsUrl="${autocomplete_city_endpoint}" searchLabel="${attr.name}" itemValueFieldName="value" itemTitleFieldNames='["displayValue"]' copyFields='[{"inputName":"birthplace_code","resultFieldName":"code"}]' suggestionsPath="result" minimumInputLength=3 additionnalRequestParamInputId="birthdate" formStyle="floating"/>
+
+                <div id="birthplace-external-container" class="d-none">
+                <@formGroup formStyle="floating" labelFor='${attr.key}' labelKey='${attr.name}' class=class mandatory=mandatory rows=2 >
+                <@input type='text' name="birthplace_external" id="birthplace_external" value="${(attr.value)!''}" />
+                </@formGroup>
                 </div>
+
+            <#elseif attr.key == 'birthcountry' & isUpdateAllowed>
+                 <@autocomplete id="birthcountry" class="identitydesk-attribute" currentValue="${(attr.value)!''}" name="birthcountry" suggestionsUrl="${autocomplete_country_endpoint}" searchLabel="${attr.name}" itemValueFieldName="value" itemTitleFieldNames='["value"]' copyFields='[{"inputName":"birthcountry_code","resultFieldName":"code"}]' suggestionsPath="result" minimumInputLength=3 additionnalRequestParamInputId="birthdate" formStyle="floating"/>
             <#else>
-                    <@formGroup formStyle='floating' labelFor='${attr.key}' labelKey='${attr.name}' mandatory=mandatory rows=2 >
+                    <@formGroup  formStyle="floating" labelFor='${attr.key}' labelKey='${attr.name}' class=class mandatory=mandatory rows=2 >
                         <#if attr.key == 'gender'>
                             <@select name='gender' disabled=disabled>
                                 <#assign value = "${attr.value!''}">
-                                <option value="">S&#x00E9;l&#x00E9;ctionner un genre</option>
+                                <option value=""></option>
                                 <option value="0" <#if value == "0">selected</#if>>Non d&#x00E9;fini</option>
                                 <option value="1" <#if value == "1">selected</#if>>Femme</option>
                                 <option value="2" <#if value == "2">selected</#if>>Homme</option>
@@ -228,28 +236,23 @@
                         <#if attr.key == 'birthdate'>
                         <#if attr.value?has_content>
                         <#assign date_dd_MM_yyyy = formatDate(attr.value)>
-                        <@input type='dateHTML5' name="${attr.key}" id="${attr.key}" placeHolder="${attr.description}" value=date_dd_MM_yyyy disabled=disabled/>
+                        <@input type='dateHTML5' name="${attr.key}" id="${attr.key}"  value=date_dd_MM_yyyy disabled=disabled/>
                     <#else>
-                        <@input type='dateHTML5' name="${attr.key}" id="${attr.key}" placeHolder="${attr.description}" disabled=disabled/>
+                        <@input type='dateHTML5' name="${attr.key}" id="${attr.key}"  disabled=disabled/>
                     </#if>
                         <#else>
-                        <@input type='text' name="${attr.key}" id="${attr.key}" placeHolder="${attr.description}" value="${(attr.value)!''}" disabled=disabled/>
-
+                        <@input type='text' name="${attr.key}" id="${attr.key}"  value="${(attr.value)!''}" disabled=disabled/>
                         </#if>
-
                         </#if>
                     </@formGroup>
             </#if>
-
-            <#assign certificationFieldName = (attr.key == 'birthplace' || attr.key == 'birthcountry')?then("${attr.key}_code-certif","${attr.key}-certif")>
-            <#assign certifierCode = attr.certifier!''>
-            <#assign found = attr.allowedCertificationList?seq_contains(certifierCode)>
-
-            <@formGroup formStyle='floating' labelKey="Certification" helpKey='' mandatory=mandatory rows=2>
+        </div>
+        <div class="col-6 p-1">
+            <@formGroup formStyle="floating" labelKey="Certification" helpKey='' mandatory=certMandatory?boolean rows=2>
                 <#if attr.allowedCertificationList?has_content>
                     <@select name=certificationFieldName>
-                        <#if !found>
-                            <option selected value="">Ajouter une certification</option>
+                        <#if !certifierFound>
+                            <option selected value=""></option>
                         </#if>
                         <#list attr.allowedCertificationList as certif>
                             <option <#if certif.code == certifierCode>selected</#if> value="${certif.code}">${certif.label} (${certif.code})</option>
@@ -259,17 +262,15 @@
                     <@input type='text' name="${attr.key}" id="${attr.key}" placeHolder="${attr.description}" value="${(attr.certifier)!''}" disabled=disabled/>
                 </#if>
             </@formGroup>
-        </@inputGroup>
         </div>
-        <div class="col-12 mb-3">
+         <#assign isShowInfo = attribute_info_key_list?seq_contains(attr.key)>
+            <#if isShowInfo >
+            <div class="col-12 my-2">
             <small class="d-block"><i class="ti ti-info-circle"></i> ${attr.description}</small>
-            <#if attr.key == 'birthplace' & isUpdateAllowed >
-                <small class="form-text text-muted d-block">Veuillez au préalable saisir votre date de naissance et votre pays de naissance pour pouvoir modifier votre ville de naissance.</small>
+            </div>
             </#if>
-            <#if attr.key == 'birthcountry' & isUpdateAllowed >
-                <small class="form-text text-muted d-block">Veuillez au préalable saisir votre date de naissance pour pouvoir modifier votre pays naissance.</small>
-            </#if>
-
+            <#if attribute_statuses?size gt 0>
+            <div class="col-12 my-2">
             <#list attribute_statuses?filter(s -> s.key == attr.key) as status>
                 <#if status.status.type == 'SUCCESS'>
                     <b class="ms-2 text-success"><small>#i18n{${status.messageKey}}</small></b>
@@ -279,38 +280,13 @@
                     <b class="ms-2 text-danger"><small>#i18n{${status.messageKey}}</small></b>
                 </#if>
             </#list>
-        </div>
+            </div>
+            </#if>
         <#else>
         <@input type="hidden" id="${attr.key}" name="${attr.key}" value="${(attr.value)!''}" />
     </#if>
 </#macro>
-
 <#function formatDate inputDate>
     <#assign parsedDate = inputDate?datetime("dd/MM/yyyy")>
     <#return parsedDate?string("yyyy-MM-dd")>
 </#function>
-
-<#macro autocompleteFixPlaceholder id name suggestionsUrl suggestionsPath="" itemValueFieldName="value" btnColor="light" btnSize="" itemLabelFieldNames="[]" itemTitleFieldNames=itemLabelFieldNames itemDescriptionFieldNames="[]" itemTagsFieldNames="[]" copyFields="[]" currentValue="" currentLabel="" required=false minimumInputLength=1 minimumInputLenghtLabel="#i18n{portal.util.labelMinimumSearchLenght}" searchLabel="#i18n{portal.util.labelSearch}" emptyLabel="#i18n{portal.util.labelNoItem}" additionnalRequestParamInputId="" >
-    <div id="${id}" class="lutece-autocomplete dropdown form-group form-floating " data-itemTitleFieldNames=${itemTitleFieldNames} data-suggestionsUrl="${suggestionsUrl}" data-suggestionsPath="${suggestionsPath}" data-itemValueFieldName=${itemValueFieldName} data-minimumInputLength=${minimumInputLength} data-itemDescriptionFieldNames=${itemDescriptionFieldNames} data-itemTagsFieldNames=${itemTagsFieldNames} data-copyFields=${copyFields} data-emptyLabel="${emptyLabel}" data-currentValue="${currentValue}" data-currentLabel="${currentLabel}" data-suggestionItemClass='["list-group-item", "p-3"]' data-titleClass='["mb-0", "fw-bolder"]' data-descriptionClass='["text-muted", "mb-0"]' data-tagClass='["badge", "bg-blue-lt", "me-1"]' data-loaderIconClasses='{"loading": ["ti-loader-2", "icon-rotate"], "error": ["ti-zoom-exclamation", "text-danger"], "search": ["ti-search"]}' data-emptyClass='["list-group-item", "p-3", "text-muted", "text-center"]' data-searchLabel="${searchLabel}">
-        <@formGroup formStyle='floating' class='' labelFor='${id}' labelKey='' mandatory=mandatory>
-        <@inputGroup>
-        <@input type='text' name="${name}" placeHolder="${searchLabel}" class="lutece-autocomplete-search-input w-75" value="${currentValue!}"  id="${id}-input" params='role="combobox" autocomplete="off" aria-expanded="false" aria-owns="${id}-list-container" aria-autocomplete="list" aria-describedby="${id}-lutece-autocomplete-assistiveHint"' />
-        <span role="button" class="input-group-text lutece-autocomplete-remove <#if currentValue=''>d-none</#if> text-danger">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M18 6l-12 12" /><path d="M6 6l12 12" /></svg>
-                </span>
-        <span role="button" class="input-group-text lutece-autocomplete-search-icon">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M10 10m-7 0a7 7 0 1 0 14 0a7 7 0 1 0 -14 0" /><path d="M21 21l-6 -6" /></svg>
-                </span>
-    </@inputGroup>
-    <div id="${id}-dropdown" class="lutece-autocomplete-dropdown dropdown-menu p-0" aria-labelledby="dropdownMenuButton">
-        <ul id="${id}-list-container" class="lutece-autocomplete-result-container list-group list-group-flush overflow-auto bg-white" role="listbox" id="suggestions-list" aria-labelledby="${id}-input" style="max-height:15rem;"></ul>
-        <span id="${id}-lutece-autocomplete-default-assistive" class="sr-only visually-hidden">#i18n{portal.util.message.autocomplete.avalailbleResults}</span>
-        <div class="sr-only lutece-autocomplete-status" role="status" aria-atomic="true" aria-live="polite"></div>
-    </div>
-    </@formGroup>
-    </div>
-    <script type="module">
-        import LuteceAutoComplete from "./themes/shared/modules/luteceAutoComplete.js";
-        new LuteceAutoComplete(document.getElementById(`${id}`), document.getElementById(`${additionnalRequestParamInputId}`));
-    </script>
-</#macro>

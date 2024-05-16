@@ -5,10 +5,10 @@
         <#if service_contract?? && referential??>
             <#if rules_requirements_reached>
                 <#assign description>
-                    Vous ne trouvez pas l'identité recherchée dans le référentiel d'identité ?
+                    Vous ne trouvez pas l'identit&eacute; recherch&eacute;e dans le r&eacute;f&eacute;rentiel d'identit&eacute; ?
                     <#if can_create>
                         <button type="submit" class="btn btn-primary btn-sm text-decoration-none border rounded-5" name="view_createIdentity">
-                            <small><i class="ti ti-user-plus"></i> Créer cette identité</small>
+                            <small><i class="ti ti-user-plus"></i> Cr&eacute;er cette identit&eacute;</small>
                         </button>
                     </#if>
                     <a class="btn btn-dark btn-sm text-decoration-none border rounded-5" href="jsp/admin/plugins/identitydesk/ManageIdentities.jsp?plugin_name=identitydesk&new_search=true">
@@ -18,11 +18,11 @@
             <#else>
                 <#assign description>#i18n{identitydesk.search_identities.description}</#assign>
             </#if>
-            <@tform action="jsp/admin/plugins/identitydesk/ManageIdentities.jsp?action_searchIdentity">
+            <@tform action="jsp/admin/plugins/identitydesk/ManageIdentities.jsp?action_searchIdentity" class="container-fluid p-5" params='style="max-width:1600px !important"'>
                 <@input type="hidden" name="token" value="${token}"/>
                 <@input type="hidden" name="new_search" value=""/>
                 <@input type="hidden" name="return_url" value="${(return_url)!''}"/>
-                <div class="jumbotron jumbotron-fluid d-flex align-items-center justify-content-center text-center">
+                <div class="jumbotron jumbotron-fluid text-center">
                     <div class="mb-5">
                         <@pageHeader title='${title}' description='${description}'>
                         </@pageHeader>
@@ -62,7 +62,7 @@
                             </@searchBox>
                         </#if>
                         <div class="mb-5 mt-2">
-                            <div class="float-end">
+                            <div class="text-end fw-bold">
                                 <#assign checked=true />
                                 <#if approximate?exists>
                                     <#if approximate>
@@ -88,3 +88,5 @@
         </#if>
     </@pageColumn>
 </@pageContainer>
+<link href="css/admin/plugins/identitydesk/identitydesk.css" rel="stylesheet">
+<script src="js/admin/plugins/identitydesk/identitydesk.js"></script>
