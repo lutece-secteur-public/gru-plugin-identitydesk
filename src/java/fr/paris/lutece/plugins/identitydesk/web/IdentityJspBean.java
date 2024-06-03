@@ -254,6 +254,7 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
             return getSearchIdentities( request );
         }
         final List<IdentityDto> qualifiedIdentities = new ArrayList<>( );
+        _attributeStatuses.clear( );
 
         // get search criterias
         collectSearchAttributes( request );
