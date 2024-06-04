@@ -75,6 +75,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -136,7 +137,7 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
     private static final String MARK_ATTRIBUTE_STATUSES = "attribute_statuses";
     private static final String MARK_SEARCH_RULES = "search_rules";
     private static final String MARK_REFERENTIAL = "referential";
-    private static final String MARK_APPROXIMATE = "approximate";
+    private static final String APPROXIMATED_SEARCH = "approximate";
     private static final String MARK_CAN_CREATE = "can_create";
     private static final String MARK_CAN_WRITE = "can_write";
     private static final String MARK_RULES_REQ_REACHED = "rules_requirements_reached";
@@ -290,20 +291,8 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
                 {
                     final IdentitySearchResponse searchResponse = _identityService.searchIdentities( searchRequest, _currentClientCode, getAuthor( ) );
                     logAndDisplayStatusErrorMessage( searchResponse );
-                    if ( !Boolean.parseBoolean( request.getParameter( MARK_APPROXIMATE ) ) )
-                    {
-                        qualifiedIdentities.addAll( searchResponse.getIdentities( ).stream( )
-                                .filter( i -> i.getQuality( ) != null && Math.round( i.getQuality( ).getScoring( ) * 100 ) == 100 )
-                                .collect( Collectors.toList( ) ) );
-                        if ( qualifiedIdentities.isEmpty( ) )
-                        {
-                            addWarning( MESSAGE_SEARCH_IDENTITY_NORESULT, getLocale( ) );
-                        }
-                    }
-                    else
-                    {
-                        qualifiedIdentities.addAll( searchResponse.getIdentities( ) );
-                    }
+                    final Comparator<IdentityDto> scoringComparator = Comparator.comparingDouble(o -> o.getQuality().getScoring());
+                    qualifiedIdentities.addAll( searchResponse.getIdentities( ).stream().sorted(scoringComparator.reversed()).collect(Collectors.toList()) );
                 }
                 catch( final IdentityStoreException e )
                 {
@@ -331,7 +320,7 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
         model.put( MARK_CAN_CREATE, _canCreateIdentity );
         model.put( MARK_CAN_WRITE, _canWriteIdentity );
         model.put( MARK_RULES_REQ_REACHED, rulesRequirementsReached );
-        model.put( MARK_APPROXIMATE, Boolean.parseBoolean( request.getParameter( PARAMETER_APPROXIMATE ) ) );
+        model.put(APPROXIMATED_SEARCH, Boolean.parseBoolean( request.getParameter( PARAMETER_APPROXIMATE ) ) );
         model.put( SecurityTokenService.MARK_TOKEN, SecurityTokenService.getInstance( ).getToken( request, ACTION_SEARCH_IDENTITY ) );
         addReturnUrlMarker( request, model );
 
@@ -610,7 +599,7 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
      */
     private void collectSearchAttributes( final HttpServletRequest request )
     {
-
+        final boolean strictSearch = !Boolean.parseBoolean(request.getParameter(APPROXIMATED_SEARCH));
         final List<SearchAttribute> searchList = _serviceContract.getAttributeDefinitions( ).stream( ).map( AttributeDefinitionDto::getKeyName )
                 .map( attrKey -> {
                     switch(attrKey)
@@ -640,7 +629,7 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
                     if ( value != null )
                     {
                         return new SearchAttribute( attrKey, value.trim( ),
-                                ( _searchAttributeKeyStrictList.contains( attrKey ) ? AttributeTreatmentType.STRICT : AttributeTreatmentType.APPROXIMATED ) );
+                                ( _searchAttributeKeyStrictList.contains( attrKey ) || strictSearch ? AttributeTreatmentType.STRICT : AttributeTreatmentType.APPROXIMATED ) );
                     }
                     return null;
                 } ).filter( searchAttribute -> searchAttribute != null && StringUtils.isNotBlank( searchAttribute.getValue( ) ) )
@@ -678,7 +667,7 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
      */
     private void updateSearchAttributes( final HttpServletRequest request )
     {
-
+        final boolean strictSearch = !Boolean.parseBoolean(request.getParameter(APPROXIMATED_SEARCH));
         final List<String> requiredAttrs = Arrays.asList( "birthdate", "common_lastname", "first_name" );
 
         final List<SearchAttribute> searchList = _serviceContract.getAttributeDefinitions( ).stream( ).map( AttributeDefinitionDto::getKeyName )
@@ -700,7 +689,7 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
                     if ( value != null )
                     {
                         return new SearchAttribute( attrKey, value.trim( ),
-                                ( _searchAttributeKeyStrictList.contains( attrKey ) ? AttributeTreatmentType.STRICT : AttributeTreatmentType.APPROXIMATED ) );
+                                ( _searchAttributeKeyStrictList.contains( attrKey ) || strictSearch ? AttributeTreatmentType.STRICT : AttributeTreatmentType.APPROXIMATED ) );
                     }
                     return null;
                 } ).filter( Objects::nonNull ).filter( searchAttribute -> StringUtils.isNotBlank( searchAttribute.getValue( ) ) )
