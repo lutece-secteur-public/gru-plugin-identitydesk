@@ -33,6 +33,8 @@
  */
 package fr.paris.lutece.plugins.identitydesk.business;
 
+import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.common.AttributeDto;
+import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.common.IdentityDto;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.contract.ServiceContractDto;
 import org.apache.commons.collections.CollectionUtils;
 
@@ -48,6 +50,7 @@ public class LocalIdentityDto
     private final String customerId;
     private final Timestamp lastUpdateDate;
     private final List<LocalAttributeDto> attributeList;
+    private AccountCreationTask accountCreationTask;
 
     private LocalIdentityDto( )
     {
@@ -73,32 +76,43 @@ public class LocalIdentityDto
         return attributeList;
     }
 
+    public AccountCreationTask getAccountCreationTask( )
+    {
+        return accountCreationTask;
+    }
+
+    public void setAccountCreationTask( AccountCreationTask accountCreationTask )
+    {
+        this.accountCreationTask = accountCreationTask;
+    }
+
     /**
      * Static builder for update UI for an IdentityDto, with allowed certification process
      * 
-     * @param qualifiedIdentity
+     * @param identityDto
      * @param serviceContract
      * @return the IdentityDto
      */
-    public static LocalIdentityDto from( final fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.common.IdentityDto qualifiedIdentity,
-            final ServiceContractDto serviceContract )
+    public static LocalIdentityDto from( final IdentityDto identityDto, final ServiceContractDto serviceContract )
     {
-        if ( qualifiedIdentity == null || serviceContract == null )
+        if ( identityDto == null || serviceContract == null )
         {
             return null;
         }
-        LocalIdentityDto localIdentityDto = new LocalIdentityDto( qualifiedIdentity.getCustomerId( ), qualifiedIdentity.getLastUpdateDate( ) );
+        final LocalIdentityDto localIdentityDto = new LocalIdentityDto( identityDto.getCustomerId( ), identityDto.getLastUpdateDate( ) );
 
         // add allowed certification process from service contract
         serviceContract.getAttributeDefinitions( ).stream( ).filter( a -> a.getAttributeRight( ).isWritable( ) ).forEach( attrRef -> {
-            final fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.common.AttributeDto identityAttr = qualifiedIdentity.getAttributes( ).stream( )
-                    .filter( a -> a.getKey( ).equals( attrRef.getKeyName( ) ) ).findFirst( ).orElse( null );
+            final AttributeDto identityAttr = identityDto.getAttributes( ).stream( ).filter( a -> a.getKey( ).equals( attrRef.getKeyName( ) ) ).findFirst( )
+                    .orElse( null );
 
             if ( CollectionUtils.isNotEmpty( attrRef.getAttributeCertifications( ) ) )
             {
                 localIdentityDto.getAttributeList( ).add( LocalAttributeDto.from( identityAttr, attrRef ) );
             }
         } );
+
+        localIdentityDto.setAccountCreationTask( AccountCreationTaskHome.get( identityDto.getCustomerId( ) ) );
 
         return localIdentityDto;
     }

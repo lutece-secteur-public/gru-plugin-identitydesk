@@ -34,11 +34,15 @@
 package fr.paris.lutece.plugins.identitydesk.web;
 
 import fr.paris.lutece.api.user.User;
+import fr.paris.lutece.plugins.identitydesk.business.AccountCreationTaskHome;
 import fr.paris.lutece.plugins.identitydesk.business.LocalIdentityDto;
+import fr.paris.lutece.plugins.identitydesk.cache.ServiceAttributeKeyReferentialCache;
 import fr.paris.lutece.plugins.identitydesk.cache.ServiceContractCache;
-import fr.paris.lutece.plugins.identitydesk.cache.ServiceReferentialCache;
+import fr.paris.lutece.plugins.identitydesk.cache.ServiceProcessusReferentialCache;
+import fr.paris.lutece.plugins.identitydesk.dto.ExtendedIdentityDto;
 import fr.paris.lutece.plugins.identitydesk.rbac.AccessIdentityResource;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.common.AttributeDto;
+import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.common.AttributeKeyDto;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.common.AttributeStatus;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.common.AttributeTreatmentType;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.common.AuthorType;
@@ -50,11 +54,18 @@ import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.contract.AttributeDef
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.contract.ServiceContractDto;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.crud.IdentityChangeRequest;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.crud.IdentityChangeResponse;
+import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.referentiel.AttributeCertificationLevelDto;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.referentiel.AttributeCertificationProcessusDto;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.search.IdentitySearchRequest;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.search.IdentitySearchResponse;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.search.SearchAttribute;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.search.SearchDto;
+import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.task.IdentityResourceType;
+import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.task.IdentityTaskCreateRequest;
+import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.task.IdentityTaskCreateResponse;
+import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.task.IdentityTaskDto;
+import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.task.IdentityTaskGetStatusResponse;
+import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.task.IdentityTaskType;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.util.Constants;
 import fr.paris.lutece.plugins.identitystore.v3.web.service.IdentityService;
 import fr.paris.lutece.plugins.identitystore.web.exception.IdentityStoreException;
@@ -94,6 +105,8 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
     // Templates
     private static final String TEMPLATE_SEARCH_IDENTITIES_RESULT = "/admin/plugins/identitydesk/search_identities_result.html";
     private static final String TEMPLATE_SEARCH_IDENTITIES = "/admin/plugins/identitydesk/search_identities.html";
+    private static final String TEMPLATE_TASK_CREATION_RESULT = "/admin/plugins/identitydesk/view_task_creation_result.html";
+    private static final String TEMPLATE_DISPLAY_ACCOUNT_TASK = "/admin/plugins/identitydesk/view_account_task.html";
 
     private static final String TEMPLATE_CREATE_IDENTITY = "/admin/plugins/identitydesk/create_identity.html";
     private static final String TEMPLATE_MODIFY_IDENTITY = "/admin/plugins/identitydesk/modify_identity.html";
@@ -106,19 +119,22 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
     private static final String MESSAGE_IDENTITY_MUSTSELECTCERTIFICATION = "identitydesk.message.identity.mustselectcertification";
     private static final String MESSAGE_CREATE_IDENTITY_SUCCESS = "identitydesk.message.create_identity.success";
     private static final String MESSAGE_CREATE_IDENTITY_ERROR = "identitydesk.message.create_identity.error";
+    private static final String MESSAGE_CREATE_IDENTITY_ACCOUNT_ERROR = "identitydesk.message.create_identity_account.error";
     private static final String MESSAGE_UPDATE_IDENTITY_NOCHANGE = "identitydesk.message.update_identity.nochange";
     private static final String MESSAGE_UPDATE_IDENTITY_SUCCESS = "identitydesk.message.update_identity.success";
     private static final String MESSAGE_UPDATE_IDENTITY_ERROR = "identitydesk.message.update_identity.error";
     private static final String MESSAGE_GET_SERVICE_CONTRACT_ERROR = "identitydesk.message.get_service_contract.error";
     private static final String MESSAGE_SEARCH_IDENTITY_REQUIREDFIELD = "identitydesk.message.search_identity.requiredfield";
     private static final String MESSAGE_GET_REFERENTIAL_ERROR = "referential error";
+    private static final String MESSAGE_GET_ACCOUNT_TASK_ERROR = "identitydesk.message.identity_account_task.error";
 
     // Properties for page titles
     private static final String PROPERTY_PAGE_TITLE_MANAGE_IDENTITIES = "identitydesk.manage_identities.pageTitle";
     private static final String PROPERTY_PAGE_TITLE_MODIFY_IDENTITY = "identitydesk.modify_identity.pageTitle";
     private static final String PROPERTY_PAGE_TITLE_CREATE_IDENTITY = "identitydesk.create_identity.pageTitle";
-	private static final String PROPERTY_ALLOW_CLIENT_CODE_DYNAMIC_CHANGE = "identitydesk.client_code.allow_dynamic_change";
-	private static final String PROPERTY_ALLOW_RETURN_URL_DYNAMIC_CHANGE  = "identitydesk.return_url.allow_dynamic_change";
+    private static final String PROPERTY_PAGE_TITLE_CREATE_TASK_IDENTITY = "identitydesk.create_identity_task.pageTitle";
+    private static final String PROPERTY_ALLOW_CLIENT_CODE_DYNAMIC_CHANGE = "identitydesk.client_code.allow_dynamic_change";
+    private static final String PROPERTY_ALLOW_RETURN_URL_DYNAMIC_CHANGE = "identitydesk.return_url.allow_dynamic_change";
 
     // Constants
     private static final String PARAMETER_SEARCH_PREFIX = "search_";
@@ -128,6 +144,7 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
 
     // Markers
     private static final String MARK_IDENTITY_LIST = "identity_list";
+    private static final String MARK_ELIGIBLE_IDENTITY_TO_ACCOUNT = "eligible_identity_to_account_list";
     private static final String MARK_IDENTITY = "identity";
     private static final String MARK_SERVICE_CONTRACT = "service_contract";
     private static final String MARK_QUERY_SEARCH_ATTRIBUTES = "query_search_attributes";
@@ -143,52 +160,53 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
     private static final String MARK_RULES_REQ_REACHED = "rules_requirements_reached";
     private static final String MARK_ATTRIBUTE_INFO_KEY_LIST = "attribute_info_key_list";
     private static final String MARK_SEARCH_PARAMS = "search_params";
+    private static final String MARK_TASK_CODE = "task_code";
+    private static final String MARK_TASK_RESULT_MESSAGE = "task_result_message";
 
     // Views
     private static final String VIEW_SEARCH_IDENTITY = "searchIdentity";
     private static final String VIEW_CREATE_IDENTITY = "createIdentity";
     private static final String VIEW_MODIFY_IDENTITY = "modifyIdentity";
+    private static final String VIEW_ACCOUNT_TASK = "displayAccountTask";
 
     // Actions
     private static final String ACTION_SEARCH_IDENTITY = "searchIdentity";
     private static final String ACTION_CREATE_IDENTITY = "createIdentity";
     private static final String ACTION_MODIFY_IDENTITY = "modifyIdentity";
+    private static final String ACTION_CREATE_ACCOUNT = "createAccount";
 
     // Cache
     private static final ServiceContractCache _serviceContractCache = SpringContextService.getBean( "identity.serviceContractCacheService" );
-    private static final ServiceReferentialCache _serviceReferentialCache = SpringContextService.getBean( "identitydesk.serviceReferentialCache" );
+    private static final ServiceProcessusReferentialCache _serviceProcessusReferentialCache = SpringContextService
+            .getBean( "identitydesk.serviceProcessusReferentialCache" );
+    private static final ServiceAttributeKeyReferentialCache _serviceAttributeKeyReferentialCache = SpringContextService
+            .getBean( "identitydesk.serviceAttributeKeyReferentialCache" );
 
     // Session variable to store working values
     private List<SearchAttribute> _searchAttributes = new ArrayList<>( );
     private ServiceContractDto _serviceContract;
-    private List<AttributeCertificationProcessusDto> _referential;
+    private List<AttributeCertificationProcessusDto> _processusReferential;
+    private List<AttributeKeyDto> _attributesReferential;
     private List<AttributeStatus> _attributeStatuses = new ArrayList<>( );
     private String _currentClientCode = AppPropertiesService.getProperty( "identitydesk.default.client.code" );
     private String _currentReturnUrl = AppPropertiesService.getProperty( "identitydesk.default.returnUrl" );
-    
+
     boolean _canCreateIdentity = false;
     boolean _canWriteIdentity = false;
 
     private final IdentityService _identityService = SpringContextService.getBean( "identity.identityService" );
+    private final String _accountCreationTaskMinLevel = AppPropertiesService.getProperty( "identitydesk.account.creation.task.eligibility.min.level" );
     private final String _autocompleteCityEndpoint = AppPropertiesService.getProperty( "identitydesk.autocomplete.city.endpoint" );
     private final String _autocompleteCountryEndpoint = AppPropertiesService.getProperty( "identitydesk.autocomplete.country.endpoint" );
-    private final List<List<String>> _searchRules = AppPropertiesService.getKeys("identitydesk.search.rule.").stream()
-    .map(key -> {
-        String property = AppPropertiesService.getProperty(key);
-        return (property != null && !property.trim().isEmpty()) ? Arrays.asList(property.split(",")) : new ArrayList<String>();
-    }).collect(Collectors.toList());
-    private final List<String> _searchAttributeKeyStrictList = 
-    Optional.ofNullable(AppPropertiesService.getProperty("identitydesk.search.strict.attributes"))
-            .filter(property -> !property.trim().isEmpty())
-            .map(property -> Arrays.asList(property.split(",")))
-            .orElseGet(ArrayList::new);
-    private final List<String> _AttributeInfoKeyList = 
-            Optional.ofNullable(AppPropertiesService.getProperty("identitydesk.attribute.information.show"))
-                    .filter(property -> !property.trim().isEmpty())
-                    .map(property -> Arrays.asList(property.split(",")))
-                    .orElseGet(ArrayList::new);
-        
-
+    private final List<List<String>> _searchRules = AppPropertiesService.getKeys( "identitydesk.search.rule." ).stream( ).map( key -> {
+        String property = AppPropertiesService.getProperty( key );
+        return ( property != null && !property.trim( ).isEmpty( ) ) ? Arrays.asList( property.split( "," ) ) : new ArrayList<String>( );
+    } ).collect( Collectors.toList( ) );
+    private final List<String> _searchAttributeKeyStrictList = Optional
+            .ofNullable( AppPropertiesService.getProperty( "identitydesk.search.strict.attributes" ) ).filter( property -> !property.trim( ).isEmpty( ) )
+            .map( property -> Arrays.asList( property.split( "," ) ) ).orElseGet( ArrayList::new );
+    private final List<String> _AttributeInfoKeyList = Optional.ofNullable( AppPropertiesService.getProperty( "identitydesk.attribute.information.show" ) )
+            .filter( property -> !property.trim( ).isEmpty( ) ).map( property -> Arrays.asList( property.split( "," ) ) ).orElseGet( ArrayList::new );
 
     /**
      * Displays the search form
@@ -213,15 +231,15 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
             _searchAttributes = new ArrayList<>( );
         }
 
-        _canCreateIdentity = RBACService.isAuthorized(new AccessIdentityResource(),
-                AccessIdentityResource.PERMISSION_CREATE, (User) getUser());
-        final boolean rulesRequirementsReached = _searchRules.stream().anyMatch(rule -> rule.stream().allMatch(key -> _searchAttributes.stream().map(SearchAttribute::getKey).anyMatch(key::equals)));
+        _canCreateIdentity = RBACService.isAuthorized( new AccessIdentityResource( ), AccessIdentityResource.PERMISSION_CREATE, (User) getUser( ) );
+        final boolean rulesRequirementsReached = _searchRules.stream( )
+                .anyMatch( rule -> rule.stream( ).allMatch( key -> _searchAttributes.stream( ).map( SearchAttribute::getKey ).anyMatch( key::equals ) ) );
 
         final Map<String, Object> model = getModel( );
         model.put( MARK_QUERY_SEARCH_ATTRIBUTES, _searchAttributes );
         model.put( MARK_SERVICE_CONTRACT, _serviceContract );
         model.put( MARK_SEARCH_RULES, _searchRules );
-        model.put( MARK_REFERENTIAL, _referential );
+        model.put( MARK_REFERENTIAL, _processusReferential );
         model.put( MARK_CAN_CREATE, _canCreateIdentity );
         model.put( MARK_RULES_REQ_REACHED, rulesRequirementsReached );
         model.put( SecurityTokenService.MARK_TOKEN, SecurityTokenService.getInstance( ).getToken( request, ACTION_SEARCH_IDENTITY ) );
@@ -243,9 +261,140 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
         // CSRF Token control
         // if ( !SecurityTokenService.getInstance( ).validate( request, ACTION_SEARCH_IDENTITY ) )
         // {
-        //     throw new AccessDeniedException( "Invalid security token" );
+        // throw new AccessDeniedException( "Invalid security token" );
         // }
         return searchIdentitiesAndCreatePage( request );
+    }
+
+    @View( VIEW_ACCOUNT_TASK )
+    public String getDisplayAccountTask( final HttpServletRequest request ) throws AccessDeniedException
+    {
+        // CSRF Token control
+        if ( !SecurityTokenService.getInstance( ).validate( request, ACTION_SEARCH_IDENTITY ) )
+        {
+            throw new AccessDeniedException( "Invalid security token" );
+        }
+
+        final String customerId = request.getParameter( Constants.PARAM_ID_CUSTOMER );
+        String taskResultMessage = null;
+        final IdentityDto qualifiedIdentity;
+        try
+        {
+            final IdentitySearchResponse getResponse = _identityService.getIdentity( customerId, _currentClientCode, getAuthor( ) );
+            logAndDisplayStatusErrorMessage( getResponse );
+            if ( getResponse.getIdentities( ).size( ) != 1 )
+            {
+                return getSearchIdentities( request );
+            }
+            qualifiedIdentity = getResponse.getIdentities( ).get( 0 );
+        }
+        catch( final IdentityStoreException e )
+        {
+            AppLogService.error( "Error while retrieving selected identity [customerId = " + customerId + "].", e );
+            addError( MESSAGE_GET_IDENTITY_ERROR, getLocale( ) );
+            return getSearchIdentities( request );
+        }
+
+        final LocalIdentityDto dto = LocalIdentityDto.from( qualifiedIdentity, _serviceContract );
+        if ( dto.getAccountCreationTask( ) != null )
+        {
+            try
+            {
+                final IdentityTaskGetStatusResponse identityTaskStatus = _identityService.getIdentityTaskStatus( dto.getAccountCreationTask( ).getTaskCode( ),
+                        _currentClientCode, getAuthor( ) );
+                if ( identityTaskStatus.getStatus( ).getHttpCode( ) == 200 )
+                {
+                    dto.getAccountCreationTask( ).setStatus( identityTaskStatus.getTaskStatus( ) );
+                }
+                taskResultMessage = identityTaskStatus.getStatus( ).getMessage( );
+            }
+            catch( final IdentityStoreException e )
+            {
+                AppLogService.error( "Error while trying to create an account for identity [customerId = " + customerId + "].", e );
+                addError( MESSAGE_CREATE_IDENTITY_ERROR, getLocale( ) );
+                taskResultMessage = e.getMessage( );
+            }
+        }
+        else
+        {
+            AppLogService.error( "Error while trying to get the store account task for identity [customerId = " + customerId + "] from database." );
+            addError( MESSAGE_GET_ACCOUNT_TASK_ERROR, getLocale( ) );
+        }
+
+        final Map<String, Object> model = getModel( );
+        model.put( MARK_IDENTITY, dto );
+        model.put( MARK_SERVICE_CONTRACT, _serviceContract );
+        model.put( MARK_TASK_RESULT_MESSAGE, taskResultMessage );
+        // Ajouter les paramètres de recherche au modèle
+        Map<String, String> searchParams = collectSearchParams( );
+        model.put( MARK_SEARCH_PARAMS, searchParams );
+        model.put( SecurityTokenService.MARK_TOKEN, SecurityTokenService.getInstance( ).getToken( request, ACTION_MODIFY_IDENTITY ) );
+        return getPage( PROPERTY_PAGE_TITLE_MANAGE_IDENTITIES, TEMPLATE_DISPLAY_ACCOUNT_TASK, model );
+    }
+
+    @Action( ACTION_CREATE_ACCOUNT )
+    public String doCreateAccount( final HttpServletRequest request ) throws AccessDeniedException
+    {
+        // CSRF Token control
+        if ( !SecurityTokenService.getInstance( ).validate( request, ACTION_SEARCH_IDENTITY ) )
+        {
+            throw new AccessDeniedException( "Invalid security token" );
+        }
+
+        final String customerId = request.getParameter( Constants.PARAM_ID_CUSTOMER );
+        String taskCode = null;
+        String taskResultMessage = null;
+        final IdentityDto qualifiedIdentity;
+        try
+        {
+            final IdentitySearchResponse getResponse = _identityService.getIdentity( customerId, _currentClientCode, getAuthor( ) );
+            logAndDisplayStatusErrorMessage( getResponse );
+            if ( getResponse.getIdentities( ).size( ) != 1 )
+            {
+                return getSearchIdentities( request );
+            }
+            qualifiedIdentity = getResponse.getIdentities( ).get( 0 );
+        }
+        catch( final IdentityStoreException e )
+        {
+            AppLogService.error( "Error while retrieving selected identity [customerId = " + customerId + "].", e );
+            addError( MESSAGE_GET_IDENTITY_ERROR, getLocale( ) );
+            return getSearchIdentities( request );
+        }
+        try
+        {
+            final IdentityTaskCreateRequest identityTaskCreateRequest = new IdentityTaskCreateRequest( );
+            final IdentityTaskDto task = new IdentityTaskDto( );
+            task.setTaskType( IdentityTaskType.ACCOUNT_CREATION_REQUEST.name( ) );
+            task.setResourceType( IdentityResourceType.CUID.name( ) );
+            task.setResourceId( customerId );
+            identityTaskCreateRequest.setTask( task );
+            final IdentityTaskCreateResponse identityTask = _identityService.createIdentityTask( identityTaskCreateRequest, _currentClientCode, getAuthor( ) );
+            if ( identityTask.getStatus( ).getHttpCode( ) == 201 )
+            {
+                taskCode = identityTask.getTaskCode( );
+                AccountCreationTaskHome.create( customerId, taskCode );
+            }
+            taskResultMessage = identityTask.getStatus( ).getMessage( );
+        }
+        catch( final IdentityStoreException e )
+        {
+            AppLogService.error( "Error while trying to create an account for identity [customerId = " + customerId + "].", e );
+            addError( MESSAGE_CREATE_IDENTITY_ERROR, getLocale( ) );
+            taskResultMessage = e.getMessage( );
+        }
+
+        final LocalIdentityDto dto = LocalIdentityDto.from( qualifiedIdentity, _serviceContract );
+        final Map<String, Object> model = getModel( );
+        model.put( MARK_IDENTITY, dto );
+        model.put( MARK_SERVICE_CONTRACT, _serviceContract );
+        model.put( MARK_TASK_CODE, taskCode );
+        model.put( MARK_TASK_RESULT_MESSAGE, taskResultMessage );
+        // Ajouter les paramètres de recherche au modèle
+        Map<String, String> searchParams = collectSearchParams( );
+        model.put( MARK_SEARCH_PARAMS, searchParams );
+        model.put( SecurityTokenService.MARK_TOKEN, SecurityTokenService.getInstance( ).getToken( request, ACTION_MODIFY_IDENTITY ) );
+        return getPage( PROPERTY_PAGE_TITLE_MANAGE_IDENTITIES, TEMPLATE_TASK_CREATION_RESULT, model );
     }
 
     private String searchIdentitiesAndCreatePage( final HttpServletRequest request ) throws AccessDeniedException
@@ -254,7 +403,7 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
         {
             return getSearchIdentities( request );
         }
-        final List<IdentityDto> qualifiedIdentities = new ArrayList<>( );
+        final List<IdentityDto> identities = new ArrayList<>( );
         _attributeStatuses.clear( );
 
         // get search criterias
@@ -272,7 +421,7 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
                     logAndDisplayStatusErrorMessage( getResponse );
                     if ( getResponse.getIdentities( ).size( ) == 1 )
                     {
-                        qualifiedIdentities.add( getResponse.getIdentities( ).get( 0 ) );
+                        identities.add( getResponse.getIdentities( ).get( 0 ) );
                     }
                 }
                 catch( final IdentityStoreException e )
@@ -291,8 +440,8 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
                 {
                     final IdentitySearchResponse searchResponse = _identityService.searchIdentities( searchRequest, _currentClientCode, getAuthor( ) );
                     logAndDisplayStatusErrorMessage( searchResponse );
-                    final Comparator<IdentityDto> scoringComparator = Comparator.comparingDouble(o -> o.getQuality().getScoring());
-                    qualifiedIdentities.addAll( searchResponse.getIdentities( ).stream().sorted(scoringComparator.reversed()).collect(Collectors.toList()) );
+                    final Comparator<IdentityDto> scoringComparator = Comparator.comparingDouble( o -> o.getQuality( ).getScoring( ) );
+                    identities.addAll( searchResponse.getIdentities( ).stream( ).sorted( scoringComparator.reversed( ) ).collect( Collectors.toList( ) ) );
                 }
                 catch( final IdentityStoreException e )
                 {
@@ -302,29 +451,31 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
             }
         }
 
+        _canWriteIdentity = RBACService.isAuthorized( new AccessIdentityResource( ), AccessIdentityResource.PERMISSION_WRITE, (User) getUser( ) );
+        _canCreateIdentity = RBACService.isAuthorized( new AccessIdentityResource( ), AccessIdentityResource.PERMISSION_CREATE, (User) getUser( ) );
+        final boolean rulesRequirementsReached = _searchRules.stream( )
+                .anyMatch( rule -> rule.stream( ).allMatch( key -> _searchAttributes.stream( ).map( SearchAttribute::getKey ).anyMatch( key::equals ) ) );
 
-        _canWriteIdentity = RBACService.isAuthorized( new AccessIdentityResource( ),
-                AccessIdentityResource.PERMISSION_WRITE, (User) getUser( ) );
-        _canCreateIdentity = RBACService.isAuthorized(new AccessIdentityResource(),
-                AccessIdentityResource.PERMISSION_CREATE, (User) getUser());
-        final boolean rulesRequirementsReached = _searchRules.stream().anyMatch(rule -> rule.stream().allMatch(key -> _searchAttributes.stream().map(SearchAttribute::getKey).anyMatch(key::equals)));
-
+        final List<ExtendedIdentityDto> extendedIdentities = identities.stream( ).map( ExtendedIdentityDto::from ).collect( Collectors.toList( ) );
+        final List<String> eligibleCustomerIds = extendedIdentities.stream( ).filter( this::eligibleToAccountCreation ).map( IdentityDto::getCustomerId )
+                .collect( Collectors.toList( ) );
         final Map<String, Object> model = getModel( );
-        model.put( MARK_IDENTITY_LIST, qualifiedIdentities );
+        model.put( MARK_IDENTITY_LIST, extendedIdentities );
+        model.put( MARK_ELIGIBLE_IDENTITY_TO_ACCOUNT, eligibleCustomerIds );
         model.put( MARK_QUERY_SEARCH_ATTRIBUTES, _searchAttributes );
         model.put( MARK_AUTOCOMPLETE_CITY_ENDPOINT, _autocompleteCityEndpoint );
         model.put( MARK_AUTOCOMPLETE_COUNTRY_ENDPOINT, _autocompleteCountryEndpoint );
         model.put( MARK_SERVICE_CONTRACT, _serviceContract );
         model.put( MARK_SEARCH_RULES, _searchRules );
-        model.put( MARK_REFERENTIAL, _referential );
+        model.put( MARK_REFERENTIAL, _processusReferential );
         model.put( MARK_CAN_CREATE, _canCreateIdentity );
         model.put( MARK_CAN_WRITE, _canWriteIdentity );
         model.put( MARK_RULES_REQ_REACHED, rulesRequirementsReached );
-        model.put(APPROXIMATED_SEARCH, Boolean.parseBoolean( request.getParameter( PARAMETER_APPROXIMATE ) ) );
+        model.put( APPROXIMATED_SEARCH, Boolean.parseBoolean( request.getParameter( PARAMETER_APPROXIMATE ) ) );
         model.put( SecurityTokenService.MARK_TOKEN, SecurityTokenService.getInstance( ).getToken( request, ACTION_SEARCH_IDENTITY ) );
         addReturnUrlMarker( request, model );
 
-        if ( qualifiedIdentities.isEmpty( ) )
+        if ( identities.isEmpty( ) )
         {
             return getPage( PROPERTY_PAGE_TITLE_MANAGE_IDENTITIES, TEMPLATE_SEARCH_IDENTITIES, model );
         }
@@ -386,7 +537,7 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
         model.put( MARK_AUTOCOMPLETE_CITY_ENDPOINT, _autocompleteCityEndpoint );
         model.put( MARK_AUTOCOMPLETE_COUNTRY_ENDPOINT, _autocompleteCountryEndpoint );
         model.put( MARK_ATTRIBUTE_STATUSES, _attributeStatuses );
-        model.put( MARK_REFERENTIAL, _referential );
+        model.put( MARK_REFERENTIAL, _processusReferential );
         model.put( MARK_ATTRIBUTE_INFO_KEY_LIST, _AttributeInfoKeyList );
         model.put( SecurityTokenService.MARK_TOKEN, SecurityTokenService.getInstance( ).getToken( request, ACTION_CREATE_IDENTITY ) );
         addReturnUrlMarker( request, model );
@@ -455,42 +606,48 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
      *            The Http request
      * @return The HTML form to update info
      */
-    @View(VIEW_MODIFY_IDENTITY)
-    public String getModifyIdentity(HttpServletRequest request) throws AccessDeniedException {
-        if (!_canWriteIdentity) {
-            throw new AccessDeniedException("You don't have the right to modify identities.");
+    @View( VIEW_MODIFY_IDENTITY )
+    public String getModifyIdentity( HttpServletRequest request ) throws AccessDeniedException
+    {
+        if ( !_canWriteIdentity )
+        {
+            throw new AccessDeniedException( "You don't have the right to modify identities." );
         }
-        final String customerId = request.getParameter("customer_id");
+        final String customerId = request.getParameter( "customer_id" );
         final IdentityDto qualifiedIdentity;
-        try {
-            final IdentitySearchResponse getResponse = _identityService.getIdentity(customerId, _currentClientCode, getAuthor());
-            logAndDisplayStatusErrorMessage(getResponse);
-            if (getResponse.getIdentities().size() != 1) {
-                return getSearchIdentities(request);
+        try
+        {
+            final IdentitySearchResponse getResponse = _identityService.getIdentity( customerId, _currentClientCode, getAuthor( ) );
+            logAndDisplayStatusErrorMessage( getResponse );
+            if ( getResponse.getIdentities( ).size( ) != 1 )
+            {
+                return getSearchIdentities( request );
             }
-            qualifiedIdentity = getResponse.getIdentities().get(0);
-        } catch (final IdentityStoreException e) {
-            AppLogService.error("Error while retrieving selected identity [customerId = " + customerId + "].", e);
-            addError(MESSAGE_GET_IDENTITY_ERROR, getLocale());
-            return getSearchIdentities(request);
+            qualifiedIdentity = getResponse.getIdentities( ).get( 0 );
         }
-        final LocalIdentityDto dto = LocalIdentityDto.from(qualifiedIdentity, _serviceContract);
-        Map<String, Object> model = getModel();
-        model.put(MARK_IDENTITY, dto);
-        model.put(MARK_SERVICE_CONTRACT, _serviceContract);
-        model.put(MARK_AUTOCOMPLETE_CITY_ENDPOINT, _autocompleteCityEndpoint);
-        model.put(MARK_AUTOCOMPLETE_COUNTRY_ENDPOINT, _autocompleteCountryEndpoint);
-        model.put(MARK_ATTRIBUTE_STATUSES, _attributeStatuses);
-        model.put(MARK_REFERENTIAL, _referential);
-        model.put(MARK_ATTRIBUTE_INFO_KEY_LIST, _AttributeInfoKeyList);
-        model.put(SecurityTokenService.MARK_TOKEN, SecurityTokenService.getInstance().getToken(request, ACTION_MODIFY_IDENTITY));
-        addReturnUrlMarker(request, model);
-    
+        catch( final IdentityStoreException e )
+        {
+            AppLogService.error( "Error while retrieving selected identity [customerId = " + customerId + "].", e );
+            addError( MESSAGE_GET_IDENTITY_ERROR, getLocale( ) );
+            return getSearchIdentities( request );
+        }
+        final LocalIdentityDto dto = LocalIdentityDto.from( qualifiedIdentity, _serviceContract );
+        Map<String, Object> model = getModel( );
+        model.put( MARK_IDENTITY, dto );
+        model.put( MARK_SERVICE_CONTRACT, _serviceContract );
+        model.put( MARK_AUTOCOMPLETE_CITY_ENDPOINT, _autocompleteCityEndpoint );
+        model.put( MARK_AUTOCOMPLETE_COUNTRY_ENDPOINT, _autocompleteCountryEndpoint );
+        model.put( MARK_ATTRIBUTE_STATUSES, _attributeStatuses );
+        model.put( MARK_REFERENTIAL, _processusReferential );
+        model.put( MARK_ATTRIBUTE_INFO_KEY_LIST, _AttributeInfoKeyList );
+        model.put( SecurityTokenService.MARK_TOKEN, SecurityTokenService.getInstance( ).getToken( request, ACTION_MODIFY_IDENTITY ) );
+        addReturnUrlMarker( request, model );
+
         // Ajouter les paramètres de recherche au modèle
-        Map<String, String> searchParams = collectSearchParams();
-        model.put(MARK_SEARCH_PARAMS, searchParams);
-    
-        return getPage(PROPERTY_PAGE_TITLE_MODIFY_IDENTITY, TEMPLATE_MODIFY_IDENTITY, model);
+        Map<String, String> searchParams = collectSearchParams( );
+        model.put( MARK_SEARCH_PARAMS, searchParams );
+
+        return getPage( PROPERTY_PAGE_TITLE_MODIFY_IDENTITY, TEMPLATE_MODIFY_IDENTITY, model );
     }
 
     /**
@@ -501,65 +658,79 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
      * @return The Jsp URL of the process result
      */
     @Action( ACTION_MODIFY_IDENTITY )
-    public String doModifyIdentity( final HttpServletRequest request ) throws AccessDeniedException {
-        if ( !SecurityTokenService.getInstance( ).validate( request, ACTION_MODIFY_IDENTITY ) ) {
+    public String doModifyIdentity( final HttpServletRequest request ) throws AccessDeniedException
+    {
+        if ( !SecurityTokenService.getInstance( ).validate( request, ACTION_MODIFY_IDENTITY ) )
+        {
             throw new AccessDeniedException( "Invalid security token" );
         }
-    
+
         final IdentityDto identityWithUpdates = getIdentityFromRequest( request, "", false );
-        if ( identityWithUpdates.getCustomerId( ) == null ) {
+        if ( identityWithUpdates.getCustomerId( ) == null )
+        {
             addError( MESSAGE_UPDATE_IDENTITY_ERROR, getLocale( ) );
             return getSearchIdentities( request );
         }
-    
+
         final IdentityChangeRequest identityChangeRequest = new IdentityChangeRequest( );
         _attributeStatuses.clear( );
-    
-        try {
+
+        try
+        {
             final IdentitySearchResponse getResponse = _identityService.getIdentity( identityWithUpdates.getCustomerId( ), _currentClientCode, getAuthor( ) );
             logAndDisplayStatusErrorMessage( getResponse );
-    
-            if ( getResponse.getIdentities( ).size( ) != 1 ) {
+
+            if ( getResponse.getIdentities( ).size( ) != 1 )
+            {
                 return getSearchIdentities( request );
             }
-    
+
             final IdentityDto originalIdentity = getResponse.getIdentities( ).get( 0 );
             identityWithUpdates.getAttributes( ).removeIf( updatedAttr -> !checkIfAttributeIsModified( originalIdentity, updatedAttr ) );
-    
-            if ( CollectionUtils.isEmpty( identityWithUpdates.getAttributes( ) ) ) {
+
+            if ( CollectionUtils.isEmpty( identityWithUpdates.getAttributes( ) ) )
+            {
                 addInfo( MESSAGE_UPDATE_IDENTITY_NOCHANGE, getLocale( ) );
                 return getModifyIdentity( request );
             }
-    
+
             final List<AttributeDto> attributesWithoutCertif = identityWithUpdates.getAttributes( ).stream( )
                     .filter( a -> StringUtils.isBlank( a.getCertifier( ) ) ).collect( Collectors.toList( ) );
-    
-            if ( CollectionUtils.isNotEmpty( attributesWithoutCertif ) ) {
+
+            if ( CollectionUtils.isNotEmpty( attributesWithoutCertif ) )
+            {
                 addWarning( MESSAGE_IDENTITY_MUSTSELECTCERTIFICATION, getLocale( ) );
                 return getModifyIdentity( request );
             }
-    
+
             identityWithUpdates.setLastUpdateDate( originalIdentity.getLastUpdateDate( ) );
             identityChangeRequest.setIdentity( identityWithUpdates );
-    
-            final IdentityChangeResponse response = _identityService.updateIdentity( originalIdentity.getCustomerId( ), identityChangeRequest, _currentClientCode, this.getAuthor( ) );
-    
-            if ( response.getStatus( ).getType( ) != ResponseStatusType.SUCCESS ) {
+
+            final IdentityChangeResponse response = _identityService.updateIdentity( originalIdentity.getCustomerId( ), identityChangeRequest,
+                    _currentClientCode, this.getAuthor( ) );
+
+            if ( response.getStatus( ).getType( ) != ResponseStatusType.SUCCESS )
+            {
                 logAndDisplayStatusErrorMessage( response );
-    
-                if ( response.getStatus( ).getAttributeStatuses( ) != null ) {
+
+                if ( response.getStatus( ).getAttributeStatuses( ) != null )
+                {
                     _attributeStatuses.addAll( response.getStatus( ).getAttributeStatuses( ) );
                 }
                 return getModifyIdentity( request );
-            } else {
+            }
+            else
+            {
                 addInfo( MESSAGE_UPDATE_IDENTITY_SUCCESS, getLocale( ) );
             }
-        } catch( final IdentityStoreException e ) {
+        }
+        catch( final IdentityStoreException e )
+        {
             AppLogService.error( "Error while updating the identity [IdentityChangeRequest = " + identityChangeRequest + "].", e );
             addError( MESSAGE_UPDATE_IDENTITY_ERROR, getLocale( ) );
             return getModifyIdentity( request );
         }
-    
+
         updateSearchAttributes( request );
         return getModifyIdentity( request ); // Rediriger vers la page de modification
     }
@@ -599,18 +770,18 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
      */
     private void collectSearchAttributes( final HttpServletRequest request )
     {
-        final boolean strictSearch = !Boolean.parseBoolean(request.getParameter(APPROXIMATED_SEARCH));
+        final boolean strictSearch = !Boolean.parseBoolean( request.getParameter( APPROXIMATED_SEARCH ) );
         final List<SearchAttribute> searchList = _serviceContract.getAttributeDefinitions( ).stream( ).map( AttributeDefinitionDto::getKeyName )
                 .map( attrKey -> {
-                    switch(attrKey)
+                    switch( attrKey )
                     {
-                        case Constants.PARAM_FAMILY_NAME :
+                        case Constants.PARAM_FAMILY_NAME:
                             attrKey = Constants.PARAM_COMMON_LASTNAME;
                             break;
-                        case Constants.PARAM_EMAIL :
+                        case Constants.PARAM_EMAIL:
                             attrKey = Constants.PARAM_COMMON_EMAIL;
                             break;
-                        default :
+                        default:
                             break;
                     }
                     String value = request.getParameter( PARAMETER_SEARCH_PREFIX + attrKey );
@@ -629,7 +800,8 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
                     if ( value != null )
                     {
                         return new SearchAttribute( attrKey, value.trim( ),
-                                ( _searchAttributeKeyStrictList.contains( attrKey ) || strictSearch ? AttributeTreatmentType.STRICT : AttributeTreatmentType.APPROXIMATED ) );
+                                ( _searchAttributeKeyStrictList.contains( attrKey ) || strictSearch ? AttributeTreatmentType.STRICT
+                                        : AttributeTreatmentType.APPROXIMATED ) );
                     }
                     return null;
                 } ).filter( searchAttribute -> searchAttribute != null && StringUtils.isNotBlank( searchAttribute.getValue( ) ) )
@@ -667,7 +839,7 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
      */
     private void updateSearchAttributes( final HttpServletRequest request )
     {
-        final boolean strictSearch = !Boolean.parseBoolean(request.getParameter(APPROXIMATED_SEARCH));
+        final boolean strictSearch = !Boolean.parseBoolean( request.getParameter( APPROXIMATED_SEARCH ) );
         final List<String> requiredAttrs = Arrays.asList( "birthdate", "common_lastname", "first_name" );
 
         final List<SearchAttribute> searchList = _serviceContract.getAttributeDefinitions( ).stream( ).map( AttributeDefinitionDto::getKeyName )
@@ -689,7 +861,8 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
                     if ( value != null )
                     {
                         return new SearchAttribute( attrKey, value.trim( ),
-                                ( _searchAttributeKeyStrictList.contains( attrKey ) || strictSearch ? AttributeTreatmentType.STRICT : AttributeTreatmentType.APPROXIMATED ) );
+                                ( _searchAttributeKeyStrictList.contains( attrKey ) || strictSearch ? AttributeTreatmentType.STRICT
+                                        : AttributeTreatmentType.APPROXIMATED ) );
                     }
                     return null;
                 } ).filter( Objects::nonNull ).filter( searchAttribute -> StringUtils.isNotBlank( searchAttribute.getValue( ) ) )
@@ -741,8 +914,7 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
     private void initClientCode( final HttpServletRequest request )
     {
         String clientCode = request.getParameter( "client_code" );
-        if ( !StringUtils.isBlank( clientCode ) 
-        		&& AppPropertiesService.getPropertyBoolean( PROPERTY_ALLOW_CLIENT_CODE_DYNAMIC_CHANGE, false))
+        if ( !StringUtils.isBlank( clientCode ) && AppPropertiesService.getPropertyBoolean( PROPERTY_ALLOW_CLIENT_CODE_DYNAMIC_CHANGE, false ) )
         {
             _currentClientCode = clientCode;
         }
@@ -757,8 +929,7 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
     private void addReturnUrlMarker( final HttpServletRequest request, final Map<String, Object> model )
     {
         final String returnUrl = request.getParameter( "return_url" );
-        if ( StringUtils.isNotBlank( returnUrl ) 
-        		&& AppPropertiesService.getPropertyBoolean( PROPERTY_ALLOW_RETURN_URL_DYNAMIC_CHANGE, false) )
+        if ( StringUtils.isNotBlank( returnUrl ) && AppPropertiesService.getPropertyBoolean( PROPERTY_ALLOW_RETURN_URL_DYNAMIC_CHANGE, false ) )
         {
             _currentReturnUrl = returnUrl;
         }
@@ -892,17 +1063,33 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
      */
     private void initReferential( String clientCode )
     {
-        if ( _referential == null )
+        if ( _processusReferential == null )
         {
             try
             {
-                _referential = _serviceReferentialCache.get( clientCode );
+                _processusReferential = _serviceProcessusReferentialCache.get( clientCode );
             }
             catch( final IdentityStoreException e )
             {
-                AppLogService.error( "Error while retrieving referential [client code = " + clientCode + "].", e );
+                AppLogService.error( "Error while retrieving processus referential [client code = " + clientCode + "].", e );
             }
-            if ( _referential == null )
+            if ( _processusReferential == null )
+            {
+                addError( MESSAGE_GET_REFERENTIAL_ERROR, getLocale( ) );
+            }
+        }
+
+        if ( _attributesReferential == null )
+        {
+            try
+            {
+                _attributesReferential = _serviceAttributeKeyReferentialCache.get( clientCode );
+            }
+            catch( final IdentityStoreException e )
+            {
+                AppLogService.error( "Error while retrieving attribute referential [client code = " + clientCode + "].", e );
+            }
+            if ( _attributesReferential == null )
             {
                 addError( MESSAGE_GET_REFERENTIAL_ERROR, getLocale( ) );
             }
@@ -929,22 +1116,84 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
                 addError( apiResponse.getStatus( ).getMessageKey( ), getLocale( ) );
                 AppLogService.error( apiResponse.getStatus( ).getMessage( ) );
             }
-            if ( apiResponse.getStatus( ).getType() == ResponseStatusType.NOT_FOUND )
+            if ( apiResponse.getStatus( ).getType( ) == ResponseStatusType.NOT_FOUND )
             {
-                addInfo(MESSAGE_SEARCH_IDENTITY_NORESULT_DETAIL, getLocale());
+                addInfo( MESSAGE_SEARCH_IDENTITY_NORESULT_DETAIL, getLocale( ) );
             }
         }
     }
 
     /**
      * Collect current search parameters
+     * 
      * @return
      */
-    private Map<String, String> collectSearchParams() {
-        Map<String, String> searchParams = new HashMap<>();
-        _searchAttributes.forEach(attr -> {
-            searchParams.put(PARAMETER_SEARCH_PREFIX + attr.getKey(), attr.getValue());
-        });
+    private Map<String, String> collectSearchParams( )
+    {
+        Map<String, String> searchParams = new HashMap<>( );
+        _searchAttributes.forEach( attr -> {
+            searchParams.put( PARAMETER_SEARCH_PREFIX + attr.getKey( ), attr.getValue( ) );
+        } );
         return searchParams;
+    }
+
+    private boolean eligibleToAccountCreation( final ExtendedIdentityDto identityDto )
+    {
+        if ( identityDto.isMonParisActive( ) )
+        {
+            final StringBuilder error = new StringBuilder( "Computing Identity " ).append( identityDto.getCustomerId( ) )
+                    .append( " eligibility to account creation :: " ).append( "Already connected" );
+            AppLogService.debug( error );
+            return false;
+        }
+
+        if ( identityDto.getAccountCreationTask( ) != null && StringUtils.isNotBlank( identityDto.getAccountCreationTask( ).getTaskCode( ) ) )
+        {
+            final StringBuilder error = new StringBuilder( "Computing Identity " + identityDto.getCustomerId( ) )
+                    .append( " eligibility to account creation :: " ).append( "Already have a pending task with code " )
+                    .append( identityDto.getAccountCreationTask( ).getTaskCode( ) );
+            AppLogService.debug( error );
+            return false;
+        }
+
+        final List<String> pivotKeys = _attributesReferential.stream( ).filter( AttributeKeyDto::isPivot ).map( AttributeKeyDto::getKeyName )
+                .collect( Collectors.toList( ) );
+        final List<AttributeDto> pivotAttributes = identityDto.getAttributes( ).stream( ).filter( a -> pivotKeys.contains( a.getKey( ) ) )
+                .collect( Collectors.toList( ) );
+
+        if ( pivotAttributes.size( ) == pivotKeys.size( ) // Born in France
+                || ( pivotAttributes.size( ) == pivotKeys.size( ) - 1 // Not born in france
+                        && pivotAttributes.stream( ).map( AttributeDto::getKey ).noneMatch( s -> s.equals( Constants.PARAM_BIRTH_PLACE_CODE ) )
+                        && pivotAttributes.stream( ).anyMatch( attributeDto -> attributeDto.getKey( ).equals( Constants.PARAM_BIRTH_COUNTRY_CODE )
+                                && attributeDto.getValue( ).equals( "99100" ) ) ) )
+        {
+            final List<String> errors = new ArrayList<>( );
+            final AttributeCertificationProcessusDto attributeCertificationProcessusDto = _processusReferential.stream( )
+                    .filter( processus -> processus.getCode( ).equals( _accountCreationTaskMinLevel ) ).findFirst( ).orElse( null );
+
+            for ( final AttributeDto attributeDto : pivotAttributes )
+            {
+                final AttributeCertificationLevelDto certificationLevel = attributeCertificationProcessusDto.getAttributeCertificationLevels( ).stream( )
+                        .filter( cert -> cert.getAttributeKey( ).equals( attributeDto.getKey( ) ) ).findFirst( ).orElse( null );
+                final Integer minRequiredLevel = Integer.valueOf( certificationLevel.getLevel( ).getLevel( ) );
+                if ( attributeDto.getCertificationLevel( ) < minRequiredLevel )
+                {
+                    errors.add( "[attribute-key=" + attributeDto.getKey( ) + "][attribute-certification-level=" + attributeDto.getCertificationLevel( )
+                            + "][expected-level=" + minRequiredLevel + "]" );
+                }
+            }
+            if ( !errors.isEmpty( ) )
+            {
+                final StringBuilder error = new StringBuilder( "Computing Identity " + identityDto.getCustomerId( ) + " eligibility to account creation" )
+                        .append( "Some errors occurred during pivot attributes validation. The minimum certification processus is " )
+                        .append( _accountCreationTaskMinLevel ).append( "." );
+                errors.forEach( error::append );
+                AppLogService.debug( error );
+            }
+            return errors.isEmpty( );
+        }
+
+        // invalid
+        return false;
     }
 }

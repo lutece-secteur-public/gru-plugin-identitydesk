@@ -4,6 +4,8 @@
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd" >
 
+    <bean id="identitydesk.accountCreationTaskDao" class="fr.paris.lutece.plugins.identitydesk.business.AccountCreationTaskDao"/>
+
     <!-- IHttpTransportProvider declarations -->
     <bean id="identitystore.httpAccessTransport" class="fr.paris.lutece.plugins.identitystore.v3.web.rs.service.HttpAccessTransport" >
 	    <property name="ApiEndPointUrl">
@@ -35,7 +37,8 @@
     </bean>
 
       <!-- ReferentialService  -->
-    <bean id="identitydesk.serviceReferentialCache"  class="fr.paris.lutece.plugins.identitydesk.cache.ServiceReferentialCache" />
+    <bean id="identitydesk.serviceProcessusReferentialCache"  class="fr.paris.lutece.plugins.identitydesk.cache.ServiceProcessusReferentialCache" />
+    <bean id="identitydesk.serviceAttributeKeyReferentialCache"  class="fr.paris.lutece.plugins.identitydesk.cache.ServiceAttributeKeyReferentialCache" />
 
     <bean id="referential.restTransport.httpAccess" class="fr.paris.lutece.plugins.identitystore.v3.web.rs.service.ReferentialTransportRest">
         <constructor-arg ref="identitystore.httpAccessTransport"/>

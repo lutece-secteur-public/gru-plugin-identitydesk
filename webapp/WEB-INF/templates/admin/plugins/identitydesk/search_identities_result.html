@@ -323,6 +323,13 @@
                                         <#if return_url?exists>
                                         <@aButton href='${return_url}?cuid=${identity.customerId}' buttonIcon='external-link' title='#i18n{identitydesk.search_identities.buttonSelectIdentityAndReturn}'  hideTitle=['all'] />
                                         </#if>
+                                        <#if eligible_identity_to_account_list?seq_contains(identity.customerId)>
+                                            <@aButton href='jsp/admin/plugins/identitydesk/ManageIdentities.jsp?action_createAccount&customer_id=${identity.customerId}&token=${token}' buttonIcon='user-plus' title='#i18n{identitydesk.search_identities.createAccountTask}'  hideTitle=['all'] />
+                                        </#if>
+                                        <#if identity.accountCreationTask??>
+                                            <@aButton href='jsp/admin/plugins/identitydesk/ManageIdentities.jsp?view_displayAccountTask&customer_id=${identity.customerId}&token=${token}' buttonIcon='user-question' title='#i18n{identitydesk.search_identities.displayAccountTask}'  hideTitle=['all'] />
+                                        </#if>
+                                    </div>
                                 </@td>
                             </tr>
                         </#list>

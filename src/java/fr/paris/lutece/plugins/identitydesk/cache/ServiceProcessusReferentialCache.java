@@ -43,12 +43,13 @@ import fr.paris.lutece.portal.service.util.AppLogService;
 
 import java.util.List;
 
-public class ServiceReferentialCache extends AbstractCacheableService
+public class ServiceProcessusReferentialCache extends AbstractCacheableService
 {
-    private static final String SERVICE_NAME = "ReferentialCacheService";
+    private static final String SERVICE_NAME = "ReferentialProcessusCacheService";
+    private static final String KEY_SUFFIX = "_processus_referential";
     private final ReferentialService _referentialService;
 
-    public ServiceReferentialCache( ReferentialService srService )
+    public ServiceProcessusReferentialCache( ReferentialService srService )
     {
         _referentialService = srService;
         this.initCache( );
@@ -56,29 +57,29 @@ public class ServiceReferentialCache extends AbstractCacheableService
 
     public void put( final String clientCode, final List<AttributeCertificationProcessusDto> referential )
     {
-        if ( this.getKeys( ).contains( clientCode + "_referential" ) )
+        if ( this.getKeys( ).contains( clientCode + KEY_SUFFIX ) )
         {
-            this.removeKey( clientCode + "_referential" );
+            this.removeKey( clientCode + KEY_SUFFIX );
         }
-        this.putInCache( clientCode + "_referential", referential );
-        AppLogService.debug( "Referential added to cache: " + clientCode + "_referential" );
+        this.putInCache( clientCode + KEY_SUFFIX, referential );
+        AppLogService.debug( "Referential added to processus cache: " + clientCode + KEY_SUFFIX );
     }
 
     public void remove( final String clientCode )
     {
-        if ( this.getKeys( ).contains( clientCode + "_referential" ) )
+        if ( this.getKeys( ).contains( clientCode + KEY_SUFFIX ) )
         {
-            this.removeKey( clientCode + "_referential" );
+            this.removeKey( clientCode + KEY_SUFFIX );
         }
 
-        AppLogService.debug( "Referential removed from cache: " + clientCode + "_referential" );
+        AppLogService.debug( "Referential removed from processus cache: " + clientCode + KEY_SUFFIX );
     }
 
     public List<AttributeCertificationProcessusDto> get( final String clientCode ) throws IdentityStoreException
     {
         List<AttributeCertificationProcessusDto> processusDtos = _referentialService
                 .getProcessList( clientCode, new RequestAuthor( "IdentityDesk_ServiceReferentialCache", AuthorType.application.name( ) ) ).getProcessus( );
-        this.put( clientCode + "_referential", processusDtos );
+        this.put( clientCode + KEY_SUFFIX, processusDtos );
         return processusDtos;
     }
 
