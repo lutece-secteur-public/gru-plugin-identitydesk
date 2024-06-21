@@ -15,9 +15,13 @@
 
     <bean id="identity.restTransport.httpAccess" class="fr.paris.lutece.plugins.identitystore.v3.web.rs.service.IdentityTransportRest">
         <constructor-arg ref="identitystore.httpAccessTransport"/>
+        <constructor-arg value="${identitydesk.identityquality.endpoint.identityPath}"/>
+        <constructor-arg value="${identitydesk.identityquality.endpoint.stackTaskPath}"/>
     </bean>
+    
      <bean id="serviceContract.restTransport.httpAccess" class="fr.paris.lutece.plugins.identitystore.v3.web.rs.service.ServiceContractTransportRest">
-        <constructor-arg ref="identitystore.httpAccessTransport"/>
+        <constructor-arg ref="identitystore.httpAccessTransport"/>         
+        <constructor-arg value="${identitydesk.identityquality.endpoint.identityPath}" />
     </bean>
 
 
@@ -42,6 +46,7 @@
 
     <bean id="referential.restTransport.httpAccess" class="fr.paris.lutece.plugins.identitystore.v3.web.rs.service.ReferentialTransportRest">
         <constructor-arg ref="identitystore.httpAccessTransport"/>
+        <constructor-arg value="${identitydesk.identityquality.endpoint.identityPath}" />
     </bean>
 
     <bean id="identity.ReferentialService" class="fr.paris.lutece.plugins.identitystore.v3.web.service.ReferentialService">

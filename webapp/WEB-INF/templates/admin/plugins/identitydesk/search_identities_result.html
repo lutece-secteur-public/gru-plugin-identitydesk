@@ -7,13 +7,13 @@
         <#if identity_list?size gt 0 >
         <#assign description> Vous ne trouvez pas l'identit&eacute recherch&eacutee dans le r&eacutef&eacuterentiel d'identit&eacute ?
         <#if can_create>
-            <button type="submit" class="btn btn-primary btn-sm text-decoration-none  border rounded-5" name="view_createIdentity">
+            <button type="submit" class="btn btn-primary" name="view_createIdentity">
                 <small><i class="ti ti-user-plus"></i> Cr&eacuteer cette identit&eacute</small>
             </button>
         </#if>
-        <a class="btn btn-dark btn-sm text-decoration-none  border rounded-5" href="jsp/admin/plugins/identitydesk/ManageIdentities.jsp?plugin_name=identitydesk&new_search=true"><small> <i class="ti ti-search"></i> Nouvelle recherche</small></a>  </#assign>
+        <a class="btn btn-dark" href="jsp/admin/plugins/identitydesk/ManageIdentities.jsp?plugin_name=identitydesk&new_search=true"><small> <i class="ti ti-search"></i> Nouvelle recherche</small></a>  </#assign>
             <#if identity_list?size gt 1>
-            <#assign title>Soyez attentif, <strong>${identity_list?size}</strong> utilisateurs trouv&eacute;s</#assign>
+            <#assign title><strong>${identity_list?size}</strong> utilisateurs trouv&eacute;s</#assign>
             <#elseif identity_list?size == 1 >
             <#assign title><strong>${identity_list?size}</strong> utilisateur trouv&eacute;</#assign>
             </#if>
@@ -24,8 +24,8 @@
             <@input type="hidden" name="return_url" value="${(return_url)!''}"/>
             <div class="jumbotron jumbotron-fluid d-flex align-items-center justify-content-center text-center bg-secondary pb-4">
                 <div class="container-fluid mt-5" style="max-width:1600px !important" >
-                    <@pageHeader title='${title}' description='${description}'>
-                    </@pageHeader>
+                    <h1>${title}</h1>
+                    <p class="fw-bolder">${description}</p>
                     <@messages infos=infos />
                     <@messages errors=errors />
                     <@messages warnings=warnings />
@@ -81,7 +81,8 @@
             </div>
             <div class="container-fluid mt-5 px-5" style="margin-top:-54px !important;">
                 <#if identity_list?size gt 0>
-                    <@table headBody=true class="table-hover">
+                    <@table  bordered=true>
+                    <thead>
                         <@tr>
                             <@th>#</@th>
                             <@th>#i18n{identitydesk.search_identities.name}</@th>
@@ -93,6 +94,8 @@
                             <@th><center>#i18n{identitydesk.search_identities.quality}</center></@th>
                             <@th></@th>
                         </@tr>
+                    </thead>
+                    <tbody>
                         <#list identity_list as identity>
                             <tr class="filtering-item"
                                 <#list service_contract.attributeDefinitions?filter(a -> a.attributeRight.searchable && a.keyName != 'birthplace_code' && a.keyName != 'birthcountry_code' && a.keyName != 'login') as searchableAttr>
@@ -154,169 +157,7 @@
                                 <@tag color="secondary">#i18n{identitydesk.search_identities.detail.guid} <strong>${identity.connectionId!'Absent'}</strong></@tag>
                             </#assign>
                             
-                            <@offcanvas id="summarize-${identity?index}" title=tags btnTitle="D&eacute;tails" size="auto" bodyClass="p-0" btnIcon="eye" btnTitle="">
-                            
-                                <div class="jumbotron jumbotron-fluid bg-secondary p-4 shadow-lg text-center">              
-                                    <div>
-                                        <div class="d-inline-block bg-light rounded-5 p-4 py-2 shadow-lg m-1">
-                                            #i18n{identitydesk.search_identities.detail.creationdate}
-                                            <br>
-                                            <strong>${identity.creationDate!''}</strong>
-                                        </div>
-                                        <div class="d-inline-block bg-light rounded-5 p-4 py-2 shadow-lg m-1">
-                                            #i18n{identitydesk.search_identities.detail.modificationdate}<br>
-                                            <strong>${identity.lastUpdateDate!''}</strong>
-                                        </div>
-                                        <div class="d-inline-block bg-light rounded-5 p-4 py-2 shadow-lg m-1">
-                                            #i18n{identitydesk.search_identities.detail.expirationdate}
-                                            <br>
-                                            <#if identity.expiration?exists>
-                                                <strong>${identity.expiration.expirationDate!''}</strong>
-                                            <#else>
-                                                <strong>-</strong>
-                                            </#if>
-                                        </div>
-                                        <div class="d-inline-block bg-light rounded-5 p-4 py-2 shadow-lg m-1">
-                                            #i18n{identitydesk.search_identities.detail.monparis}
-                                            <br>
-                                            <#if identity.connectionId??>
-                                                <span class="text-success fw-bold">#i18n{identitydesk.search_identities.yes}</span>
-                                            <#else>
-                                                <span class="text-danger fw-bold">#i18n{identitydesk.search_identities.no}</span>
-                                            </#if>
-                                        </div>
-                                        <div class="d-inline-block bg-light rounded-5 p-4 py-2 shadow-lg m-1">
-                                            #i18n{identitydesk.search_identities.detail.monparis.merged}
-                                            <br>
-                                            <#if identity.merge??>
-                                                    <span class="fw-bold">#i18n{identitydesk.search_identities.yes}</span>
-                                            <#else>
-                                                <span class="text-info fw-bold">#i18n{identitydesk.search_identities.no}</span>
-                                            </#if>
-                                        </div>
-                                        <div class="d-inline-block bg-light rounded-5 p-4 py-2 shadow-lg m-1">
-                                            #i18n{identitydesk.search_identities.detail.monparis.deleted}
-                                            <br>
-                                            <#if identity.expiration??>
-                                                <#if identity.expiration.deleted>
-                                                <span class="text-danger fw-bold">#i18n{identitydesk.search_identities.yes}</span>
-                                                <#else>
-                                                <span class="text-success fw-bold">#i18n{identitydesk.search_identities.no}</span>
-                                                </#if>
-                                            <#else>
-                                            <span class="text-success fw-bold">#i18n{identitydesk.search_identities.no}</span>
-                                            </#if>
-                                        </div>
-                                    </div>
-                                </div>
-                                        <table class="table table-hover shadow-lg">
-                                            <thead>
-                                                <@th>#i18n{identitydesk.search_identities.detail.attribut}</@th>
-                                                <@th>#i18n{identitydesk.search_identities.detail.value}</@th>
-                                                <@th>#i18n{identitydesk.search_identities.detail.mandatory}</@th>
-                                                <@th>#i18n{identitydesk.search_identities.detail.certfication}</@th>
-                                                <@th>#i18n{identitydesk.search_identities.detail.level}</@th>
-                                                <@th>#i18n{identitydesk.search_identities.detail.minimum}</@th>
-                                                <@th params='style="min-width:200px"'>#i18n{identitydesk.search_identities.detail.score}</@th>
-                                            </thead>
-                                            <tbody>
-                                                <#list service_contract.attributeDefinitions as serviceContractAttr>
-                                                    <#if serviceContractAttr.attributeRight.mandatory >
-                                                        <#assign mandatory = "#i18n{identitydesk.search_identities.detail.yes}">
-                                                    <#else>
-                                                        <#assign mandatory = "#i18n{identitydesk.search_identities.detail.no}">
-                                                    </#if>
-                                                    <#if serviceContractAttr.keyName != "fc_key">
-                                                        <#if serviceContractAttr.attributeRight.readable>
-                                                            <#list identity.attributes?filter(a -> a.key == serviceContractAttr.keyName) as attr>
-                                                                <#if attr.value == "">
-                                                                    <#assign level = "0" >
-                                                                <#else>
-                                                                    <#assign level = "${getAttributeCertificationLevel('${attr.certifier}', '${attr.key}')}" >
-                                                                </#if>
-                                                                <#assign levelMax = "${getHighestLevelForAttributeKey('${attr.key}')}" >
-                                                                <#assign ratio = (level?number / levelMax?number) * 100>
-                                                                <#assign bgColor><#if ratio = 100 >success<#elseif ratio gt 50>warning<#else>danger</#if></#assign>
-                                                                <tr data-attribute-key="${serviceContractAttr.keyName}" data-attribute-name="${serviceContractAttr.name}"  data-score=${ratio?round}>
-                                                                    <@td>${serviceContractAttr.name}</@td>
-                                                                    <@td><strong>
-                                                                        <#if serviceContractAttr.keyName == "gender">
-                                                                            <#if attr.value = "0" >
-                                                                                Non d&#x00E9;fini
-                                                                            <#elseif attr.value = "1">
-                                                                                MME
-                                                                            <#elseif attr.value = "2">
-                                                                                MR
-                                                                            </#if>
-                                                                        <#else>
-                                                                            ${attr.value}
-                                                                        </#if>
-                                                                    </strong></@td>
-                                                                    <@td>${mandatory}</@td>
-                                                                    <td class="text-center">
-                                                                        <#if attr.value != "" >
-                                                                            <#if serviceContractAttr.attributeRequirement?exists>
-                                                                                <#if level?number gte serviceContractAttr.attributeRequirement.level?number >
-                                                                                    <@tag color="success"><i class="ti ti-check"></i>  ${attr.certifier} (${level})</@tag>
-                                                                                <#else>
-                                                                                    <@tag color="danger"><i class="ti ti-x"></i> ${attr.certifier} (${level})</@tag>
-                                                                                </#if>
-                                                                            <#else>
-                                                                                <@tag color="success"><i class="ti ti-check"></i>  ${attr.certifier} (${level})</@tag>
-                                                                            </#if>
-                                                                        </#if>
-                                                                    </td>
-                                                                    <@td>
-                                                                        <#if attr.value != "">
-                                                                            <strong>${level}</strong> / ${levelMax}
-                                                                        </#if>
-                                                                    </@td>
-                                                                    <@td>
-                                                                        <#if attr.value != "">
-                                                                            <#if serviceContractAttr.attributeRequirement?exists>
-                                                                                ${getAttributeCodeByLevel('${serviceContractAttr.attributeRequirement.level}', '${attr.key}')}
-                                                                            <#else>
-                                                                                #i18n{identitydesk.search_identities.detail.none}
-                                                                            </#if>
-                                                                        </#if>
-                                                                    </@td>
-                                                                    <@td>
-                                                                        <#if attr.value != "">
-                                                                            <@tag color=bgColor >
-                                                                                <#if ratio = 100 >#i18n{identitydesk.search_identities.detail.certification.strong}<#elseif ratio gt 50>#i18n{identitydesk.search_identities.detail.certification.medium}<#else>#i18n{identitydesk.search_identities.detail.certification.weak}</#if>
-                                                                            </@tag>
-                                                                        </#if>
-                                                                    </@td>
-                                                                </tr>
-                                                            </#list>
-                                                            <#if identity.attributes?filter(a -> a.key == serviceContractAttr.keyName)?size == 0>
-                                                                <#assign levelMax = "${getHighestLevelForAttributeKey('${serviceContractAttr.keyName}')}" >
-                                                                <tr data-attribute-key="${serviceContractAttr.keyName}" data-attribute-name="${serviceContractAttr.name}" data-score=0>
-                                                                    <@td>${serviceContractAttr.name}</@td>
-                                                                    <@td></@td>
-                                                                    <@td>${mandatory}</@td>
-                                                                    <@td></@td>
-                                                                    <@td></@td>
-                                                                    <@td></@td>
-                                                                    <@td></@td>
-                                                                </tr>
-                                                            </#if>
-                                                        <#else>
-                                                            <tr data-attribute-key="${serviceContractAttr.keyName}" data-attribute-name="${serviceContractAttr.name}" data-score=0>
-                                                                <@td>${serviceContractAttr.name}</@td>
-                                                                <@td>non lisible</@td>
-                                                                <@td>${mandatory}</@td>
-                                                                <@td>non lisible</@td>
-                                                                <@td>non lisible</@td>
-                                                                <@td>non lisible</@td>
-                                                                <@td>non lisible</@td>
-                                                            </tr>
-                                                        </#if>
-                                                    </#if>
-                                                </#list>
-                                            </tbody>
-                                        </table>
-                                    </@offcanvas>
+                            <@offcanvas targetUrl="jsp/admin/plugins/identitydesk/ManageIdentities.jsp?view_viewIdentity=&customer_id=${identity.customerId}" targetElement="#identity-container"  id="summarize-${identity?index}" title=tags btnTitle="D&eacute;tails" size="auto" bodyClass="p-0" btnIcon="eye" btnTitle=""/>
                                         <#if can_write>
                                         <@aButton href='jsp/admin/plugins/identitydesk/ManageIdentities.jsp?view_modifyIdentity&customer_id=${identity.customerId}' buttonIcon='edit' title='#i18n{identitydesk.search_identities.buttonModifyIdentity}'  hideTitle=['all'] />
                                         </#if>
@@ -333,6 +174,7 @@
                                 </@td>
                             </tr>
                         </#list>
+                    </tbody>
                     </@table>
                 </#if>
             </div>

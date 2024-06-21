@@ -35,12 +35,14 @@ package fr.paris.lutece.plugins.identitydesk.web;
 
 import fr.paris.lutece.api.user.User;
 import fr.paris.lutece.plugins.identitydesk.business.AccountCreationTaskHome;
+import fr.paris.lutece.plugins.identitydesk.business.LocalHistoryDto;
 import fr.paris.lutece.plugins.identitydesk.business.LocalIdentityDto;
 import fr.paris.lutece.plugins.identitydesk.cache.ServiceAttributeKeyReferentialCache;
 import fr.paris.lutece.plugins.identitydesk.cache.ServiceContractCache;
 import fr.paris.lutece.plugins.identitydesk.cache.ServiceProcessusReferentialCache;
 import fr.paris.lutece.plugins.identitydesk.dto.ExtendedIdentityDto;
 import fr.paris.lutece.plugins.identitydesk.rbac.AccessIdentityResource;
+import fr.paris.lutece.plugins.identitydesk.service.HistoryService;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.common.AttributeDto;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.common.AttributeKeyDto;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.common.AttributeStatus;
@@ -107,6 +109,8 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
     private static final String TEMPLATE_SEARCH_IDENTITIES = "/admin/plugins/identitydesk/search_identities.html";
     private static final String TEMPLATE_TASK_CREATION_RESULT = "/admin/plugins/identitydesk/view_task_creation_result.html";
     private static final String TEMPLATE_DISPLAY_ACCOUNT_TASK = "/admin/plugins/identitydesk/view_account_task.html";
+    private static final String TEMPLATE_VIEW_IDENTITY = "/admin/plugins/identitydesk/view_identity.html";
+
 
     private static final String TEMPLATE_CREATE_IDENTITY = "/admin/plugins/identitydesk/create_identity.html";
     private static final String TEMPLATE_MODIFY_IDENTITY = "/admin/plugins/identitydesk/modify_identity.html";
@@ -127,6 +131,7 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
     private static final String MESSAGE_SEARCH_IDENTITY_REQUIREDFIELD = "identitydesk.message.search_identity.requiredfield";
     private static final String MESSAGE_GET_REFERENTIAL_ERROR = "referential error";
     private static final String MESSAGE_GET_ACCOUNT_TASK_ERROR = "identitydesk.message.identity_account_task.error";
+    private static final String MESSAGE_GET_IDENTITY_HISTORY_ERROR = "identitydesk.message.get_identity_history.error";
 
     // Properties for page titles
     private static final String PROPERTY_PAGE_TITLE_MANAGE_IDENTITIES = "identitydesk.manage_identities.pageTitle";
@@ -162,12 +167,14 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
     private static final String MARK_SEARCH_PARAMS = "search_params";
     private static final String MARK_TASK_CODE = "task_code";
     private static final String MARK_TASK_RESULT_MESSAGE = "task_result_message";
+    private static final String MARK_IDENTITY_HISTORY_LIST = "history_list";
 
     // Views
     private static final String VIEW_SEARCH_IDENTITY = "searchIdentity";
     private static final String VIEW_CREATE_IDENTITY = "createIdentity";
     private static final String VIEW_MODIFY_IDENTITY = "modifyIdentity";
     private static final String VIEW_ACCOUNT_TASK = "displayAccountTask";
+    private static final String VIEW_VIEW_IDENTITY = "viewIdentity";
 
     // Actions
     private static final String ACTION_SEARCH_IDENTITY = "searchIdentity";
@@ -207,6 +214,64 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
             .map( property -> Arrays.asList( property.split( "," ) ) ).orElseGet( ArrayList::new );
     private final List<String> _AttributeInfoKeyList = Optional.ofNullable( AppPropertiesService.getProperty( "identitydesk.attribute.information.show" ) )
             .filter( property -> !property.trim( ).isEmpty( ) ).map( property -> Arrays.asList( property.split( "," ) ) ).orElseGet( ArrayList::new );
+
+
+
+
+    @View ( VIEW_VIEW_IDENTITY )
+    public String getViewIdentity( HttpServletRequest request ) throws AccessDeniedException
+    {
+        final String customerId = request.getParameter( "customer_id" );
+        final IdentityDto qualifiedIdentity;
+        ExtendedIdentityDto extendedIdentity;
+        List<LocalHistoryDto> localHistories = new ArrayList<>( );
+
+        initClientCode( request );
+        initServiceContract( _currentClientCode );
+        initReferential( _currentClientCode );
+
+        try
+        {
+            final IdentitySearchResponse getResponse = _identityService.getIdentity( customerId, _currentClientCode, getAuthor( ) );
+            logAndDisplayStatusErrorMessage( getResponse );
+            if ( getResponse.getIdentities( ).size( ) != 1 )
+            {
+                return getSearchIdentities( request );
+            }
+            qualifiedIdentity = getResponse.getIdentities( ).get( 0 );
+            extendedIdentity = ExtendedIdentityDto.from( qualifiedIdentity );
+        }
+        catch( final IdentityStoreException e )
+        {
+            AppLogService.error( "Error while retrieving selected identity [customerId = " + customerId + "].", e );
+            addError( MESSAGE_GET_IDENTITY_ERROR, getLocale( ) );
+            return getSearchIdentities( request );
+        }
+
+
+
+        try {
+           localHistories = HistoryService.getInstance().getIdentityHistory(qualifiedIdentity.getCustomerId(), getAuthor());
+        } catch (IdentityStoreException e) {
+            AppLogService.error("Error while retrieving the history for identity [customerId = " + qualifiedIdentity.getCustomerId() + "].", e);
+            addError(MESSAGE_GET_IDENTITY_HISTORY_ERROR, getLocale());
+        }
+
+
+        final LocalIdentityDto dto = LocalIdentityDto.from( qualifiedIdentity, _serviceContract );
+        Map<String, Object> model = getModel( );
+        model.put( MARK_IDENTITY, extendedIdentity );
+        model.put( MARK_SERVICE_CONTRACT, _serviceContract );
+        model.put( MARK_REFERENTIAL, _processusReferential );
+        model.put( MARK_ATTRIBUTE_INFO_KEY_LIST, _AttributeInfoKeyList );
+        model.put( MARK_CAN_WRITE, _canWriteIdentity );
+        model.put( MARK_IDENTITY_HISTORY_LIST, localHistories );
+        model.put( SecurityTokenService.MARK_TOKEN, SecurityTokenService.getInstance( ).getToken( request, ACTION_MODIFY_IDENTITY ) );
+        addReturnUrlMarker( request, model );
+
+        return getPage( PROPERTY_PAGE_TITLE_MANAGE_IDENTITIES, TEMPLATE_VIEW_IDENTITY, model );
+    }
+
 
     /**
      * Displays the search form
