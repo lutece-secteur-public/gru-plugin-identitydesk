@@ -143,11 +143,13 @@ document.addEventListener('DOMContentLoaded', () => {
             elements.birthPlaceExternalContainer.querySelector('input').setAttribute('name', 'birthplace');
             birthPlaceContainer.classList.add('d-none');
             birthPlaceContainer.querySelector('input').removeAttribute('name');
+            elements.birthPlaceCertif.setAttribute('name', 'birthplace-certif');
         } else {
             elements.birthPlaceExternalContainer.classList.add('d-none');
             elements.birthPlaceExternalContainer.querySelector('input').setAttribute('name', 'birthplace_external');
             birthPlaceContainer.classList.remove('d-none');
             birthPlaceContainer.querySelector('input').setAttribute('name', 'birthplace');
+            elements.birthPlaceCertif.setAttribute('name', 'birthplace_code-certif');
         }
     };
     document.querySelectorAll('.identitydesk-js-rules input, .identitydesk-js-rules select').forEach((field) => {
