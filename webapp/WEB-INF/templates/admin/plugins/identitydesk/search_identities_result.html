@@ -1,21 +1,21 @@
 <#include "search_functions.html" />
 <@pageContainer>
     <@pageColumn flush=true id="search-identity-column">
-        <#assign title><strong>Lancer</strong>une recherche dans notre <strong>referentiel d'identite</strong>
-        </#assign>
-        <#assign description>Pour effectuer une recherche, vous devez entrer un login ou fournir le nom, le pr&eacute;nom et la date de naissance</#assign>
+        <#assign title><strong>#i18n{identitydesk.search_identities.launch_search}</strong></#assign>
+        <#assign description>#i18n{identitydesk.search_identities.enter_login_or_details}</#assign>
         <#if identity_list?size gt 0 >
-        <#assign description> Vous ne trouvez pas l'identit&eacute recherch&eacutee dans le r&eacutef&eacuterentiel d'identit&eacute ?
+        <#assign description>#i18n{identitydesk.search_identities.identity_not_found}
         <#if can_create>
             <button type="submit" class="btn btn-primary" name="view_createIdentity">
-                <small><i class="ti ti-user-plus"></i> Cr&eacuteer cette identit&eacute</small>
+                <small><i class="ti ti-user-plus"></i> #i18n{identitydesk.search_identities.create_identity}</small>
             </button>
         </#if>
-        <a class="btn btn-dark" href="jsp/admin/plugins/identitydesk/ManageIdentities.jsp?plugin_name=identitydesk&new_search=true"><small> <i class="ti ti-search"></i> Nouvelle recherche</small></a>  </#assign>
+        <a class="btn btn-dark" href="jsp/admin/plugins/identitydesk/ManageIdentities.jsp?plugin_name=identitydesk&new_search=true"><small> <i class="ti ti-search"></i> #i18n{identitydesk.search_identities.new_search}</small></a>  
+        </#assign>
             <#if identity_list?size gt 1>
-            <#assign title><strong>${identity_list?size}</strong> utilisateurs trouv&eacute;s</#assign>
+            <#assign title><strong>${identity_list?size}</strong> #i18n{identitydesk.search_identities.users_found}</#assign>
             <#elseif identity_list?size == 1 >
-            <#assign title><strong>${identity_list?size}</strong> utilisateur trouv&eacute;</#assign>
+            <#assign title><strong>${identity_list?size}</strong> #i18n{identitydesk.search_identities.user_found}</#assign>
             </#if>
         </#if>
         <@tform action="jsp/admin/plugins/identitydesk/ManageIdentities.jsp?action_searchIdentity">
@@ -87,7 +87,7 @@
                             <@th>#</@th>
                             <@th>#i18n{identitydesk.search_identities.name}</@th>
                             <@th>#i18n{identitydesk.search_identities.birthplace}</@th>
-                            <@th>#i18n{identitydesk.search_identities.adress}</@th>
+                            <@th>#i18n{identitydesk.search_identities.address}</@th>
                             <@th>#i18n{identitydesk.search_identities.contact}</@th>
                             <@th><center>#i18n{identitydesk.search_identities.monparis}</center></@th>
                             <@th><center>#i18n{identitydesk.search_identities.pivot}</center></@th>
@@ -157,7 +157,7 @@
                                 <@tag color="secondary">#i18n{identitydesk.search_identities.detail.guid} <strong>${identity.connectionId!'Absent'}</strong></@tag>
                             </#assign>
                             
-                            <@offcanvas targetUrl="jsp/admin/plugins/identitydesk/ManageIdentities.jsp?view_viewIdentity=&customer_id=${identity.customerId}" targetElement="#identity-container"  id="summarize-${identity?index}" title=tags btnTitle="D&eacute;tails" size="auto" bodyClass="p-0" btnIcon="eye" btnTitle=""/>
+                            <@offcanvas targetUrl="jsp/admin/plugins/identitydesk/ManageIdentities.jsp?view_viewIdentity=&customer_id=${identity.customerId}" targetElement="#identity-container"  id="summarize-${identity?index}" title=tags btnTitle="#i18n{identitydesk.search_identities.details}" size="auto" bodyClass="p-0" btnIcon="eye" btnTitle=""/>
                                         <#if can_write>
                                         <@aButton href='jsp/admin/plugins/identitydesk/ManageIdentities.jsp?view_modifyIdentity&customer_id=${identity.customerId}' buttonIcon='edit' title='#i18n{identitydesk.search_identities.buttonModifyIdentity}'  hideTitle=['all'] />
                                         </#if>

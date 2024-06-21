@@ -97,9 +97,9 @@
                                                 <@td>${serviceContractAttr.name}</@td>
                                                 <@td><strong>
                                                         <#if serviceContractAttr.keyName=="gender">
-                                                            <#if attr.value=="0">Non d&#x00E9;fini
-                                                                <#elseif attr.value=="1">MME
-                                                                    <#elseif attr.value=="2">MR
+                                                            <#if attr.value=="0">#i18n{identitydesk.view_identity.gender.undefined}
+                                                                <#elseif attr.value=="1">#i18n{identitydesk.view_identity.gender.mme}
+                                                                    <#elseif attr.value=="2">#i18n{identitydesk.view_identity.gender.mr}
                                                             </#if>
                                                             <#else>
                                                                 ${attr.value}
@@ -138,18 +138,18 @@
                                                             ${getAttributeCodeByLevel('${serviceContractAttr.attributeRequirement.level}',
                                                             '${attr.key}')}
                                                             <#else>
-                                                                #i18n{identitydesk.search_identities.detail.none}
+                                                                #i18n{identitydesk.view_identity.none}
                                                         </#if>
                                                     </#if>
                                                 </@td>
                                                 <@td>
                                                     <#if attr.value !="">
                                                         <#if ratio==100>
-                                                            #i18n{identitydesk.search_identities.detail.certification.strong}
+                                                            #i18n{identitydesk.view_identity.certification.strong}
                                                             <#elseif ratio gt 50>
-                                                                #i18n{identitydesk.search_identities.detail.certification.medium}
+                                                                #i18n{identitydesk.view_identity.certification.medium}
                                                                 <#else>
-                                                                    #i18n{identitydesk.search_identities.detail.certification.weak}
+                                                                    #i18n{identitydesk.view_identity.certification.weak}
                                                         </#if>
                                                     </#if>
                                                 </@td>
@@ -195,12 +195,12 @@
                                                                     <@table  bordered=true>
                                                                         <thead>
                                                                             <tr>
-                                                                                <th><@icon style="arrow-up"/> Date de modification</th>
-                                                                                <th>Auteur</th>
-                                                                                <th>Valeur</th>
-                                                                                <th>Certification</th>
-                                                                                <th style="max-width:400px">Message</th>
-                                                                                <th class="text-center">Status</th>
+                                                                                <th><@icon style="arrow-up"/> #i18n{identitydesk.view_identity.modification_date}</th>
+                                                                                <th>#i18n{identitydesk.view_identity.author}</th>
+                                                                                <th>#i18n{identitydesk.view_identity.value}</th>
+                                                                                <th>#i18n{identitydesk.view_identity.certification}</th>
+                                                                                <th style="max-width:400px">#i18n{identitydesk.view_identity.message}</th>
+                                                                                <th class="text-center">#i18n{identitydesk.view_identity.status}</th>
                                                                             </tr>
                                                                         </thead>
                                                                         <tbody>
@@ -226,9 +226,9 @@
                                                                                                             </td>
                                                                                                             <td class="fw-bolder">
                                                                                                                 <#if filteredChanges[0].attributeKey=="gender" && filteredChanges[0].attributeValue??>
-                                                                                                                <#if filteredChanges[0].attributeValue=="0">Non d&#x00E9;fini
-                                                                                                                    <#elseif filteredChanges[0].attributeValue=="1">MME
-                                                                                                                        <#elseif filteredChanges[0].attributeValue=="2">MR
+                                                                                                                <#if filteredChanges[0].attributeValue=="0">#i18n{identitydesk.view_identity.gender.undefined}
+                                                                                                                    <#elseif filteredChanges[0].attributeValue=="1">#i18n{identitydesk.view_identity.gender.mme}
+                                                                                                                        <#elseif filteredChanges[0].attributeValue=="2">#i18n{identitydesk.view_identity.gender.mr}
                                                                                                                 </#if>
                                                                                                                 <#else>
                                                                                                                 ${filteredChanges[0].attributeValue!''}
@@ -251,7 +251,7 @@
                                                                                                                     filteredChanges[0].changeSatus=="removed">
                                                                                                                     <@tag
                                                                                                                         color="danger">
-                                                                                                                        Supprim&eacute;
+                                                                                                                        #i18n{identitydesk.view_identity.status.removed}
                                                                                                                     </@tag>
                                                                                                                     <#elseif
                                                                                                                         filteredChanges[0].changeSatus??
@@ -259,7 +259,7 @@
                                                                                                                         filteredChanges[0].changeSatus=="updated">
                                                                                                                         <@tag
                                                                                                                             color="warning">
-                                                                                                                            Modifi&eacute;
+                                                                                                                            #i18n{identitydesk.view_identity.status.updated}
                                                                                                                         </@tag>
                                                                                                                         <#elseif
                                                                                                                             filteredChanges[0].changeSatus??
@@ -267,7 +267,7 @@
                                                                                                                             filteredChanges[0].changeSatus=="created">
                                                                                                                             <@tag
                                                                                                                                 color="success">
-                                                                                                                                Cr&eacute;&eacute;
+                                                                                                                                #i18n{identitydesk.view_identity.status.created}
                                                                                                                             </@tag>
                                                                                                                             <#else>
                                                                                                                                 ${filteredChanges[0].changeSatus!''}
@@ -301,12 +301,12 @@
                                     <tr data-attribute-key="${serviceContractAttr.keyName}"
                                         data-attribute-name="${serviceContractAttr.name}" data-score=0>
                                         <@td>${serviceContractAttr.name}</@td>
-                                        <@td>non lisible</@td>
+                                        <@td>#i18n{identitydesk.view_identity.not_readable}</@td>
                                         <@td>${mandatory}</@td>
-                                        <@td>non lisible</@td>
-                                        <@td>non lisible</@td>
-                                        <@td>non lisible</@td>
-                                        <@td>non lisible</@td>
+                                        <@td>#i18n{identitydesk.view_identity.not_readable}</@td>
+                                        <@td>#i18n{identitydesk.view_identity.not_readable}</@td>
+                                        <@td>#i18n{identitydesk.view_identity.not_readable}</@td>
+                                        <@td>#i18n{identitydesk.view_identity.not_readable}</@td>
                                         <@td></@td>
                                     </tr>
                             </#if>
