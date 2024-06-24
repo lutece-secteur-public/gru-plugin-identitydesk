@@ -1,59 +1,131 @@
 <#include "search_functions.html" />
 <@pageContainer>
     <@pageColumn>
-        <@pageHeader title="D&eacute;tails de l'identit&eacute;" />
+        <#assign tags> 
+            <b>${getAttributeValue(identity.attributes, 'family_name')}</b>  <span style="font-weight:normal">${getAttributeValue(identity.attributes, 'first_name')} <i>${getAttributeValue(identity.attributes, 'preferred_username')}</i></span>
+        </#assign>
+        <@pageHeader title=tags>
+        <@tag color="secondary">#i18n{identitydesk.search_identities.detail.cuid} <strong>${identity.customerId!'Absent'}</strong></@tag>
+        <@tag color="secondary">#i18n{identitydesk.search_identities.detail.guid} <strong>${identity.connectionId!'Absent'}</strong></@tag>
+        </@pageHeader>
         <div id="identity-container">
-            <div class="jumbotron jumbotron-fluid p-4 shadow-lg text-center bg-light">
+            <div class="jumbotron jumbotron-fluid p-4 pt-2 shadow-lg text-center bg-light">
                 <div>
+                  <#list ["creationdate", "modificationdate", "expirationdate", "monparis", "monparis.merged", "monparis.deleted"] as item>
                     <div class="d-inline-block card rounded-5 p-4 py-2 shadow-lg m-1">
-                        #i18n{identitydesk.search_identities.detail.creationdate}
-                        <br>
-                        <strong>${identity.creationDate!''}</strong>
+                      <div class="d-flex">
+                        <div>
+                          #i18n{identitydesk.search_identities.detail.${item}}
+                          <br>
+                          <strong>
+                            <#switch item>
+                              <#case "creationdate">
+                                ${identity.creationDate!''}
+                                <#break>
+                              <#case "modificationdate">
+                                ${identity.lastUpdateDate!''}
+                                <#break>
+                              <#case "expirationdate">
+                                <#if identity.expiration?exists>${identity.expiration.expirationDate!''}<#else>-</#if>
+                                <#break>
+                              <#case "monparis">
+                                <#if identity.connectionId??><span class="text-success fw-bold">#i18n{identitydesk.search_identities.yes}</span><#else><span class="text-danger fw-bold">#i18n{identitydesk.search_identities.no}</span></#if>
+                                <#break>
+                              <#case "monparis.merged">
+                                <#if identity.merge??><span class="fw-bold">#i18n{identitydesk.search_identities.yes}</span><#else><span class="fw-bold">#i18n{identitydesk.search_identities.no}</span></#if>
+                                <#break>
+                              <#case "monparis.deleted">
+                                <#if identity.expiration?? && identity.expiration.deleted><span class="text-danger fw-bold">#i18n{identitydesk.search_identities.yes}</span><#else><span class="text-success fw-bold">#i18n{identitydesk.search_identities.no}</span></#if>
+                                <#break>
+                            </#switch>
+                          </strong>
+                        </div>
+                      </div>
                     </div>
-                    <div class="d-inline-block card rounded-5 p-4 py-2 shadow-lg m-1">
-                        #i18n{identitydesk.search_identities.detail.modificationdate}<br>
-                        <strong>${identity.lastUpdateDate!''}</strong>
-                    </div>
-                    <div class="d-inline-block card rounded-5 p-4 py-2 shadow-lg m-1">
-                        #i18n{identitydesk.search_identities.detail.expirationdate}
-                        <br>
-                        <#if identity.expiration?exists>
-                            <strong>${identity.expiration.expirationDate!''}</strong>
-                            <#else>
-                                <strong>-</strong>
-                        </#if>
-                    </div>
-                    <div class="d-inline-block card rounded-5 p-4 py-2 shadow-lg m-1">
-                        #i18n{identitydesk.search_identities.detail.monparis}
-                        <br>
-                        <#if identity.connectionId??>
-                            <span class="text-success fw-bold">#i18n{identitydesk.search_identities.yes}</span>
-                            <#else>
-                                <span class="text-danger fw-bold">#i18n{identitydesk.search_identities.no}</span>
-                        </#if>
-                    </div>
-                    <div class="d-inline-block card rounded-5 p-4 py-2 shadow-lg m-1">
-                        #i18n{identitydesk.search_identities.detail.monparis.merged}
-                        <br>
-                        <#if identity.merge??>
-                            <span class="fw-bold">#i18n{identitydesk.search_identities.yes}</span>
-                            <#else>
-                                <span class="text-info fw-bold">#i18n{identitydesk.search_identities.no}</span>
-                        </#if>
-                    </div>
-                    <div class="d-inline-block card rounded-5 p-4 py-2 shadow-lg m-1">
-                        #i18n{identitydesk.search_identities.detail.monparis.deleted}
-                        <br>
-                        <#if identity.expiration??>
-                            <#if identity.expiration.deleted>
-                                <span class="text-danger fw-bold">#i18n{identitydesk.search_identities.yes}</span>
+                  </#list>
+                  <#assign historySize>${history_list[0].identityChanges?size}</#assign>
+                    <@offcanvas id="history" title="<i class='ti ti-history fs-2'></i> Historique de l'identit&eacute;" btnTitle="Voir l'historique<br> complet" size="auto" bodyClass="p-5" btnClass=" mt-3" btnTitleShow=true badgeContent="" bodyClass="p-0" badgeContent="${historySize}">
+                        <div class="accordion" id="identityHistoryAccordion">
+                        <#list history_list[0].identityChanges as identityChange>
+                            <div class="accordion-item">
+                            <h2 class="accordion-header" id="heading${identityChange.modificationDate?string('yyyyMMddHHmmss')}">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse${identityChange.modificationDate?string('yyyyMMddHHmmss')}" aria-expanded="false" aria-controls="collapse${identityChange.modificationDate?string('yyyyMMddHHmmss')}">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <div>
+                                    <i class="fw-normal small">${identityChange.modificationDate?datetime} - ${identityChange.author.type!''}</i>
+                                    <p>${identityChange.author.name!''}</p>
+                                    <small>
+                                        <#if identityChange.monParisActive?? && identityChange.monParisActive><@tag color="success">L'identit&eacute; a &eacute;t&eacute; activ&eacute;e</@tag></#if>
+                                        <#if identityChange.deleted?? && identityChange.deleted><@tag color="danger">L'identit&eacute; a &eacute;t&eacute; supprim&eacute;e</@tag></#if>
+                                        <#if identityChange.merged?? && identityChange.merged><@tag color="warning">L'identit&eacute; a &eacute;t&eacute; fusionn&eacute;e</@tag></#if>
+                                    </small>
+                                    </div>
+                                    <div class="ps-5 pe-3">
+                                    <#if identityChange.changeType?? && identityChange.changeStatus??>
+                                        <#if identityChange.changeStatus=="SUCCESS">
+                                        <@tag color="success">#i18n{identitydesk.view_identity.${identityChange.changeType?lower_case}.${identityChange.changeStatus?lower_case}}</@tag>
+                                        <#else>
+                                        <@tag color="danger">#i18n{identitydesk.view_identity.${identityChange.changeType?lower_case}.${identityChange.changeStatus?lower_case}}</@tag>
+                                        </#if>
+                                    </#if>
+                                    </div>
+                                </div>
+                                </button>
+                            </h2>
+                            <div id="collapse${identityChange.modificationDate?string('yyyyMMddHHmmss')}" class="accordion-collapse collapse bg-light" aria-labelledby="heading${identityChange.modificationDate?string('yyyyMMddHHmmss')}" data-bs-parent="#identityHistoryAccordion">
+                                <div class="accordion-body">
+                                <#assign hasChanges=false>
+                                <#list history_list[0].attributeHistories as attributeHistory>
+                                    <#list attributeHistory.attributeChanges as attributeChange>
+                                    <#if identityChange.modificationDate?time?string("HH:mm")==attributeChange.modificationDate?time?string("HH:mm")>
+                                        <#assign hasChanges=true><#break>
+                                    </#if>
+                                    </#list>
+                                    <#if hasChanges><#break></#if>
+                                </#list>
+                                <#if hasChanges>
+                                    <div class="table-responsive rounded rounded-3 border shadow mb-0">
+                                    <table class="table rounded rounded-3 overflow-hidden border table-condensed table-hover mb-0">
+                                        <thead>
+                                        <tr>
+                                            <th>#i18n{identitydesk.view_identity.attribute}</th>
+                                            <th>#i18n{identitydesk.view_identity.value}</th>
+                                            <th>#i18n{identitydesk.view_identity.certification}</th>
+                                            <th style="max-width:400px">#i18n{identitydesk.view_identity.message}</th>
+                                            <th class="text-end">#i18n{identitydesk.view_identity.status}</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        <#list history_list[0].attributeHistories as attributeHistory>
+                                            <#list attributeHistory.attributeChanges as attributeChange>
+                                            <#if identityChange.modificationDate?time?string("HH:mm")==attributeChange.modificationDate?time?string("HH:mm")>
+                                                <tr>
+                                                <td><strong>${attributeHistory.attributeKey}</strong></td>
+                                                <td>${attributeChange.attributeValue!''}</td>
+                                                <td>${attributeChange.certificationProcessus!''}</td>
+                                                <td style="max-width:400px">${attributeChange.changeMessage!''}</td>
+                                                <td class="text-end">
+                                                    <#if attributeChange.changeSatus??>
+                                                    <#assign status=attributeChange.changeSatus?lower_case>
+                                                    <@tag>#i18n{identitydesk.view_identity.${status}}</@tag>
+                                                    </#if>
+                                                </td>
+                                                </tr>
+                                            </#if>
+                                            </#list>
+                                        </#list>
+                                        </tbody>
+                                    </table>
+                                    </div>
                                 <#else>
-                                    <span class="text-success fw-bold">#i18n{identitydesk.search_identities.no}</span>
-                            </#if>
-                            <#else>
-                                <span class="text-success fw-bold">#i18n{identitydesk.search_identities.no}</span>
-                        </#if>
-                    </div>
+                                    <p class="text-center mb-0 py-4"><@tag>Pas de changement au niveau des attributs</@tag></p>
+                                </#if>
+                                </div>
+                            </div>
+                            </div>
+                        </#list>
+                        </div>
+                    </@offcanvas>
                 </div>
             </div>
             <@table class="table" bordered=true>
@@ -69,247 +141,117 @@
                 </thead>
                 <tbody>
                     <#list service_contract.attributeDefinitions as serviceContractAttr>
-                        <#if serviceContractAttr.attributeRight.mandatory>
-                            <#assign mandatory="#i18n{identitydesk.search_identities.detail.yes}">
-                                <#else>
-                                    <#assign mandatory="#i18n{identitydesk.search_identities.detail.no}">
-                        </#if>
-                        <#if serviceContractAttr.keyName !="fc_key">
-                            <#if serviceContractAttr.attributeRight.readable>
-                                <#list identity.attributes?filter(a -> a.key == serviceContractAttr.keyName) as attr>
-                                    <#if attr.value=="">
-                                        <#assign level="0">
-                                            <#else>
-                                                <#assign
-                                                    level="${getAttributeCertificationLevel('${attr.certifier}', '${attr.key}')}">
+                        <#if serviceContractAttr.keyName != "fc_key">
+                            <#assign mandatory = serviceContractAttr.attributeRight.mandatory?string("#i18n{identitydesk.search_identities.detail.yes}", "#i18n{identitydesk.search_identities.detail.no}")>
+                            <#assign attributeValue = "">
+                            <#assign level = 0>
+                            <#assign certifier = "">
+                            <#list identity.attributes?filter(a -> a.key == serviceContractAttr.keyName) as attr>
+                                <#assign attributeValue = attr.value>
+                                <#assign level = (attributeValue?has_content)?then(getAttributeCertificationLevel(attr.certifier, attr.key)?number, 0)>
+                                <#assign certifier = attr.certifier>
+                            </#list>
+                            <#assign levelMax = getHighestLevelForAttributeKey(serviceContractAttr.keyName)?number>
+                            <#assign ratio = (levelMax > 0)?then((level / levelMax) * 100, 0)>
+                            <#assign bgColor = (ratio == 100)?string("success", (ratio > 50)?string("warning", "danger"))>
+                            <tr data-attribute-key="${serviceContractAttr.keyName}" data-attribute-name="${serviceContractAttr.name}" data-score=${ratio?round}>
+                                <@td>${serviceContractAttr.name}</@td>
+                                <@td><strong>
+                                    <#if serviceContractAttr.keyName == "gender">
+                                        <#switch attributeValue>
+                                            <#case "0">#i18n{identitydesk.view_identity.gender.undefined}<#break>
+                                            <#case "1">#i18n{identitydesk.view_identity.gender.mme}<#break>
+                                            <#case "2">#i18n{identitydesk.view_identity.gender.mr}<#break>
+                                            <#default>${attributeValue}
+                                        </#switch>
+                                    <#else>${attributeValue}</#if>
+                                </strong></@td>
+                                <@td>${mandatory}</@td>
+                                <td class="text-center">
+                                    <#if attributeValue?has_content>
+                                        <#assign isSuccess = (serviceContractAttr.attributeRequirement?? && level >= serviceContractAttr.attributeRequirement.level?number)>
+                                        <#assign colorTag = isSuccess?string("success", "danger")>
+                                        <@tag color="${colorTag}"><i class="ti ti-${isSuccess?string('check', 'x')}"></i> ${certifier} (${level})</@tag>
                                     </#if>
-                                    <#assign levelMax="${getHighestLevelForAttributeKey('${attr.key}')}">
-                                        <#assign ratio=(level?number / levelMax?number) * 100>
-                                            <#assign bgColor>
-                                                <#if ratio==100>success
-                                                    <#elseif ratio gt 50>warning
-                                                        <#else>danger
-                                                </#if>
-                                            </#assign>
-                                            <tr data-attribute-key="${serviceContractAttr.keyName}"
-                                                data-attribute-name="${serviceContractAttr.name}"
-                                                data-score=${ratio?round}>
-                                                <@td>${serviceContractAttr.name}</@td>
-                                                <@td><strong>
-                                                        <#if serviceContractAttr.keyName=="gender">
-                                                            <#if attr.value=="0">#i18n{identitydesk.view_identity.gender.undefined}
-                                                                <#elseif attr.value=="1">#i18n{identitydesk.view_identity.gender.mme}
-                                                                    <#elseif attr.value=="2">#i18n{identitydesk.view_identity.gender.mr}
-                                                            </#if>
-                                                            <#else>
-                                                                ${attr.value}
-                                                        </#if>
-                                                    </strong>
-                                                </@td>
-                                                <@td>${mandatory}</@td>
-                                                <td class="text-center">
-                                                    <#if attr.value !="">
-                                                        <#if serviceContractAttr.attributeRequirement?exists>
-                                                            <#if level?number gte
-                                                                serviceContractAttr.attributeRequirement.level?number>
-                                                                <@tag color="success"><i class="ti ti-check"></i>
-                                                                    ${attr.certifier}
-                                                                    (${level})</@tag>
-                                                                <#else>
-                                                                    <@tag color="danger"><i class="ti ti-x"></i>
-                                                                        ${attr.certifier}
-                                                                        (${level})</@tag>
-                                                            </#if>
-                                                            <#else>
-                                                                <@tag color="success"><i class="ti ti-check"></i>
-                                                                    ${attr.certifier}
-                                                                    (${level})</@tag>
-                                                        </#if>
+                                </td>
+                                <@td><#if attributeValue?has_content><strong>${level}</strong> / ${levelMax}</#if></@td>
+                                <@td>
+                                    <#if attributeValue?has_content && serviceContractAttr.attributeRequirement??>
+                                        ${getAttributeCodeByLevel(serviceContractAttr.attributeRequirement.level, serviceContractAttr.keyName)}
+                                    <#else>
+                                        #i18n{identitydesk.view_identity.none}
+                                    </#if>
+                                </@td>
+                                <@td>
+                                    <#if attributeValue?has_content>
+                                        #i18n{identitydesk.view_identity.certification.${(ratio == 100)?string("strong", (ratio > 50)?string("medium", "weak"))}}
+                                    </#if>
+                                </@td>
+                                <@td>
+                                    <#assign historySize = 0>
+                                    <#assign historySizeDeleted = 0>
+                                    <#assign historySizeUpdated = 0>
+                                    <#list history_list as history>
+                                        <#list history.attributeHistories as attributeHistory>
+                                            <#if attributeHistory.attributeKey == serviceContractAttr.keyName>
+                                                <#assign historySize = historySize + attributeHistory.attributeChanges?size>
+                                                <#list attributeHistory.attributeChanges as attributeChange>
+                                                    <#if attributeChange.changeSatus?? && attributeChange.changeSatus == "removed">
+                                                        <#assign historySizeDeleted = historySizeDeleted + 1>
+                                                    <#elseif attributeChange.changeSatus?? && attributeChange.changeSatus == "updated">
+                                                        <#assign historySizeUpdated = historySizeUpdated + 1>
                                                     </#if>
-                                                </td>
-                                                <@td>
-                                                    <#if attr.value !="">
-                                                        <strong>${level}</strong> / ${levelMax}
-                                                    </#if>
-                                                </@td>
-                                                <@td>
-                                                    <#if attr.value !="">
-                                                        <#if serviceContractAttr.attributeRequirement?exists>
-                                                            ${getAttributeCodeByLevel('${serviceContractAttr.attributeRequirement.level}',
-                                                            '${attr.key}')}
-                                                            <#else>
-                                                                #i18n{identitydesk.view_identity.none}
-                                                        </#if>
-                                                    </#if>
-                                                </@td>
-                                                <@td>
-                                                    <#if attr.value !="">
-                                                        <#if ratio==100>
-                                                            #i18n{identitydesk.view_identity.certification.strong}
-                                                            <#elseif ratio gt 50>
-                                                                #i18n{identitydesk.view_identity.certification.medium}
-                                                                <#else>
-                                                                    #i18n{identitydesk.view_identity.certification.weak}
-                                                        </#if>
-                                                    </#if>
-                                                </@td>
-                                                <@td>
-                                                    <#assign historySize>${history_list?filter(h ->
-                                                        h.attributeChanges?filter(ac ->
-                                                        ac.attributeKey == serviceContractAttr.keyName)?size >
-                                                        0)?size} </#assign>
-                                                    <#assign historySizeDeleted=history_list?filter(h ->
-                                                        h.attributeChanges?filter(ac ->
-                                                        ac.attributeKey == serviceContractAttr.keyName
-                                                        )?size > 0
-                                                        )?filter(h ->
-                                                        h.attributeChanges?filter(ac ->
-                                                        ac.attributeKey == serviceContractAttr.keyName
-                                                        )?filter(ac ->
-                                                        ac.changeSatus?? && ac.changeSatus == "removed"
-                                                        )?size > 0
-                                                        )?size>
-                                                        <#assign historySizeUpdated=history_list?filter(h ->
-                                                            h.attributeChanges?filter(ac ->
-                                                            ac.attributeKey == serviceContractAttr.keyName
-                                                            )?size > 0
-                                                            )?filter(h ->
-                                                            h.attributeChanges?filter(ac ->
-                                                            ac.attributeKey == serviceContractAttr.keyName
-                                                            )?filter(ac ->
-                                                            ac.changeSatus?? && ac.changeSatus == "updated"
-                                                            )?size > 0
-                                                            )?size>
-                                                            <#assign badgeColor="">
-                                                                <#if historySizeDeleted gt 0>
-                                                                    <#assign badgeColor="light text-danger">
-                                                                        <#elseif historySizeUpdated gt 0>
-                                                                            <#assign badgeColor="light text-warning">
-                                                                </#if>
-                                                                <@offcanvas id="history-${serviceContractAttr.keyName}"
-                                                                    title="<i class='ti ti-history fs-2'></i> ${serviceContractAttr.name}"
-                                                                    btnTitle="Historique du champ" size="auto"
-                                                                    bodyClass="p-0" btnIcon="history" btnTitleShow=false
-                                                                    badgeContent="${historySize}"
-                                                                    badgeColor="${badgeColor}">
-                                                                    <@table  bordered=true>
-                                                                        <thead>
-                                                                            <tr>
-                                                                                <th><@icon style="arrow-up"/> #i18n{identitydesk.view_identity.modification_date}</th>
-                                                                                <th>#i18n{identitydesk.view_identity.author}</th>
-                                                                                <th>#i18n{identitydesk.view_identity.value}</th>
-                                                                                <th>#i18n{identitydesk.view_identity.certification}</th>
-                                                                                <th style="max-width:400px">#i18n{identitydesk.view_identity.message}</th>
-                                                                                <th class="text-center">#i18n{identitydesk.view_identity.status}</th>
-                                                                            </tr>
-                                                                        </thead>
-                                                                        <tbody>
-                                                                            <#assign
-                                                                                sortedHistoryList=history_list?sort_by("modificationTime")?reverse>
-                                                                                <#list sortedHistoryList as history>
-                                                                                    <#assign
-                                                                                        filteredChanges=history.attributeChanges?filter(ac
-                                                                                        -> ac.attributeKey ==
-                                                                                        serviceContractAttr.keyName)>
-                                                                                        <#if filteredChanges?size gt 0>
-                                                                                            <#assign
-                                                                                                modificationTime=history.modificationTime?number_to_date?string("dd/MM/yyyy
-                                                                                                HH:mm")>
-                                                                                                <#assign
-                                                                                                    firstChangeType=filteredChanges[0].changeType!''>
-                                                                                                    <#assign
-                                                                                                        authorName=filteredChanges[0].authorName!''>
-                                                                                                        <tr>
-                                                                                                            <td>${modificationTime}
-                                                                                                            </td>
-                                                                                                            <td>${authorName}
-                                                                                                            </td>
-                                                                                                            <td class="fw-bolder">
-                                                                                                                <#if filteredChanges[0].attributeKey=="gender" && filteredChanges[0].attributeValue??>
-                                                                                                                <#if filteredChanges[0].attributeValue=="0">#i18n{identitydesk.view_identity.gender.undefined}
-                                                                                                                    <#elseif filteredChanges[0].attributeValue=="1">#i18n{identitydesk.view_identity.gender.mme}
-                                                                                                                        <#elseif filteredChanges[0].attributeValue=="2">#i18n{identitydesk.view_identity.gender.mr}
-                                                                                                                </#if>
-                                                                                                                <#else>
-                                                                                                                ${filteredChanges[0].attributeValue!''}
-                                                                                                            </#if>
-                                                                                                                
-                                                                                                                
-                                                                                                            </td>
-                                                                                                            <td>${filteredChanges[0].certificationProcessus!''}
-                                                                                                            </td>
-                                                                                                       
-                                                                                                    
-                                                                                                            <td
-                                                                                                                style="max-width:400px">
-                                                                                                                ${filteredChanges[0].changeMessage!''}
-                                                                                                            </td>
-                                                                                                            <td
-                                                                                                                class="text-center">
-                                                                                                                <#if filteredChanges[0].changeSatus??
-                                                                                                                    &&
-                                                                                                                    filteredChanges[0].changeSatus=="removed">
-                                                                                                                    <@tag
-                                                                                                                        color="danger">
-                                                                                                                        #i18n{identitydesk.view_identity.status.removed}
-                                                                                                                    </@tag>
-                                                                                                                    <#elseif
-                                                                                                                        filteredChanges[0].changeSatus??
-                                                                                                                        &&
-                                                                                                                        filteredChanges[0].changeSatus=="updated">
-                                                                                                                        <@tag
-                                                                                                                            color="warning">
-                                                                                                                            #i18n{identitydesk.view_identity.status.updated}
-                                                                                                                        </@tag>
-                                                                                                                        <#elseif
-                                                                                                                            filteredChanges[0].changeSatus??
-                                                                                                                            &&
-                                                                                                                            filteredChanges[0].changeSatus=="created">
-                                                                                                                            <@tag
-                                                                                                                                color="success">
-                                                                                                                                #i18n{identitydesk.view_identity.status.created}
-                                                                                                                            </@tag>
-                                                                                                                            <#else>
-                                                                                                                                ${filteredChanges[0].changeSatus!''}
-                                                                                                                </#if>
-                                                                                                            </td>
-                                                                                                        </tr>
-                                                                                        </#if>
-                                                                                </#list>
-                                                                        </tbody>
-                                                                    </@table>
-                                                                </@offcanvas>
-                                                </@td>
-                                            </tr>
-                                </#list>
-                                <#if identity.attributes?filter(a -> a.key == serviceContractAttr.keyName)?size == 0>
-                                    <#assign
-                                        levelMax="${getHighestLevelForAttributeKey('${serviceContractAttr.keyName}')}">
-                                        <tr data-attribute-key="${serviceContractAttr.keyName}"
-                                            data-attribute-name="${serviceContractAttr.name}" data-score=0>
-                                            <@td>${serviceContractAttr.name}</@td>
-                                            <@td></@td>
-                                            <@td>${mandatory}</@td>
-                                            <@td></@td>
-                                            <@td></@td>
-                                            <@td></@td>
-                                            <@td></@td>
-                                            <@td></@td>
-                                        </tr>
-                                </#if>
-                                <#else>
-                                    <tr data-attribute-key="${serviceContractAttr.keyName}"
-                                        data-attribute-name="${serviceContractAttr.name}" data-score=0>
-                                        <@td>${serviceContractAttr.name}</@td>
-                                        <@td>#i18n{identitydesk.view_identity.not_readable}</@td>
-                                        <@td>${mandatory}</@td>
-                                        <@td>#i18n{identitydesk.view_identity.not_readable}</@td>
-                                        <@td>#i18n{identitydesk.view_identity.not_readable}</@td>
-                                        <@td>#i18n{identitydesk.view_identity.not_readable}</@td>
-                                        <@td>#i18n{identitydesk.view_identity.not_readable}</@td>
-                                        <@td></@td>
-                                    </tr>
-                            </#if>
+                                                </#list>
+                                            </#if>
+                                        </#list>
+                                    </#list>
+                                    <#assign badgeColor = (historySizeDeleted > 0)?string("light text-danger", (historySizeUpdated > 0)?string("light text-warning", ""))>
+                                    <@offcanvas id="history-${serviceContractAttr.keyName}" title="<i class='ti ti-history fs-2'></i> ${serviceContractAttr.name}" btnTitle="Historique du champ" size="auto" bodyClass="p-0" btnIcon="history" btnTitleShow=false badgeContent="${historySize}" badgeColor="${badgeColor}">
+                                        <@table bordered=true>
+                                            <thead>
+                                                <tr>
+                                                    <th><@icon style="arrow-up" /> #i18n{identitydesk.view_identity.modification_date}</th>
+                                                    <th>#i18n{identitydesk.view_identity.author}</th>
+                                                    <th>#i18n{identitydesk.view_identity.value}</th>
+                                                    <th>#i18n{identitydesk.view_identity.certification}</th>
+                                                    <th style="max-width:400px">#i18n{identitydesk.view_identity.message}</th>
+                                                    <th class="text-center">#i18n{identitydesk.view_identity.status}</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <#list history_list as history>
+                                                    <#list history.attributeHistories?filter(ah -> ah.attributeKey == serviceContractAttr.keyName) as attributeHistory>
+                                                        <#list attributeHistory.attributeChanges?sort_by("modificationDate")?reverse as attributeChange>
+                                                            <tr>
+                                                                <td>${attributeChange.modificationDate?string("dd/MM/yyyy HH:mm")}</td>
+                                                                <td>${attributeChange.authorName!''}</td>
+                                                                <td class="fw-bolder">
+                                                                    <#if attributeChange.attributeKey == "gender" && attributeChange.attributeValue??>
+                                                                        <#switch attributeChange.attributeValue>
+                                                                            <#case "0">#i18n{identitydesk.view_identity.gender.undefined}<#break>
+                                                                            <#case "1">#i18n{identitydesk.view_identity.gender.mme}<#break>
+                                                                            <#case "2">#i18n{identitydesk.view_identity.gender.mr}<#break>
+                                                                            <#default>${attributeChange.attributeValue!''}
+                                                                        </#switch>
+                                                                    <#else>${attributeChange.attributeValue!''}</#if>
+                                                                </td>
+                                                                <td>${attributeChange.certificationProcessus!''}</td>
+                                                                <td style="max-width:400px">${attributeChange.changeMessage!''}</td>
+                                                                <td class="text-center">
+                                                                    <#assign statusColor = (attributeChange.changeSatus == "removed")?string("danger", (attributeChange.changeSatus == "updated")?string("warning", (attributeChange.changeSatus == "created")?string("success", "")))>
+                                                                    <#if statusColor != "">
+                                                                        <@tag color="${statusColor}">#i18n{identitydesk.view_identity.status.${attributeChange.changeSatus}}</@tag>
+                                                                    <#else>${attributeChange.changeSatus!''}</#if>
+                                                                </td>
+                                                            </tr>
+                                                        </#list>
+                                                    </#list>
+                                                </#list>
+                                            </tbody>
+                                        </@table>
+                                    </@offcanvas>
+                                </@td>
+                            </tr>
                         </#if>
                     </#list>
                 </tbody>

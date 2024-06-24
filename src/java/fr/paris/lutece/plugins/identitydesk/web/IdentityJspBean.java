@@ -35,7 +35,6 @@ package fr.paris.lutece.plugins.identitydesk.web;
 
 import fr.paris.lutece.api.user.User;
 import fr.paris.lutece.plugins.identitydesk.business.AccountCreationTaskHome;
-import fr.paris.lutece.plugins.identitydesk.business.LocalHistoryDto;
 import fr.paris.lutece.plugins.identitydesk.business.LocalIdentityDto;
 import fr.paris.lutece.plugins.identitydesk.cache.ServiceAttributeKeyReferentialCache;
 import fr.paris.lutece.plugins.identitydesk.cache.ServiceContractCache;
@@ -56,6 +55,7 @@ import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.contract.AttributeDef
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.contract.ServiceContractDto;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.crud.IdentityChangeRequest;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.crud.IdentityChangeResponse;
+import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.history.IdentityHistory;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.referentiel.AttributeCertificationLevelDto;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.referentiel.AttributeCertificationProcessusDto;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.search.IdentitySearchRequest;
@@ -77,6 +77,7 @@ import fr.paris.lutece.portal.service.security.SecurityTokenService;
 import fr.paris.lutece.portal.service.spring.SpringContextService;
 import fr.paris.lutece.portal.service.util.AppLogService;
 import fr.paris.lutece.portal.service.util.AppPropertiesService;
+import fr.paris.lutece.portal.util.mvc.admin.MVCAdminJspBean;
 import fr.paris.lutece.portal.util.mvc.admin.annotations.Controller;
 import fr.paris.lutece.portal.util.mvc.commons.annotations.Action;
 import fr.paris.lutece.portal.util.mvc.commons.annotations.View;
@@ -101,7 +102,7 @@ import java.util.stream.Collectors;
  * This class provides the user interface to manage Identity features ( manage, create, modify, remove )
  */
 @Controller( controllerJsp = "ManageIdentities.jsp", controllerPath = "jsp/admin/plugins/identitydesk/", right = "IDENTITYDESK_MANAGEMENT" )
-public class IdentityJspBean extends ManageIdentitiesJspBean
+public class IdentityJspBean extends MVCAdminJspBean
 {
     private static final long serialVersionUID = 6053504380426222888L;
     // Templates
@@ -117,13 +118,11 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
 
     // Messages
     private static final String MESSAGE_GET_IDENTITY_ERROR = "identitydesk.message.get_identity.error";
-    private static final String MESSAGE_SEARCH_IDENTITY_NORESULT = "identitydesk.message.search_identity.noresult";
     private static final String MESSAGE_SEARCH_IDENTITY_NORESULT_DETAIL = "identitydesk.message.search_identity.noresult.detail";
     private static final String MESSAGE_SEARCH_IDENTITY_ERROR = "identitydesk.message.search_identity.error";
     private static final String MESSAGE_IDENTITY_MUSTSELECTCERTIFICATION = "identitydesk.message.identity.mustselectcertification";
     private static final String MESSAGE_CREATE_IDENTITY_SUCCESS = "identitydesk.message.create_identity.success";
     private static final String MESSAGE_CREATE_IDENTITY_ERROR = "identitydesk.message.create_identity.error";
-    private static final String MESSAGE_CREATE_IDENTITY_ACCOUNT_ERROR = "identitydesk.message.create_identity_account.error";
     private static final String MESSAGE_UPDATE_IDENTITY_NOCHANGE = "identitydesk.message.update_identity.nochange";
     private static final String MESSAGE_UPDATE_IDENTITY_SUCCESS = "identitydesk.message.update_identity.success";
     private static final String MESSAGE_UPDATE_IDENTITY_ERROR = "identitydesk.message.update_identity.error";
@@ -137,7 +136,6 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
     private static final String PROPERTY_PAGE_TITLE_MANAGE_IDENTITIES = "identitydesk.manage_identities.pageTitle";
     private static final String PROPERTY_PAGE_TITLE_MODIFY_IDENTITY = "identitydesk.modify_identity.pageTitle";
     private static final String PROPERTY_PAGE_TITLE_CREATE_IDENTITY = "identitydesk.create_identity.pageTitle";
-    private static final String PROPERTY_PAGE_TITLE_CREATE_TASK_IDENTITY = "identitydesk.create_identity_task.pageTitle";
     private static final String PROPERTY_ALLOW_CLIENT_CODE_DYNAMIC_CHANGE = "identitydesk.client_code.allow_dynamic_change";
     private static final String PROPERTY_ALLOW_RETURN_URL_DYNAMIC_CHANGE = "identitydesk.return_url.allow_dynamic_change";
 
@@ -224,7 +222,7 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
         final String customerId = request.getParameter( "customer_id" );
         final IdentityDto qualifiedIdentity;
         ExtendedIdentityDto extendedIdentity;
-        List<LocalHistoryDto> localHistories = new ArrayList<>( );
+        List<IdentityHistory> localHistories = new ArrayList<>( );
 
         initClientCode( request );
         initServiceContract( _currentClientCode );
@@ -248,8 +246,6 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
             return getSearchIdentities( request );
         }
 
-
-
         try {
            localHistories = HistoryService.getInstance().getIdentityHistory(qualifiedIdentity.getCustomerId(), getAuthor());
         } catch (IdentityStoreException e) {
@@ -258,7 +254,6 @@ public class IdentityJspBean extends ManageIdentitiesJspBean
         }
 
 
-        final LocalIdentityDto dto = LocalIdentityDto.from( qualifiedIdentity, _serviceContract );
         Map<String, Object> model = getModel( );
         model.put( MARK_IDENTITY, extendedIdentity );
         model.put( MARK_SERVICE_CONTRACT, _serviceContract );

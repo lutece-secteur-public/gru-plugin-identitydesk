@@ -1,185 +1,125 @@
 <#include "search_functions.html" />
 <@pageContainer>
-    <@pageColumn flush=true id="search-identity-column">
-        <#assign title><strong>#i18n{identitydesk.search_identities.launch_search}</strong></#assign>
-        <#assign description>#i18n{identitydesk.search_identities.enter_login_or_details}</#assign>
-        <#if identity_list?size gt 0 >
-        <#assign description>#i18n{identitydesk.search_identities.identity_not_found}
-        <#if can_create>
-            <button type="submit" class="btn btn-primary" name="view_createIdentity">
-                <small><i class="ti ti-user-plus"></i> #i18n{identitydesk.search_identities.create_identity}</small>
-            </button>
-        </#if>
-        <a class="btn btn-dark" href="jsp/admin/plugins/identitydesk/ManageIdentities.jsp?plugin_name=identitydesk&new_search=true"><small> <i class="ti ti-search"></i> #i18n{identitydesk.search_identities.new_search}</small></a>  
-        </#assign>
-            <#if identity_list?size gt 1>
-            <#assign title><strong>${identity_list?size}</strong> #i18n{identitydesk.search_identities.users_found}</#assign>
-            <#elseif identity_list?size == 1 >
-            <#assign title><strong>${identity_list?size}</strong> #i18n{identitydesk.search_identities.user_found}</#assign>
-            </#if>
-        </#if>
-        <@tform action="jsp/admin/plugins/identitydesk/ManageIdentities.jsp?action_searchIdentity">
-            <@input type="hidden" name="token" value="${token}"/>
-            <@input type="hidden" name="new_search" value=""/>
-            <@input type="hidden" name="return_url" value="${(return_url)!''}"/>
-            <div class="jumbotron jumbotron-fluid d-flex align-items-center justify-content-center text-center bg-secondary pb-4">
-                <div class="container-fluid mt-5" style="max-width:1600px !important" >
-                    <h1>${title}</h1>
-                    <p class="fw-bolder">${description}</p>
-                    <@messages infos=infos />
-                    <@messages errors=errors />
-                    <@messages warnings=warnings />
-                    <#if search_rules?size gt 0>
-                    <@searchBox id="search-box-identity">
-                    <#list search_rules as rule>
-                        <#list rule as field>
-                            <#assign fieldValue><#list query_search_attributes?filter(a -> a.key == field) as attr>${attr.value!''}</#list></#assign>
-                            <#assign fieldType><#if field == "birthdate">date<#else>text</#if></#assign>
-                            <#if field == "birthdate">
-                                <#if fieldValue?length gt 0 >
-                                    <#assign date_dd_MM_yyyy = formatDate(fieldValue)>
-                                    <@searchInput name="search_${field}" label="${getName(field)}" value=date_dd_MM_yyyy type=fieldType   />
-                                <#else>
-                                    <@searchInput name="search_${field}" label="${getName(field)}" value=fieldValue type=fieldType   />
-                                </#if>
-                                <#elseif field == "common_email">
-                                    <@searchInput name="search_common_email" value=fieldValue type=fieldType
-                                    label="${getName('email')} #i18n{identitydesk.search_identities.or} ${getName('login')}" />
-                                <#elseif field == "common_lastname">
-                                    <@searchInput name="search_common_lastname" value=fieldValue type=fieldType
-                                    label="${getName('family_name')} #i18n{identitydesk.search_identities.or} ${getName('preferred_username')}" />
-                                <#else>
-                                    <@searchInput name="search_${field}" label="${getName(field)}" value=fieldValue type=fieldType   />
-                            </#if>
-                            <#if field_has_next>
-                                <@searchSeparator type="and" content="+" />
-                            </#if>
-                            <#if rule_has_next>
-                                <@searchSeparator color="dark" type="or" content="#i18n{identitydesk.search_identities.or}" />
-                            </#if>
-                        </#list>
+  <@pageColumn flush=true id="search-identity-column">
+    <#assign title><strong>#i18n{identitydesk.search_identities.launch_search}</strong></#assign>
+    <#assign description>#i18n{identitydesk.search_identities.enter_login_or_details}</#assign>
+    <#if identity_list?size gt 0>
+      <#assign description>#i18n{identitydesk.search_identities.identity_not_found}
+      <#if can_create><button type="submit" class="btn btn-primary" name="view_createIdentity"><small><i class="ti ti-user-plus"></i> #i18n{identitydesk.search_identities.create_identity}</small></button></#if>
+      <a class="btn btn-dark" href="jsp/admin/plugins/identitydesk/ManageIdentities.jsp?plugin_name=identitydesk&new_search=true"><small><i class="ti ti-search"></i> #i18n{identitydesk.search_identities.new_search}</small></a></#assign>
+      <#assign title><strong>${identity_list?size}</strong> #i18n{identitydesk.search_identities.user<#if identity_list?size gt 1>s</#if>_found}</#assign>
+    </#if>
+    <@tform action="jsp/admin/plugins/identitydesk/ManageIdentities.jsp?action_searchIdentity">
+      <@input type="hidden" name="token" value="${token}"/>
+      <@input type="hidden" name="new_search" value=""/>
+      <@input type="hidden" name="return_url" value="${(return_url)!''}"/>
+      <div class="jumbotron jumbotron-fluid d-flex align-items-center justify-content-center text-center bg-secondary pb-4">
+        <div class="container-fluid mt-5" style="max-width:1600px !important">
+          <h1>${title}</h1>
+          <p class="fw-bolder">${description}</p>
+          <@messages infos=infos errors=errors warnings=warnings />
+          <#if search_rules?size gt 0>
+            <@searchBox id="search-box-identity">
+              <#list search_rules as rule>
+                <#list rule as field>
+                  <#assign fieldValue><#list query_search_attributes?filter(a -> a.key == field) as attr>${attr.value!''}</#list></#assign>
+                  <#assign fieldType = (field == "birthdate")?string("date", "text")>
+                  <#if field == "birthdate">
+                    <@searchInput name="search_${field}" label="${getName(field)}" value="${fieldValue?has_content?then(formatDate(fieldValue), fieldValue)}" type=fieldType />
+                  <#elseif field == "common_email">
+                    <@searchInput name="search_common_email" value=fieldValue type=fieldType label="${getName('email')} #i18n{identitydesk.search_identities.or} ${getName('login')}" />
+                  <#elseif field == "common_lastname">
+                    <@searchInput name="search_common_lastname" value=fieldValue type=fieldType label="${getName('family_name')} #i18n{identitydesk.search_identities.or} ${getName('preferred_username')}" />
+                  <#else>
+                    <@searchInput name="search_${field}" label="${getName(field)}" value=fieldValue type=fieldType />
+                  </#if>
+                  <#if field_has_next><@searchSeparator type="and" content="+" /></#if>
+                </#list>
+                <#if rule_has_next><@searchSeparator color="dark" type="or" content="#i18n{identitydesk.search_identities.or}" /></#if>
+              </#list>
+            </@searchBox>
+          </#if>
+          <div class="mb-5 mt-2">
+            <div class="text-end fw-bold">
+              <@listGroupItem>
+                <@checkBox orientation='switch' id='approximate' name='approximate' labelKey='#i18n{identitydesk.search_identities.approximateSearch}' value='true' mandatory=false checked=approximate?? />
+              </@listGroupItem>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="container-fluid mt-5 px-5" style="margin-top:-54px !important;">
+        <#if identity_list?size gt 0>
+          <@table bordered=true>
+            <thead>
+              <@tr>
+                <@th>#</@th>
+                <@th>#i18n{identitydesk.search_identities.name}</@th>
+                <@th>#i18n{identitydesk.search_identities.birthplace}</@th>
+                <@th>#i18n{identitydesk.search_identities.address}</@th>
+                <@th>#i18n{identitydesk.search_identities.contact}</@th>
+                <@th><center>#i18n{identitydesk.search_identities.monparis}</center></@th>
+                <@th><center>#i18n{identitydesk.search_identities.pivot}</center></@th>
+                <@th><center>#i18n{identitydesk.search_identities.quality}</center></@th>
+                <@th></@th>
+              </@tr>
+            </thead>
+            <tbody>
+              <#list identity_list as identity>
+                <tr class="filtering-item"
+                  <#list service_contract.attributeDefinitions?filter(a -> a.attributeRight.searchable && a.keyName != 'birthplace_code' && a.keyName != 'birthcountry_code' && a.keyName != 'login') as searchableAttr>
+                    <#list identity.attributes?filter(a -> a.key == searchableAttr.keyName) as attr>
+                      data-filter-${searchableAttr.keyName}="${attr.value}"
                     </#list>
-                </@searchBox>
-                </#if>
-                <div class="mb-5 mt-2">
-                    <div class="text-end fw-bold">
-                      <#assign checked=true />
-                      <#if approximate?exists>
-                    <#if approximate>
-                    <#assign checked=true />
+                  </#list>
+                >
+                  <@td>${identity?index + 1}</@td>
+                  <@td><strong>${getAttributeValue(identity.attributes, 'family_name')}</strong> ${getAttributeValue(identity.attributes, 'first_name')}<br><i>${getAttributeValue(identity.attributes, 'preferred_username')}</i></@td>
+                  <@td>${getAttributeValue(identity.attributes, 'birthdate')}<br>${getAttributeValue(identity.attributes, 'birthplace')}<#if getAttributeValue(identity.attributes, 'birthplace')?has_content>, </#if>${getAttributeValue(identity.attributes, 'birthcountry')}</@td>
+                  <@td>${getAttributeValue(identity.attributes, 'address')}<br>${getAttributeValue(identity.attributes, 'address_city')}<#if getAttributeValue(identity.attributes, 'address_city')?has_content>, </#if>${getAttributeValue(identity.attributes, 'address_postal_code')}</@td>
+                  <@td>${getAttributeValue(identity.attributes, 'mobile_phone')}<br>${getAttributeValue(identity.attributes, 'email')}</@td>
+                  <td class="text-center">
+                    <#if identity.connectionId??>
+                      <strong class="text-success">#i18n{identitydesk.search_identities.yes}</strong><br>
+                      <span>${getAttributeValue(identity.attributes, 'login')}</span>
                     <#else>
-                    <#assign checked=false />
+                      <strong class="text-danger">#i18n{identitydesk.search_identities.no}</strong>
                     </#if>
-                    <#else>
-                    <#assign checked=true />
+                  </td>
+                  <td><center>${getCertifierPivotBadge(identity.attributes)}</center></td>
+                  <td class="text-center">
+                    <#assign qualityPercent = (identity.quality.quality * 100)?string("0")>
+                    <#assign colorClass = (qualityPercent?number gt 80)?string('success', (qualityPercent?number gt 50)?string('warning', 'danger'))>
+                    <span class="text-${colorClass}-emphasis bg-${colorClass}-subtle border border-${colorClass}-subtle badge rounded-5">${qualityPercent}%</span>
+                  </td>
+                  <@td class="text-end">
+                    <#assign tags>
+                      <b>${getAttributeValue(identity.attributes, 'family_name')}</b> <span style="font-weight:normal">${getAttributeValue(identity.attributes, 'first_name')} <i>${getAttributeValue(identity.attributes, 'preferred_username')}</i></span>
+                      <@tag color="secondary">#i18n{identitydesk.search_identities.detail.cuid} <strong>${identity.customerId!''}</strong></@tag>
+                      <@tag color="secondary">#i18n{identitydesk.search_identities.detail.guid} <strong>${identity.connectionId!''}</strong></@tag>
+                    </#assign>
+                    <@offcanvas targetUrl="jsp/admin/plugins/identitydesk/ManageIdentities.jsp?view_viewIdentity=&customer_id=${identity.customerId}" targetElement="#identity-container" id="summarize-${identity?index}" title=tags btnTitle="#i18n{identitydesk.search_identities.details}" size="auto" bodyClass="p-0" btnIcon="eye" btnTitle=""/>
+                    <#if can_write>
+                      <@aButton href='jsp/admin/plugins/identitydesk/ManageIdentities.jsp?view_modifyIdentity&customer_id=${identity.customerId}' buttonIcon='edit' title='#i18n{identitydesk.search_identities.buttonModifyIdentity}' hideTitle=['all'] />
                     </#if>
-                    <@listGroupItem>
-                    <@checkBox orientation='switch' id='approximate' name='approximate'  labelKey='#i18n{identitydesk.search_identities.approximateSearch}' value='true' mandatory=false  checked=checked />
-                </@listGroupItem></div>
-                  </div>
-                </div>
-            </div>
-            <div class="container-fluid mt-5 px-5" style="margin-top:-54px !important;">
-                <#if identity_list?size gt 0>
-                    <@table  bordered=true>
-                    <thead>
-                        <@tr>
-                            <@th>#</@th>
-                            <@th>#i18n{identitydesk.search_identities.name}</@th>
-                            <@th>#i18n{identitydesk.search_identities.birthplace}</@th>
-                            <@th>#i18n{identitydesk.search_identities.address}</@th>
-                            <@th>#i18n{identitydesk.search_identities.contact}</@th>
-                            <@th><center>#i18n{identitydesk.search_identities.monparis}</center></@th>
-                            <@th><center>#i18n{identitydesk.search_identities.pivot}</center></@th>
-                            <@th><center>#i18n{identitydesk.search_identities.quality}</center></@th>
-                            <@th></@th>
-                        </@tr>
-                    </thead>
-                    <tbody>
-                        <#list identity_list as identity>
-                            <tr class="filtering-item"
-                                <#list service_contract.attributeDefinitions?filter(a -> a.attributeRight.searchable && a.keyName != 'birthplace_code' && a.keyName != 'birthcountry_code' && a.keyName != 'login') as searchableAttr>
-                                    <#list identity.attributes?filter(a -> a.key == searchableAttr.keyName) as attr>
-                                        data-filter-${searchableAttr.keyName}="${attr.value}"
-                                    </#list>
-                                </#list>
-                            >
-                                <@td>
-                                    ${identity?index + 1}
-                                </@td>
-                                <@td>
-                                    <strong>${getAttributeValue(identity.attributes, 'family_name')}</strong>   ${getAttributeValue(identity.attributes, 'first_name')}<br>
-                                    <i>${getAttributeValue(identity.attributes, 'preferred_username')}</i>
-                                </@td>
-                                <@td>${getAttributeValue(identity.attributes, 'birthdate')}<br>
-                                    ${getAttributeValue(identity.attributes, 'birthplace')}<#if getAttributeValue(identity.attributes, 'birthplace')?length != 0>,
-                                    </#if>
-                                    ${getAttributeValue(identity.attributes, 'birthcountry')}<br>
-                                </@td>
-                                <@td>${getAttributeValue(identity.attributes, 'address')}<br>
-                                    ${getAttributeValue(identity.attributes, 'address_city')}<#if getAttributeValue(identity.attributes, 'address_city')?length != 0>,
-                                    </#if>
-                                    ${getAttributeValue(identity.attributes, 'address_postal_code')}<br>
-                                </@td>
-                                <@td>
-                                    ${getAttributeValue(identity.attributes, 'mobile_phone')}<br>
-                                        ${getAttributeValue(identity.attributes, 'email')}
-                                </@td>
-                                <td class="text-center">
-                                    <#if identity.connectionId??>
-                                        <#assign colorClass = "success">
-                                        <strong class="text-${colorClass}">#i18n{identitydesk.search_identities.yes}</strong><br>
-                                        <span>${getAttributeValue(identity.attributes, 'login')}</span>
-                                    <#else>
-                                        <#assign colorClass = "danger">
-                                        <strong class="text-${colorClass}">#i18n{identitydesk.search_identities.no}</strong>
-                                    </#if>
-                                </td>
-                                <td>
-                                    <center>${getCertifierPivotBadge(identity.attributes)}</center>
-                                </td>
-                                <td class="text-center">
-                                    <#assign qualityPercent = (identity.quality.quality * 100)?string("0")>
-                                    <#if qualityPercent?number gt 80>
-                                        <#assign colorClass = "success">
-                                    <#elseif qualityPercent?number gt 50>
-                                        <#assign colorClass = "warning">
-                                    <#else>
-                                        <#assign colorClass = "danger">
-                                    </#if>
-                                    <span class="text-${colorClass}-emphasis bg-${colorClass}-subtle border border-${colorClass}-subtle badge rounded-5">${qualityPercent}%</span>
-                                </td>
-                                <@td class="text-end">
-                              
-                                <#assign tags> 
-<b>${getAttributeValue(identity.attributes, 'family_name')}</b>  <span style="font-weight:normal">${getAttributeValue(identity.attributes, 'first_name')} <i>${getAttributeValue(identity.attributes, 'preferred_username')}</i></span>
-                                    <@tag color="secondary">#i18n{identitydesk.search_identities.detail.cuid} <strong>${identity.customerId!''}</strong></@tag>
-                                    <@tag color="secondary">#i18n{identitydesk.search_identities.detail.guid} <strong>${identity.connectionId!''}</strong></@tag>
-                                </#assign>
-                            
-                            <@offcanvas targetUrl="jsp/admin/plugins/identitydesk/ManageIdentities.jsp?view_viewIdentity=&customer_id=${identity.customerId}" targetElement="#identity-container"  id="summarize-${identity?index}" title=tags btnTitle="#i18n{identitydesk.search_identities.details}" size="auto" bodyClass="p-0" btnIcon="eye" btnTitle=""/>
-                                        <#if can_write>
-                                        <@aButton href='jsp/admin/plugins/identitydesk/ManageIdentities.jsp?view_modifyIdentity&customer_id=${identity.customerId}' buttonIcon='edit' title='#i18n{identitydesk.search_identities.buttonModifyIdentity}'  hideTitle=['all'] />
-                                        </#if>
-                                        <#if return_url?exists>
-                                        <@aButton href='${return_url}?cuid=${identity.customerId}' buttonIcon='external-link' title='#i18n{identitydesk.search_identities.buttonSelectIdentityAndReturn}'  hideTitle=['all'] />
-                                        </#if>
-                                        <#if eligible_identity_to_account_list?seq_contains(identity.customerId)>
-                                            <@aButton href='jsp/admin/plugins/identitydesk/ManageIdentities.jsp?action_createAccount&customer_id=${identity.customerId}&token=${token}' buttonIcon='user-plus' title='#i18n{identitydesk.search_identities.createAccountTask}'  hideTitle=['all'] />
-                                        </#if>
-                                        <#if identity.accountCreationTask??>
-                                            <@aButton href='jsp/admin/plugins/identitydesk/ManageIdentities.jsp?view_displayAccountTask&customer_id=${identity.customerId}&token=${token}' buttonIcon='user-question' title='#i18n{identitydesk.search_identities.displayAccountTask}'  hideTitle=['all'] />
-                                        </#if>
-                                    </div>
-                                </@td>
-                            </tr>
-                        </#list>
-                    </tbody>
-                    </@table>
-                </#if>
-            </div>
-        </@tform>
-    </@pageColumn>
+                    <#if return_url??>
+                      <@aButton href='${return_url}?cuid=${identity.customerId}' buttonIcon='external-link' title='#i18n{identitydesk.search_identities.buttonSelectIdentityAndReturn}' hideTitle=['all'] />
+                    </#if>
+                    <#if eligible_identity_to_account_list?seq_contains(identity.customerId)>
+                      <@aButton href='jsp/admin/plugins/identitydesk/ManageIdentities.jsp?action_createAccount&customer_id=${identity.customerId}&token=${token}' buttonIcon='user-plus' title='#i18n{identitydesk.search_identities.createAccountTask}' hideTitle=['all'] />
+                    </#if>
+                    <#if identity.accountCreationTask??>
+                      <@aButton href='jsp/admin/plugins/identitydesk/ManageIdentities.jsp?view_displayAccountTask&customer_id=${identity.customerId}&token=${token}' buttonIcon='user-question' title='#i18n{identitydesk.search_identities.displayAccountTask}' hideTitle=['all'] />
+                    </#if>
+                  </@td>
+                </tr>
+              </#list>
+            </tbody>
+          </@table>
+        </#if>
+      </div>
+    </@tform>
+  </@pageColumn>
 </@pageContainer>
 <link href="css/admin/plugins/identitydesk/identitydesk.css" rel="stylesheet">
 <script src="js/admin/plugins/identitydesk/identitydesk.js"></script>
