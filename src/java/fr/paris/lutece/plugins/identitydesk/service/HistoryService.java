@@ -4,14 +4,13 @@ import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.common.RequestAuthor;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.common.ResponseStatusType;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.common.ResponseDto;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.history.IdentityHistory;
+import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.history.IdentityHistoryGetResponse;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.history.IdentityHistorySearchRequest;
-import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.history.IdentityHistorySearchResponse;
 import fr.paris.lutece.plugins.identitystore.v3.web.service.IdentityServiceExtended;
 import fr.paris.lutece.plugins.identitystore.web.exception.IdentityStoreException;
 import fr.paris.lutece.portal.service.spring.SpringContextService;
 import fr.paris.lutece.portal.service.util.AppLogService;
 import fr.paris.lutece.portal.service.util.AppPropertiesService;
-import java.util.List;
 
 public class HistoryService {
 
@@ -38,21 +37,18 @@ public class HistoryService {
      *
      * @param customerId The customerId of the identity to fetch the history for.
      * @param author     The author requesting the history.
-     * @return A List containing identity history
+     * @return the history
      * @throws IdentityStoreException If there is an issue with the identity store.
      */
-    public List<IdentityHistory> getIdentityHistory(String customerId, RequestAuthor author)
+    public IdentityHistory getIdentityHistory(String customerId, RequestAuthor author)
             throws IdentityStoreException {
-        IdentityHistorySearchRequest request = new IdentityHistorySearchRequest();
-        request.setCustomerId(customerId);
-        request.setClientCode(_currentClientCode);
-        IdentityHistorySearchResponse response = _serviceIdentity.searchIdentityHistory(request, _currentClientCode,
+        IdentityHistoryGetResponse response = _serviceIdentity.getIdentityHistory(customerId, _currentClientCode,
                 author);
         if (response.getStatus().getType() != ResponseStatusType.OK) {
             logAndDisplayStatusErrorMessage(response);
             return null;
         }
-        return response.getHistories();
+        return response.getHistory();
     }
 
     /**

@@ -165,7 +165,7 @@ public class IdentityJspBean extends MVCAdminJspBean
     private static final String MARK_SEARCH_PARAMS = "search_params";
     private static final String MARK_TASK_CODE = "task_code";
     private static final String MARK_TASK_RESULT_MESSAGE = "task_result_message";
-    private static final String MARK_IDENTITY_HISTORY_LIST = "history_list";
+    private static final String MARK_IDENTITY_HISTORY = "history";
 
     // Views
     private static final String VIEW_SEARCH_IDENTITY = "searchIdentity";
@@ -222,7 +222,7 @@ public class IdentityJspBean extends MVCAdminJspBean
         final String customerId = request.getParameter( "customer_id" );
         final IdentityDto qualifiedIdentity;
         ExtendedIdentityDto extendedIdentity;
-        List<IdentityHistory> localHistories = new ArrayList<>( );
+        IdentityHistory history = null;
 
         initClientCode( request );
         initServiceContract( _currentClientCode );
@@ -247,7 +247,7 @@ public class IdentityJspBean extends MVCAdminJspBean
         }
 
         try {
-           localHistories = HistoryService.getInstance().getIdentityHistory(qualifiedIdentity.getCustomerId(), getAuthor());
+            history = HistoryService.getInstance().getIdentityHistory(qualifiedIdentity.getCustomerId(), getAuthor());
         } catch (IdentityStoreException e) {
             AppLogService.error("Error while retrieving the history for identity [customerId = " + qualifiedIdentity.getCustomerId() + "].", e);
             addError(MESSAGE_GET_IDENTITY_HISTORY_ERROR, getLocale());
@@ -260,7 +260,7 @@ public class IdentityJspBean extends MVCAdminJspBean
         model.put( MARK_REFERENTIAL, _processusReferential );
         model.put( MARK_ATTRIBUTE_INFO_KEY_LIST, _AttributeInfoKeyList );
         model.put( MARK_CAN_WRITE, _canWriteIdentity );
-        model.put( MARK_IDENTITY_HISTORY_LIST, localHistories );
+        model.put( MARK_IDENTITY_HISTORY, history );
         model.put( SecurityTokenService.MARK_TOKEN, SecurityTokenService.getInstance( ).getToken( request, ACTION_MODIFY_IDENTITY ) );
         addReturnUrlMarker( request, model );
 
