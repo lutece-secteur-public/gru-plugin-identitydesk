@@ -33,13 +33,15 @@
  */
 package fr.paris.lutece.plugins.identitydesk.dto;
 
-import fr.paris.lutece.plugins.identitydesk.business.AccountCreationTask;
-import fr.paris.lutece.plugins.identitydesk.business.AccountCreationTaskHome;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.common.IdentityDto;
+import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.task.IdentityTaskDto;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class ExtendedIdentityDto extends IdentityDto
 {
-    private AccountCreationTask accountCreationTask;
+    private List<IdentityTaskDto> tasks = new ArrayList<>();
 
     public ExtendedIdentityDto( final IdentityDto identityDto )
     {
@@ -59,20 +61,11 @@ public class ExtendedIdentityDto extends IdentityDto
         this.getAttributes( ).addAll( identityDto.getAttributes( ) );
     }
 
-    public AccountCreationTask getAccountCreationTask( )
-    {
-        return accountCreationTask;
+    public List<IdentityTaskDto> getTasks() {
+        return tasks;
     }
 
-    public void setAccountCreationTask( AccountCreationTask accountCreationTask )
-    {
-        this.accountCreationTask = accountCreationTask;
-    }
-
-    public static ExtendedIdentityDto from( final IdentityDto identityDto )
-    {
-        final ExtendedIdentityDto extendedIdentityDto = new ExtendedIdentityDto( identityDto );
-        extendedIdentityDto.setAccountCreationTask( AccountCreationTaskHome.get( extendedIdentityDto.getCustomerId( ) ) );
-        return extendedIdentityDto;
+    public void setTasks(List<IdentityTaskDto> tasks) {
+        this.tasks = tasks;
     }
 }

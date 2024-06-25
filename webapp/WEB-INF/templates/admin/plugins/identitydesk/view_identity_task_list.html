@@ -1,0 +1,22 @@
+<#include "search_functions.html" />
+<#include "components/task_card.ftl" />
+<@pageContainer class="bg-secondary">
+    <@pageColumn>
+        <div class="container-xl">
+            <@pageHeader title=title>
+                <#assign searchParamsList=[]>
+                <#list search_params?keys as key>
+                    <#assign searchParamsList +=[key + "=" + (search_params[key]!)]>
+                </#list>
+                <@aButton color='light' title='Retour aux r&eacute;sultats' buttonIcon='chevron-left' href='jsp/admin/plugins/identitydesk/ManageIdentities.jsp?action_searchIdentity&${searchParamsList?join("&")}&approximate=true' />
+            </@pageHeader>
+            <@messages errors=errors warnings=warnings infos=infos />
+            <@input type="hidden" name="token" value="${token}" />
+            <#if identity.tasks?? && identity.tasks?size != 0 >
+                <#list identity.tasks as task>
+                    <@taskCard task=task/>
+                </#list>
+            </#if>
+        </div>
+    </@pageColumn>
+</@pageContainer>

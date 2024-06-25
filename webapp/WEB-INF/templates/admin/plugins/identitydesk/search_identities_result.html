@@ -124,8 +124,8 @@
                     <#if eligible_identity_to_account_list?seq_contains(identity.customerId)>
                       <@aButton href='jsp/admin/plugins/identitydesk/ManageIdentities.jsp?action_createAccount&customer_id=${identity.customerId}&token=${token}' buttonIcon='user-plus' title='#i18n{identitydesk.search_identities.createAccountTask}' hideTitle=['all'] />
                     </#if>
-                    <#if identity.accountCreationTask??>
-                      <@aButton href='jsp/admin/plugins/identitydesk/ManageIdentities.jsp?view_displayAccountTask&customer_id=${identity.customerId}&token=${token}' buttonIcon='user-question' title='#i18n{identitydesk.search_identities.displayAccountTask}' hideTitle=['all'] />
+                    <#if identity.tasks?size != 0>
+                        <@aButton href='jsp/admin/plugins/identitydesk/ManageIdentities.jsp?view_displayIdentityTaskList&customer_id=${identity.customerId}&token=${token}' buttonIcon='list' title='#i18n{identitydesk.search_identities.displayIdentityTaskList}'  hideTitle=['all'] />
                     </#if>
                   </@td>
                 </tr>

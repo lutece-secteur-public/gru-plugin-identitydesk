@@ -34,7 +34,6 @@
 package fr.paris.lutece.plugins.identitydesk.web;
 
 import fr.paris.lutece.api.user.User;
-import fr.paris.lutece.plugins.identitydesk.business.AccountCreationTaskHome;
 import fr.paris.lutece.plugins.identitydesk.business.LocalIdentityDto;
 import fr.paris.lutece.plugins.identitydesk.cache.ServiceAttributeKeyReferentialCache;
 import fr.paris.lutece.plugins.identitydesk.cache.ServiceContractCache;
@@ -42,6 +41,7 @@ import fr.paris.lutece.plugins.identitydesk.cache.ServiceProcessusReferentialCac
 import fr.paris.lutece.plugins.identitydesk.dto.ExtendedIdentityDto;
 import fr.paris.lutece.plugins.identitydesk.rbac.AccessIdentityResource;
 import fr.paris.lutece.plugins.identitydesk.service.HistoryService;
+import fr.paris.lutece.plugins.identitydesk.service.IdentityDeskService;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.common.AttributeDto;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.common.AttributeKeyDto;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.common.AttributeStatus;
@@ -66,7 +66,6 @@ import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.task.IdentityResource
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.task.IdentityTaskCreateRequest;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.task.IdentityTaskCreateResponse;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.task.IdentityTaskDto;
-import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.task.IdentityTaskGetStatusResponse;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.task.IdentityTaskType;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.util.Constants;
 import fr.paris.lutece.plugins.identitystore.v3.web.service.IdentityService;
@@ -109,7 +108,7 @@ public class IdentityJspBean extends MVCAdminJspBean
     private static final String TEMPLATE_SEARCH_IDENTITIES_RESULT = "/admin/plugins/identitydesk/search_identities_result.html";
     private static final String TEMPLATE_SEARCH_IDENTITIES = "/admin/plugins/identitydesk/search_identities.html";
     private static final String TEMPLATE_TASK_CREATION_RESULT = "/admin/plugins/identitydesk/view_task_creation_result.html";
-    private static final String TEMPLATE_DISPLAY_ACCOUNT_TASK = "/admin/plugins/identitydesk/view_account_task.html";
+    private static final String TEMPLATE_DISPLAY_IDENTITY_TASK_LIST = "/admin/plugins/identitydesk/view_identity_task_list.html";
     private static final String TEMPLATE_VIEW_IDENTITY = "/admin/plugins/identitydesk/view_identity.html";
 
 
@@ -129,8 +128,9 @@ public class IdentityJspBean extends MVCAdminJspBean
     private static final String MESSAGE_GET_SERVICE_CONTRACT_ERROR = "identitydesk.message.get_service_contract.error";
     private static final String MESSAGE_SEARCH_IDENTITY_REQUIREDFIELD = "identitydesk.message.search_identity.requiredfield";
     private static final String MESSAGE_GET_REFERENTIAL_ERROR = "referential error";
-    private static final String MESSAGE_GET_ACCOUNT_TASK_ERROR = "identitydesk.message.identity_account_task.error";
     private static final String MESSAGE_GET_IDENTITY_HISTORY_ERROR = "identitydesk.message.get_identity_history.error";
+    private static final String MESSAGE_CREATE_IDENTITY_ACCOUNT_ERROR = "identitydesk.message.create_identity_account.error";
+    private static final String PROPERTY_PAGE_TITLE_CREATE_TASK_IDENTITY = "identitydesk.create_identity_task.pageTitle";
 
     // Properties for page titles
     private static final String PROPERTY_PAGE_TITLE_MANAGE_IDENTITIES = "identitydesk.manage_identities.pageTitle";
@@ -171,7 +171,7 @@ public class IdentityJspBean extends MVCAdminJspBean
     private static final String VIEW_SEARCH_IDENTITY = "searchIdentity";
     private static final String VIEW_CREATE_IDENTITY = "createIdentity";
     private static final String VIEW_MODIFY_IDENTITY = "modifyIdentity";
-    private static final String VIEW_ACCOUNT_TASK = "displayAccountTask";
+    private static final String VIEW_IDENTITY_TASK_LIST = "displayIdentityTaskList";
     private static final String VIEW_VIEW_IDENTITY = "viewIdentity";
 
     // Actions
@@ -237,7 +237,7 @@ public class IdentityJspBean extends MVCAdminJspBean
                 return getSearchIdentities( request );
             }
             qualifiedIdentity = getResponse.getIdentities( ).get( 0 );
-            extendedIdentity = ExtendedIdentityDto.from( qualifiedIdentity );
+            extendedIdentity = IdentityDeskService.instance().toExtendedIdentityDto( qualifiedIdentity, this.getAuthor() );
         }
         catch( final IdentityStoreException e )
         {
@@ -246,15 +246,17 @@ public class IdentityJspBean extends MVCAdminJspBean
             return getSearchIdentities( request );
         }
 
-        try {
+        try
+        {
             history = HistoryService.getInstance().getIdentityHistory(qualifiedIdentity.getCustomerId(), getAuthor());
-        } catch (IdentityStoreException e) {
+        }
+        catch (IdentityStoreException e)
+        {
             AppLogService.error("Error while retrieving the history for identity [customerId = " + qualifiedIdentity.getCustomerId() + "].", e);
             addError(MESSAGE_GET_IDENTITY_HISTORY_ERROR, getLocale());
         }
 
-
-        Map<String, Object> model = getModel( );
+        final Map<String, Object> model = getModel( );
         model.put( MARK_IDENTITY, extendedIdentity );
         model.put( MARK_SERVICE_CONTRACT, _serviceContract );
         model.put( MARK_REFERENTIAL, _processusReferential );
@@ -328,8 +330,8 @@ public class IdentityJspBean extends MVCAdminJspBean
         return searchIdentitiesAndCreatePage( request );
     }
 
-    @View( VIEW_ACCOUNT_TASK )
-    public String getDisplayAccountTask( final HttpServletRequest request ) throws AccessDeniedException
+    @View(VIEW_IDENTITY_TASK_LIST)
+    public String getDisplayIdentityTaskList( final HttpServletRequest request ) throws AccessDeniedException
     {
         // CSRF Token control
         if ( !SecurityTokenService.getInstance( ).validate( request, ACTION_SEARCH_IDENTITY ) )
@@ -338,7 +340,6 @@ public class IdentityJspBean extends MVCAdminJspBean
         }
 
         final String customerId = request.getParameter( Constants.PARAM_ID_CUSTOMER );
-        String taskResultMessage = null;
         final IdentityDto qualifiedIdentity;
         try
         {
@@ -357,41 +358,16 @@ public class IdentityJspBean extends MVCAdminJspBean
             return getSearchIdentities( request );
         }
 
-        final LocalIdentityDto dto = LocalIdentityDto.from( qualifiedIdentity, _serviceContract );
-        if ( dto.getAccountCreationTask( ) != null )
-        {
-            try
-            {
-                final IdentityTaskGetStatusResponse identityTaskStatus = _identityService.getIdentityTaskStatus( dto.getAccountCreationTask( ).getTaskCode( ),
-                        _currentClientCode, getAuthor( ) );
-                if ( identityTaskStatus.getStatus( ).getHttpCode( ) == 200 )
-                {
-                    dto.getAccountCreationTask( ).setStatus( identityTaskStatus.getTaskStatus( ) );
-                }
-                taskResultMessage = identityTaskStatus.getStatus( ).getMessage( );
-            }
-            catch( final IdentityStoreException e )
-            {
-                AppLogService.error( "Error while trying to create an account for identity [customerId = " + customerId + "].", e );
-                addError( MESSAGE_CREATE_IDENTITY_ERROR, getLocale( ) );
-                taskResultMessage = e.getMessage( );
-            }
-        }
-        else
-        {
-            AppLogService.error( "Error while trying to get the store account task for identity [customerId = " + customerId + "] from database." );
-            addError( MESSAGE_GET_ACCOUNT_TASK_ERROR, getLocale( ) );
-        }
+        final LocalIdentityDto dto = IdentityDeskService.instance().toLocalIdentityDto( qualifiedIdentity, _serviceContract, this.getAuthor( ) );
 
         final Map<String, Object> model = getModel( );
         model.put( MARK_IDENTITY, dto );
         model.put( MARK_SERVICE_CONTRACT, _serviceContract );
-        model.put( MARK_TASK_RESULT_MESSAGE, taskResultMessage );
         // Ajouter les paramètres de recherche au modèle
-        Map<String, String> searchParams = collectSearchParams( );
+        final Map<String, String> searchParams = collectSearchParams( );
         model.put( MARK_SEARCH_PARAMS, searchParams );
         model.put( SecurityTokenService.MARK_TOKEN, SecurityTokenService.getInstance( ).getToken( request, ACTION_MODIFY_IDENTITY ) );
-        return getPage( PROPERTY_PAGE_TITLE_MANAGE_IDENTITIES, TEMPLATE_DISPLAY_ACCOUNT_TASK, model );
+        return getPage( PROPERTY_PAGE_TITLE_MANAGE_IDENTITIES, TEMPLATE_DISPLAY_IDENTITY_TASK_LIST, model );
     }
 
     @Action( ACTION_CREATE_ACCOUNT )
@@ -435,18 +411,17 @@ public class IdentityJspBean extends MVCAdminJspBean
             if ( identityTask.getStatus( ).getHttpCode( ) == 201 )
             {
                 taskCode = identityTask.getTaskCode( );
-                AccountCreationTaskHome.create( customerId, taskCode );
             }
             taskResultMessage = identityTask.getStatus( ).getMessage( );
         }
         catch( final IdentityStoreException e )
         {
             AppLogService.error( "Error while trying to create an account for identity [customerId = " + customerId + "].", e );
-            addError( MESSAGE_CREATE_IDENTITY_ERROR, getLocale( ) );
+            addError( MESSAGE_CREATE_IDENTITY_ACCOUNT_ERROR, getLocale( ) );
             taskResultMessage = e.getMessage( );
         }
 
-        final LocalIdentityDto dto = LocalIdentityDto.from( qualifiedIdentity, _serviceContract );
+        final LocalIdentityDto dto = IdentityDeskService.instance().toLocalIdentityDto( qualifiedIdentity, _serviceContract, this.getAuthor() );
         final Map<String, Object> model = getModel( );
         model.put( MARK_IDENTITY, dto );
         model.put( MARK_SERVICE_CONTRACT, _serviceContract );
@@ -456,7 +431,7 @@ public class IdentityJspBean extends MVCAdminJspBean
         Map<String, String> searchParams = collectSearchParams( );
         model.put( MARK_SEARCH_PARAMS, searchParams );
         model.put( SecurityTokenService.MARK_TOKEN, SecurityTokenService.getInstance( ).getToken( request, ACTION_MODIFY_IDENTITY ) );
-        return getPage( PROPERTY_PAGE_TITLE_MANAGE_IDENTITIES, TEMPLATE_TASK_CREATION_RESULT, model );
+        return getPage( PROPERTY_PAGE_TITLE_CREATE_TASK_IDENTITY, TEMPLATE_TASK_CREATION_RESULT, model );
     }
 
     private String searchIdentitiesAndCreatePage( final HttpServletRequest request ) throws AccessDeniedException
@@ -518,7 +493,7 @@ public class IdentityJspBean extends MVCAdminJspBean
         final boolean rulesRequirementsReached = _searchRules.stream( )
                 .anyMatch( rule -> rule.stream( ).allMatch( key -> _searchAttributes.stream( ).map( SearchAttribute::getKey ).anyMatch( key::equals ) ) );
 
-        final List<ExtendedIdentityDto> extendedIdentities = identities.stream( ).map( ExtendedIdentityDto::from ).collect( Collectors.toList( ) );
+        final List<ExtendedIdentityDto> extendedIdentities = identities.stream( ).map( identityDto -> IdentityDeskService.instance().toExtendedIdentityDto( identityDto, this.getAuthor( ) ) ).collect( Collectors.toList( ) );
         final List<String> eligibleCustomerIds = extendedIdentities.stream( ).filter( this::eligibleToAccountCreation ).map( IdentityDto::getCustomerId )
                 .collect( Collectors.toList( ) );
         final Map<String, Object> model = getModel( );
@@ -594,7 +569,7 @@ public class IdentityJspBean extends MVCAdminJspBean
     {
         Map<String, Object> model = getModel( );
 
-        model.put( MARK_IDENTITY, LocalIdentityDto.from( identity, _serviceContract ) );
+        model.put( MARK_IDENTITY, IdentityDeskService.instance().toLocalIdentityDto( identity, _serviceContract, this.getAuthor() ) );
         model.put( MARK_SERVICE_CONTRACT, _serviceContract );
         model.put( MARK_AUTOCOMPLETE_CITY_ENDPOINT, _autocompleteCityEndpoint );
         model.put( MARK_AUTOCOMPLETE_COUNTRY_ENDPOINT, _autocompleteCountryEndpoint );
@@ -693,7 +668,7 @@ public class IdentityJspBean extends MVCAdminJspBean
             addError( MESSAGE_GET_IDENTITY_ERROR, getLocale( ) );
             return getSearchIdentities( request );
         }
-        final LocalIdentityDto dto = LocalIdentityDto.from( qualifiedIdentity, _serviceContract );
+        final LocalIdentityDto dto = IdentityDeskService.instance().toLocalIdentityDto( qualifiedIdentity, _serviceContract, this.getAuthor( ) );
         Map<String, Object> model = getModel( );
         model.put( MARK_IDENTITY, dto );
         model.put( MARK_SERVICE_CONTRACT, _serviceContract );
@@ -1202,15 +1177,6 @@ public class IdentityJspBean extends MVCAdminJspBean
         {
             final StringBuilder error = new StringBuilder( "Computing Identity " ).append( identityDto.getCustomerId( ) )
                     .append( " eligibility to account creation :: " ).append( "Already connected" );
-            AppLogService.debug( error );
-            return false;
-        }
-
-        if ( identityDto.getAccountCreationTask( ) != null && StringUtils.isNotBlank( identityDto.getAccountCreationTask( ).getTaskCode( ) ) )
-        {
-            final StringBuilder error = new StringBuilder( "Computing Identity " + identityDto.getCustomerId( ) )
-                    .append( " eligibility to account creation :: " ).append( "Already have a pending task with code " )
-                    .append( identityDto.getAccountCreationTask( ).getTaskCode( ) );
             AppLogService.debug( error );
             return false;
         }
