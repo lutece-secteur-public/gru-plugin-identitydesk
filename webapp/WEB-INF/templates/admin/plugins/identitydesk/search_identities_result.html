@@ -98,7 +98,7 @@
                       <@tag color="secondary">#i18n{identitydesk.search_identities.detail.cuid} <strong>${identity.customerId!''}</strong></@tag>
                       <@tag color="secondary">#i18n{identitydesk.search_identities.detail.guid} <strong>${identity.connectionId!''}</strong></@tag>
                     </#assign>
-                    <@offcanvas targetUrl="jsp/admin/plugins/identitydesk/ManageIdentities.jsp?view_viewIdentity=&customer_id=${identity.customerId}" targetElement="#identity-container" id="summarize-${identity?index}" title=tags btnTitle="#i18n{identitydesk.search_identities.details}" size="auto" bodyClass="p-0" btnIcon="eye" btnTitle=""/>
+                    <@offcanvas targetUrl="jsp/admin/plugins/identitydesk/ManageIdentities.jsp?view_viewIdentity=&customer_id=${identity.customerId}" targetElement="#identity-container" id="summarize-${identity?index}" title=tags btnTitle="#i18n{identitydesk.search_identities.details}" size="auto" bodyClass="p-0" btnIcon="eye" btnTitleShow=false  />
                     <#if can_write>
                       <@aButton href='jsp/admin/plugins/identitydesk/ManageIdentities.jsp?view_modifyIdentity&customer_id=${identity.customerId}' buttonIcon='edit' title='#i18n{identitydesk.search_identities.buttonModifyIdentity}' hideTitle=['all'] />
                     </#if>
