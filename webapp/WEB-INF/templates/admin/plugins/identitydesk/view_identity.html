@@ -100,7 +100,7 @@
                                             <#list attributeHistory.attributeChanges as attributeChange>
                                             <#if identityChange.modificationDate?time?string("HH:mm")==attributeChange.modificationDate?time?string("HH:mm")>
                                                 <tr>
-                                                <td><strong>${attributeHistory.attributeKey}</strong></td>
+                                                <td><strong>${getName(attributeHistory.attributeKey)}</strong></td>
                                                 <td>${attributeChange.attributeValue!''}</td>
                                                 <td>${attributeChange.certificationProcessus!''}</td>
                                                 <td style="max-width:400px">${attributeChange.changeMessage!''}</td>
