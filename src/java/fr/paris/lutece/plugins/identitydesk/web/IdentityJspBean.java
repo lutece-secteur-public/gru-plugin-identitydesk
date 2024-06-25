@@ -194,7 +194,7 @@ public class IdentityJspBean extends MVCAdminJspBean
     private List<AttributeKeyDto> _attributesReferential;
     private List<AttributeStatus> _attributeStatuses = new ArrayList<>( );
     private String _currentClientCode = AppPropertiesService.getProperty( "identitydesk.default.client.code" );
-    private String _currentReturnUrl = AppPropertiesService.getProperty( "identitydesk.default.returnUrl" );
+    private String _returnUrl = null;
 
     boolean _canCreateIdentity = false;
     boolean _canWriteIdentity = false;
@@ -285,10 +285,12 @@ public class IdentityJspBean extends MVCAdminJspBean
         initClientCode( request );
         initServiceContract( _currentClientCode );
         initReferential( _currentClientCode );
-
-        if ( Boolean.parseBoolean( request.getParameter( PARAMETER_NEW_SEARCH ) ) )
-        {
-            _searchAttributes = new ArrayList<>( );
+        
+        if (Boolean.parseBoolean(request.getParameter(PARAMETER_NEW_SEARCH))) {
+            _searchAttributes = new ArrayList<>();
+            _returnUrl = null;
+        } else if (AppPropertiesService.getPropertyBoolean(PROPERTY_ALLOW_RETURN_URL_DYNAMIC_CHANGE, false)) {
+            _returnUrl = StringUtils.defaultIfBlank(request.getParameter("return_url"), _returnUrl);
         }
 
         _canCreateIdentity = RBACService.isAuthorized( new AccessIdentityResource( ), AccessIdentityResource.PERMISSION_CREATE, (User) getUser( ) );
@@ -303,8 +305,8 @@ public class IdentityJspBean extends MVCAdminJspBean
         model.put( MARK_CAN_CREATE, _canCreateIdentity );
         model.put( MARK_RULES_REQ_REACHED, rulesRequirementsReached );
         model.put( SecurityTokenService.MARK_TOKEN, SecurityTokenService.getInstance( ).getToken( request, ACTION_SEARCH_IDENTITY ) );
-
         addReturnUrlMarker( request, model );
+
         return getPage( PROPERTY_PAGE_TITLE_MANAGE_IDENTITIES, TEMPLATE_SEARCH_IDENTITIES, model );
     }
 
@@ -988,13 +990,10 @@ public class IdentityJspBean extends MVCAdminJspBean
      */
     private void addReturnUrlMarker( final HttpServletRequest request, final Map<String, Object> model )
     {
-        final String returnUrl = request.getParameter( "return_url" );
-        if ( StringUtils.isNotBlank( returnUrl ) && AppPropertiesService.getPropertyBoolean( PROPERTY_ALLOW_RETURN_URL_DYNAMIC_CHANGE, false ) )
+        if( _returnUrl != null )
         {
-            _currentReturnUrl = returnUrl;
+            model.put( MARK_RETURN_URL, _returnUrl );
         }
-
-        model.put( MARK_RETURN_URL, _currentReturnUrl );
     }
 
     /**

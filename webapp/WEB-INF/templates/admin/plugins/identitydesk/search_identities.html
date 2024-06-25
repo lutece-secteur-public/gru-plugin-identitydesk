@@ -16,7 +16,8 @@
                     </a>
                 </#assign>
             <#else>
-                <#assign description>#i18n{identitydesk.search_identities.description}</#assign>
+                <#assign description>#i18n{identitydesk.search_identities.description}
+                </#assign>
             </#if>
             <@tform action="jsp/admin/plugins/identitydesk/ManageIdentities.jsp?action_searchIdentity" class="container-fluid p-5" params='style="max-width:1600px !important"'>
                 <@input type="hidden" name="token" value="${token}"/>
@@ -24,6 +25,12 @@
                 <@input type="hidden" name="return_url" value="${(return_url)!''}"/>
                 <div class="jumbotron jumbotron-fluid text-center">
                     <div class="mb-5">
+                        <#if return_url?exists>
+                        <@aButton href="${return_url}">
+                            <small> <i class="ti ti-arrow-left"></i> Retour &agrave; votre application</small>
+                        </@aButton>
+                        </#if>
+                        <br><br>
                         <@pageHeader title='${title}' description='${description}'>
                         </@pageHeader>
                         <@messages errors=errors />
