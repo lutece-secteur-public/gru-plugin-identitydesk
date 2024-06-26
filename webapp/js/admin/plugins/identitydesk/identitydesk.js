@@ -40,6 +40,7 @@ document.addEventListener('DOMContentLoaded', () => {
         birthCountryCertif: document.getElementById('birthcountry_code-certif'),
         birthCountryRequiredMsg: document.getElementById('birthcountry_required_msg'),
         birthPlaceExternalContainer: document.getElementById('birthplace-external-container'),
+        birthPlaceExternalInput: document.getElementById('birthplace-external-container').querySelector('input')
     };
     const initialValues = {
         birthPlaceCode: elements.birthPlaceCode?.value || '',
@@ -112,7 +113,10 @@ document.addEventListener('DOMContentLoaded', () => {
             applyBirthRules();
             applyBirthPlaceRules();
         });
-        elements.birthCountryCertif?.addEventListener('change', applyBirthRules);
+        elements.birthCountryCertif.addEventListener('change', () => {
+            applyBirthRules();
+            applyBirthPlaceRules();
+        });
         elements.birthDate?.addEventListener('change', applyBirthRules);
     };
     /**
@@ -140,18 +144,36 @@ document.addEventListener('DOMContentLoaded', () => {
         const birthPlaceContainer = document.getElementById('birthplace');
         if (elements.birthCountryCode.value !== "" && elements.birthCountryCode.value !== "99100") {
             elements.birthPlaceExternalContainer.classList.remove('d-none');
-            elements.birthPlaceExternalContainer.querySelector('input').setAttribute('name', 'birthplace');
+            elements.birthPlaceExternalInput.setAttribute('name', 'birthplace');
+            if ( elements.birthPlaceExternalInput.value == "" ) {
+                elements.birthPlaceCertif.removeAttribute('required');
+                elements.birthPlaceCertif.parentElement.querySelector('.text-danger')?.remove();    
+            }
             birthPlaceContainer.classList.add('d-none');
             birthPlaceContainer.querySelector('input').removeAttribute('name');
             elements.birthPlaceCertif.setAttribute('name', 'birthplace-certif');
         } else {
             elements.birthPlaceExternalContainer.classList.add('d-none');
-            elements.birthPlaceExternalContainer.querySelector('input').setAttribute('name', 'birthplace_external');
+            elements.birthPlaceExternalInput.setAttribute('name', 'birthplace_external');
             birthPlaceContainer.classList.remove('d-none');
             birthPlaceContainer.querySelector('input').setAttribute('name', 'birthplace');
             elements.birthPlaceCertif.setAttribute('name', 'birthplace_code-certif');
         }
     };
+    elements.birthPlaceExternalInput.addEventListener('input', () => {
+        if (elements.birthCountryCode.value !== "" && elements.birthCountryCode.value !== "99100") {
+            if (birthPlaceExternalInput.value === '') {
+                elements.birthPlaceCertif.removeAttribute('required');
+                elements.birthPlaceCertif.parentElement.querySelector('.text-danger')?.remove();
+            } else {
+                elements.birthPlaceCertif.setAttribute('required', true);
+                const formLabel = elements.birthPlaceCertif.parentElement.querySelector('.form-label');
+                if (!formLabel.querySelector('.text-danger')) {
+                    formLabel.insertAdjacentHTML('beforeend', '<span class="text-danger fw-bolder"><i class="ti ti-asterisk"></i></span>');
+                }
+            }
+        }
+    });
     document.querySelectorAll('.identitydesk-js-rules input, .identitydesk-js-rules select').forEach((field) => {
         field.addEventListener('change', applyCertifRules);
     });
