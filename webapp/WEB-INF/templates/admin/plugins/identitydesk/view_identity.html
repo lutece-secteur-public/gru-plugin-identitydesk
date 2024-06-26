@@ -52,26 +52,26 @@
                             <div class="accordion-item">
                             <h2 class="accordion-header" id="heading${identityChange.modificationDate?string('yyyyMMddHHmmss')}">
                                 <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse${identityChange.modificationDate?string('yyyyMMddHHmmss')}" aria-expanded="false" aria-controls="collapse${identityChange.modificationDate?string('yyyyMMddHHmmss')}">
-                                <div class="d-flex w-100 justify-content-between">
-                                    <div>
-                                    <i class="fw-normal small">${identityChange.modificationDate?datetime} - ${identityChange.author.type!''}</i>
-                                    <p>${identityChange.author.name!''}</p>
-                                    <small>
-                                        <#if identityChange.monParisActive?? && identityChange.monParisActive><@tag color="success">L'identit&eacute; a &eacute;t&eacute; activ&eacute;e</@tag></#if>
-                                        <#if identityChange.deleted?? && identityChange.deleted><@tag color="danger">L'identit&eacute; a &eacute;t&eacute; supprim&eacute;e</@tag></#if>
-                                        <#if identityChange.merged?? && identityChange.merged><@tag color="warning">L'identit&eacute; a &eacute;t&eacute; fusionn&eacute;e</@tag></#if>
-                                    </small>
+                                    <div class="d-flex w-100 justify-content-between align-items-center">
+                                        <div>
+                                            <i class="fw-normal small">${identityChange.modificationDate?datetime} - ${identityChange.clientCode!''} - ${identityChange.author.type!''} </i>
+                                            <p class="mb-0">${identityChange.author.name!''}</p>
+                                            <small>
+                                                <#if identityChange.monParisActive?? && identityChange.monParisActive><@tag color="success">L'identit&eacute; a &eacute;t&eacute; activ&eacute;e</@tag></#if>
+                                                <#if identityChange.deleted?? && identityChange.deleted><@tag color="danger">L'identit&eacute; a &eacute;t&eacute; supprim&eacute;e</@tag></#if>
+                                                <#if identityChange.merged?? && identityChange.merged><@tag color="warning">L'identit&eacute; a &eacute;t&eacute; fusionn&eacute;e</@tag></#if>
+                                            </small>
+                                        </div>
+                                        <div class="d-flex align-items-center ps-5">
+                                            <#if identityChange.changeType?? && identityChange.changeStatus??>
+                                                <#if identityChange.changeStatus=="SUCCESS">
+                                                    <@tag color="success">#i18n{identitydesk.view_identity.${identityChange.changeType?lower_case}.${identityChange.changeStatus?lower_case}}</@tag>
+                                                <#else>
+                                                    <@tag color="danger">#i18n{identitydesk.view_identity.${identityChange.changeType?lower_case}.${identityChange.changeStatus?lower_case}}</@tag>
+                                                </#if>
+                                            </#if>
+                                        </div>
                                     </div>
-                                    <div class="ps-5 pe-3">
-                                    <#if identityChange.changeType?? && identityChange.changeStatus??>
-                                        <#if identityChange.changeStatus=="SUCCESS">
-                                        <@tag color="success">#i18n{identitydesk.view_identity.${identityChange.changeType?lower_case}.${identityChange.changeStatus?lower_case}}</@tag>
-                                        <#else>
-                                        <@tag color="danger">#i18n{identitydesk.view_identity.${identityChange.changeType?lower_case}.${identityChange.changeStatus?lower_case}}</@tag>
-                                        </#if>
-                                    </#if>
-                                    </div>
-                                </div>
                                 </button>
                             </h2>
                             <div id="collapse${identityChange.modificationDate?string('yyyyMMddHHmmss')}" class="accordion-collapse collapse bg-light" aria-labelledby="heading${identityChange.modificationDate?string('yyyyMMddHHmmss')}" data-bs-parent="#identityHistoryAccordion">
@@ -215,6 +215,7 @@
                                                 <tr>
                                                     <th><@icon style="arrow-up" /> #i18n{identitydesk.view_identity.modification_date}</th>
                                                     <th>#i18n{identitydesk.view_identity.author}</th>
+                                                    <th>#i18n{identitydesk.view_identity.client}</th>
                                                     <th>#i18n{identitydesk.view_identity.value}</th>
                                                     <th>#i18n{identitydesk.view_identity.certification}</th>
                                                     <th style="max-width:400px">#i18n{identitydesk.view_identity.message}</th>
@@ -228,6 +229,7 @@
                                                             <tr>
                                                                 <td>${attributeChange.modificationDate?string("dd/MM/yyyy HH:mm")}</td>
                                                                 <td>${attributeChange.authorName!''}</td>
+                                                                <td>${attributeChange.clientCode!''}</td>
                                                                 <td class="fw-bolder">
                                                                     <#if attributeChange.attributeKey == "gender" && attributeChange.attributeValue??>
                                                                         <#switch attributeChange.attributeValue>
