@@ -195,7 +195,7 @@
             </#if>
         </#list>        
         <#assign mandatory = attr.mandatory>
-        <#assign certMandatory><#if mandatory>true<#elseif certifierFound>true<#else>false</#if></#assign>
+        <#assign certMandatory><#if mandatory>true<#elseif certifierFound>true<#elseif attr.value??>true<#else>false</#if></#assign>
         <#assign noRequiredClass> <#if !mandatory & !certMandatory?boolean>identitydesk-js-rules</#if> </#assign>
         <#assign class>identitydesk-attribute ${noRequiredClass} </#assign>
             <#if attr.key == 'birthplace' & isUpdateAllowed >
@@ -269,8 +269,13 @@
             <small class="d-block"><i class="ti ti-info-circle"></i> ${attr.description}</small>
             </div>
             </#if>
+            <#if certifierCode!="" && !certifierFound>
+                <div class="col-12 mt-1 mb-2">
+                    <b class="ms-2 text-danger"><small>#i18n{"identitydesk.message.certifier_not_found"} (${certifierCode})</small></b>
+                </div>
+            </#if>
             <#if attribute_statuses?size gt 0>
-            <div class="col-12 my-2">
+            <div class="col-12 mt-1 mb-2">
             <#list attribute_statuses?filter(s -> s.key == attr.key) as status>
                 <#if status.status.type == 'SUCCESS'>
                     <b class="ms-2 text-success"><small>#i18n{${status.messageKey}}</small></b>
