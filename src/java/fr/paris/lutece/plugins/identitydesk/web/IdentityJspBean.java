@@ -34,6 +34,7 @@
 package fr.paris.lutece.plugins.identitydesk.web;
 
 import fr.paris.lutece.api.user.User;
+import fr.paris.lutece.plugins.identitydesk.business.LocalAttributeDto;
 import fr.paris.lutece.plugins.identitydesk.business.LocalIdentityDto;
 import fr.paris.lutece.plugins.identitydesk.cache.ServiceAttributeKeyReferentialCache;
 import fr.paris.lutece.plugins.identitydesk.cache.ServiceContractCache;
@@ -223,7 +224,7 @@ public class IdentityJspBean extends MVCAdminJspBean
     @View ( VIEW_VIEW_IDENTITY )
     public String getViewIdentity( HttpServletRequest request ) throws AccessDeniedException
     {
-        final String customerId = request.getParameter( "customer_id" );
+        final String customerId = request.getParameter( Constants.PARAM_ID_CUSTOMER );
         final IdentityDto qualifiedIdentity;
         ExtendedIdentityDto extendedIdentity;
         IdentityHistory history = null;
@@ -654,7 +655,7 @@ public class IdentityJspBean extends MVCAdminJspBean
         {
             throw new AccessDeniedException( "You don't have the right to modify identities." );
         }
-        final String customerId = request.getParameter( "customer_id" );
+        final String customerId = request.getParameter( Constants.PARAM_ID_CUSTOMER );
         final IdentityDto qualifiedIdentity;
         try
         {
@@ -672,7 +673,8 @@ public class IdentityJspBean extends MVCAdminJspBean
             addError( MESSAGE_GET_IDENTITY_ERROR, getLocale( ) );
             return getSearchIdentities( request );
         }
-        final LocalIdentityDto dto = IdentityDeskService.instance().toLocalIdentityDto( qualifiedIdentity, _serviceContract, this.getAuthor( ) );
+
+        final LocalIdentityDto dto = keepModificationFormData( qualifiedIdentity, request );
         Map<String, Object> model = getModel( );
         model.put( MARK_IDENTITY, dto );
         model.put( MARK_SERVICE_CONTRACT, _serviceContract );
@@ -774,6 +776,44 @@ public class IdentityJspBean extends MVCAdminJspBean
 
         updateSearchAttributes( request );
         return getModifyIdentity( request ); // Rediriger vers la page de modification
+    }
+
+
+    private LocalIdentityDto keepModificationFormData( final IdentityDto qualifiedIdentity,final HttpServletRequest request )
+    {
+        final LocalIdentityDto dto = IdentityDeskService.instance().toLocalIdentityDto( qualifiedIdentity, _serviceContract, this.getAuthor( ) );
+        List<LocalAttributeDto> attributeList = dto.getAttributeList();
+        List<LocalAttributeDto> returnedList = new ArrayList<>();
+
+        for(LocalAttributeDto attribute : attributeList)
+        {
+            String value = request.getParameter(attribute.getKey());
+            String certif = request.getParameter(attribute.getKey() + PARAMETER_ATTR_CERT_SUFFIX);
+            if(StringUtils.equals(attribute.getKey(), Constants.PARAM_BIRTH_DATE) && StringUtils.isNotBlank(value)){
+                try
+                {
+                    Date date = new SimpleDateFormat( "yyyy-MM-dd" ).parse( value );
+                    value = new SimpleDateFormat( "dd/MM/yyyy" ).format( date );
+                }
+                catch( ParseException e )
+                {
+                    AppLogService.error( "Can't convert the date: " + value, e );
+                }
+            }
+            if (StringUtils.isNotBlank(value) && !StringUtils.equals(attribute.getValue(), value))
+            {
+                attribute.setValue(value);
+            }
+            if (StringUtils.isNotBlank(certif) && !StringUtils.equals(attribute.getCertifier(), certif))
+            {
+                attribute.setCertifier(certif);
+            }
+
+            returnedList.add(attribute);
+        }
+        dto.getAttributeList().clear();
+        dto.getAttributeList().addAll( returnedList );
+        return dto;
     }
 
     /**
@@ -954,7 +994,7 @@ public class IdentityJspBean extends MVCAdminJspBean
      */
     private void initClientCode( final HttpServletRequest request )
     {
-        String clientCode = request.getParameter( "client_code" );
+        String clientCode = request.getParameter( Constants.PARAM_CLIENT_CODE );
         if ( !StringUtils.isBlank( clientCode ) && AppPropertiesService.getPropertyBoolean( PROPERTY_ALLOW_CLIENT_CODE_DYNAMIC_CHANGE, false ) )
         {
             _currentClientCode = clientCode;
