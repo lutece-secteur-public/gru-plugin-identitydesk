@@ -1190,7 +1190,7 @@ public class IdentityJspBean extends MVCAdminJspBean
                 || ( pivotAttributes.size( ) == pivotKeys.size( ) - 1 // Not born in france
                         && pivotAttributes.stream( ).map( AttributeDto::getKey ).noneMatch( s -> s.equals( Constants.PARAM_BIRTH_PLACE_CODE ) )
                         && pivotAttributes.stream( ).anyMatch( attributeDto -> attributeDto.getKey( ).equals( Constants.PARAM_BIRTH_COUNTRY_CODE )
-                                && attributeDto.getValue( ).equals( "99100" ) ) ) )
+                                && !attributeDto.getValue( ).equals( "99100" ) ) ) )
         {
             final List<String> errors = new ArrayList<>( );
             final AttributeCertificationProcessusDto attributeCertificationProcessusDto = _processusReferential.stream( )
