@@ -201,7 +201,7 @@ document.addEventListener('DOMContentLoaded', () => {
             initialAttrValues[element.name] = element.value;
             const certifElement = document.getElementById(element.name === 'birthplace' || element.name === 'birthcountry' ? `${element.name}_code-certif` : `${element.name}-certif`);
             if (certifElement) {
-                initialCertifValues[certifElement.name] = certifElement.value;
+                initialCertifValues[certifElement.name] = certifElement.getAttribute('data-initial-value') || '';
             }
         });
         /**

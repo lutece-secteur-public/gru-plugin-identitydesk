@@ -250,7 +250,7 @@
         <div class="col-6 p-1">
             <@formGroup formStyle="floating" labelKey="Certification" helpKey='' mandatory=certMandatory?boolean rows=2>
                 <#if attr.allowedCertificationList?has_content>
-                    <@select name=certificationFieldName>
+                    <@select name=certificationFieldName params="data-initial-value=${certifierCode}">
                         <#if !certifierFound>
                             <option selected value=""></option>
                         </#if>
