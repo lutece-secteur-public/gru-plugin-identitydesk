@@ -11,7 +11,7 @@
         <div id="identity-container">
             <div class="jumbotron jumbotron-fluid p-4 pt-2 shadow-lg text-center bg-light">
                 <div>
-                  <#list ["creationdate", "modificationdate", "expirationdate", "monparis", "monparis.merged", "monparis.deleted"] as item>
+                  <#list ["creationdate", "modificationdate", "expirationdate", "monparis", "monparis.deleted"] as item>
                     <div class="d-inline-block card rounded-5 p-4 py-2 shadow-lg m-1">
                       <div class="d-flex">
                         <div>
@@ -31,9 +31,6 @@
                               <#case "monparis">
                                 <#if identity.connectionId??><span class="text-success fw-bold">#i18n{identitydesk.search_identities.yes}</span><#else><span class="text-danger fw-bold">#i18n{identitydesk.search_identities.no}</span></#if>
                                 <#break>
-                              <#case "monparis.merged">
-                                <#if identity.merge??><span class="fw-bold">#i18n{identitydesk.search_identities.yes}</span><#else><span class="fw-bold">#i18n{identitydesk.search_identities.no}</span></#if>
-                                <#break>
                               <#case "monparis.deleted">
                                 <#if identity.expiration?? && identity.expiration.deleted><span class="text-danger fw-bold">#i18n{identitydesk.search_identities.yes}</span><#else><span class="text-success fw-bold">#i18n{identitydesk.search_identities.no}</span></#if>
                                 <#break>
@@ -43,6 +40,33 @@
                       </div>
                     </div>
                   </#list>
+                    <#if identity.consolidate?? && identity.consolidate.mergedIdentities?size != 0 >
+                        <@offcanvas id="mergedList" title="<i class='fa fa-list fs-2'></i> #i18n{identitydesk.search_identities.detail.monparis.merged.list}" btnTitle="#i18n{identitydesk.search_identities.detail.monparis.merged}<br>#i18n{identitydesk.search_identities.yes}" size="auto" bodyClass="p-5" btnClass=" mt-3" btnTitleShow=true badgeContent="" bodyClass="p-0" badgeContent="${identity.consolidate.mergedIdentities?size}">
+                            <@table bordered=true>
+                            <tr>
+                                <th>
+                                    #i18n{identitydesk.search_identities.detail.cuid}
+                                </th>
+                            </tr>
+                            <#list identity.consolidate.mergedIdentities as mergedIdentity>
+                            <tr>
+                                <td>
+                                    <span>${mergedIdentity.customerId} </span>
+                                </td>
+                            </tr>
+                            </#list>
+                            </@table>
+                        </@offcanvas>
+                    <#else>
+                        <div class="d-inline-block card rounded-5 p-4 py-2 shadow-lg m-1">
+                            <div class="d-flex">
+                                <div>
+                                    <span>#i18n{identitydesk.search_identities.detail.monparis.merged}</span>
+                                    <br>
+                                    <span class="text-primary fw-bold">#i18n{identitydesk.search_identities.no}</span></div>
+                            </div>
+                        </div>
+                    </#if>
                   <#assign historySize><#if history??>${history.identityChanges?size}<#else>0</#if>
                   </#assign>
                     <@offcanvas id="history" title="<i class='ti ti-history fs-2'></i> Historique de l'identit&eacute;" btnTitle="Voir l'historique<br> complet" size="auto" bodyClass="p-5" btnClass=" mt-3" btnTitleShow=true badgeContent="" bodyClass="p-0" badgeContent="${historySize}">
