@@ -65,9 +65,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 formLabel.insertAdjacentHTML('beforeend', '<span class="text-danger fw-bolder"><i class="ti ti-asterisk"></i></span>');
             }
         }
-        if (!certifElement.value && codeElement.value) {
-            certifElement.focus();
-        }
     };
     /**
      * Lock (disable) specified fields.
