@@ -132,6 +132,7 @@ public class IdentityJspBean extends MVCAdminJspBean
     private static final String MESSAGE_GET_REFERENTIAL_ERROR = "referential error";
     private static final String MESSAGE_GET_IDENTITY_HISTORY_ERROR = "identitydesk.message.get_identity_history.error";
     private static final String MESSAGE_CREATE_IDENTITY_ACCOUNT_ERROR = "identitydesk.message.create_identity_account.error";
+    private static final String MESSAGE_VALIDATE_IDENTITY_EMAIL_ERROR = "identitydesk.message.validate_identity_email.error";
     private static final String PROPERTY_PAGE_TITLE_CREATE_TASK_IDENTITY = "identitydesk.create_identity_task.pageTitle";
 
     // Properties for page titles
@@ -150,6 +151,7 @@ public class IdentityJspBean extends MVCAdminJspBean
     // Markers
     private static final String MARK_IDENTITY_LIST = "identity_list";
     private static final String MARK_ELIGIBLE_IDENTITY_TO_ACCOUNT = "eligible_identity_to_account_list";
+    private static final String MARK_ELIGIBLE_IDENTITY_TO_EMAIL_VALIDATION = "eligible_identity_to_email_validation_list";
     private static final String MARK_IDENTITY = "identity";
     private static final String MARK_SERVICE_CONTRACT = "service_contract";
     private static final String MARK_QUERY_SEARCH_ATTRIBUTES = "query_search_attributes";
@@ -184,6 +186,7 @@ public class IdentityJspBean extends MVCAdminJspBean
     private static final String ACTION_CREATE_IDENTITY = "createIdentity";
     private static final String ACTION_MODIFY_IDENTITY = "modifyIdentity";
     private static final String ACTION_CREATE_ACCOUNT = "createAccount";
+    private static final String ACTION_VALIDATE_EMAIL = "validateEmail";
 
     // Cache
     private static final ServiceContractCache _serviceContractCache = SpringContextService.getBean( "identity.serviceContractCacheService" );
@@ -378,6 +381,17 @@ public class IdentityJspBean extends MVCAdminJspBean
     @Action( ACTION_CREATE_ACCOUNT )
     public String doCreateAccount( final HttpServletRequest request ) throws AccessDeniedException
     {
+        return this.createTask( request, IdentityTaskType.ACCOUNT_CREATION_REQUEST.name(), MESSAGE_CREATE_IDENTITY_ACCOUNT_ERROR );
+    }
+
+    @Action( ACTION_VALIDATE_EMAIL )
+    public String doValidateEmail( final HttpServletRequest request ) throws AccessDeniedException
+    {
+        return this.createTask( request, IdentityTaskType.EMAIL_VALIDATION_REQUEST.name(), MESSAGE_VALIDATE_IDENTITY_EMAIL_ERROR );
+    }
+
+    private String createTask( final HttpServletRequest request, final String taskType, final String errorMessageKey ) throws AccessDeniedException
+    {
         // CSRF Token control
         if ( !SecurityTokenService.getInstance( ).validate( request, ACTION_SEARCH_IDENTITY ) )
         {
@@ -408,7 +422,7 @@ public class IdentityJspBean extends MVCAdminJspBean
         {
             final IdentityTaskCreateRequest identityTaskCreateRequest = new IdentityTaskCreateRequest( );
             final IdentityTaskDto task = new IdentityTaskDto( );
-            task.setTaskType( IdentityTaskType.ACCOUNT_CREATION_REQUEST.name( ) );
+            task.setTaskType( taskType );
             task.setResourceType( IdentityResourceType.CUID.name( ) );
             task.setResourceId( customerId );
             identityTaskCreateRequest.setTask( task );
@@ -421,8 +435,8 @@ public class IdentityJspBean extends MVCAdminJspBean
         }
         catch( final IdentityStoreException e )
         {
-            AppLogService.error( "Error while trying to create an account for identity [customerId = " + customerId + "].", e );
-            addError( MESSAGE_CREATE_IDENTITY_ACCOUNT_ERROR, getLocale( ) );
+            AppLogService.error( "Error while trying to create " + taskType + " for identity [customerId = " + customerId + "].", e );
+            addError( errorMessageKey, getLocale( ) );
             taskResultMessage = e.getMessage( );
         }
 
@@ -499,11 +513,14 @@ public class IdentityJspBean extends MVCAdminJspBean
                 .anyMatch( rule -> rule.stream( ).allMatch( key -> _searchAttributes.stream( ).map( SearchAttribute::getKey ).anyMatch( key::equals ) ) );
 
         final List<ExtendedIdentityDto> extendedIdentities = identities.stream( ).map( identityDto -> IdentityDeskService.instance().toExtendedIdentityDto( identityDto, this.getAuthor( ) ) ).collect( Collectors.toList( ) );
-        final List<String> eligibleCustomerIds = extendedIdentities.stream( ).filter( this::eligibleToAccountCreation ).map( IdentityDto::getCustomerId )
+        final List<String> eligibleCustomerIdsToAccount = extendedIdentities.stream( ).filter( this::eligibleToAccountCreation ).map( IdentityDto::getCustomerId )
+                .collect( Collectors.toList( ) );
+        final List<String> eligibleCustomerIdsToMailValidation = extendedIdentities.stream( ).filter( this::eligibleToEmailValidation ).map( IdentityDto::getCustomerId )
                 .collect( Collectors.toList( ) );
         final Map<String, Object> model = getModel( );
         model.put( MARK_IDENTITY_LIST, extendedIdentities );
-        model.put( MARK_ELIGIBLE_IDENTITY_TO_ACCOUNT, eligibleCustomerIds );
+        model.put( MARK_ELIGIBLE_IDENTITY_TO_ACCOUNT, eligibleCustomerIdsToAccount );
+        model.put( MARK_ELIGIBLE_IDENTITY_TO_EMAIL_VALIDATION, eligibleCustomerIdsToMailValidation );
         model.put( MARK_QUERY_SEARCH_ATTRIBUTES, _searchAttributes );
         model.put( MARK_AUTOCOMPLETE_CITY_ENDPOINT, _autocompleteCityEndpoint );
         model.put( MARK_AUTOCOMPLETE_COUNTRY_ENDPOINT, _autocompleteCountryEndpoint );
@@ -1214,6 +1231,11 @@ public class IdentityJspBean extends MVCAdminJspBean
             searchParams.put( PARAMETER_SEARCH_PREFIX + attr.getKey( ), attr.getValue( ) );
         } );
         return searchParams;
+    }
+
+    private boolean eligibleToEmailValidation( final ExtendedIdentityDto identityDto )
+    {
+        return identityDto.getAttributes().stream().anyMatch(attributeDto -> Objects.equals(attributeDto.getKey(), Constants.PARAM_EMAIL) && ( attributeDto.getCertificationLevel( ) == null || attributeDto.getCertificationLevel( ) <= 100 ) );
     }
 
     private boolean eligibleToAccountCreation( final ExtendedIdentityDto identityDto )
