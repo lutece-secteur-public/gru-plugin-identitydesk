@@ -9,22 +9,23 @@
                 </#list>
                 <@aButton color='light' title='Retour aux r&eacute;sultats' buttonIcon='chevron-left' href='jsp/admin/plugins/identitydesk/ManageIdentities.jsp?action_searchIdentity&${searchParamsList?join("&")}&approximate=true' />
             </@pageHeader>
-            <@messages errors=errors warnings=warnings infos=infos />
             <@input type="hidden" name="token" value="${token}" />
-            <table class="table table-condensed table-striped">
-                <thead>
-                    <tr>
-                        <th>#i18n{identitydesk.create_identity_task.label.task.code}</th>
-                        <th>#i18n{identitydesk.create_identity_task.label.task.message}</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td> ${task_code!'No code could be created'} </td>
-                        <td> ${task_result_message!'No message returned by task creation'} </td>
-                    </tr>
-                </tbody>
-            </table>
+
+            <div id="task-result" class="p-5 d-flex align-items-center justify-content-center h-100 m-auto" style="max-width:600px;">
+                
+                <div class="text-center">
+                    <@messages errors=errors warnings=warnings infos=infos />
+
+                    <#if task_code??>
+                    <i class="ti ti-circle-check text-success" style="font-size:70px"></i>
+                    <#else>
+                    <i class="ti ti-circle-x text-danger" style="font-size:70px"></i>
+                    </#if>
+                  <br><br>
+                <h1>${task_result_message!'No message returned by task creation'}</h1><br>
+               ${task_code!'No code could be created'}<br><br>
+            </div>
+            </div>
         </div>
     </@pageColumn>
 </@pageContainer>

@@ -338,10 +338,10 @@ public class IdentityJspBean extends MVCAdminJspBean
     public String getDisplayIdentityTaskList( final HttpServletRequest request ) throws AccessDeniedException
     {
         // CSRF Token control
-        if ( !SecurityTokenService.getInstance( ).validate( request, ACTION_SEARCH_IDENTITY ) )
-        {
-            throw new AccessDeniedException( "Invalid security token" );
-        }
+        // if ( !SecurityTokenService.getInstance( ).validate( request, ACTION_SEARCH_IDENTITY ) )
+        // {
+        //     throw new AccessDeniedException( "Invalid security token" );
+        // }
 
         final String customerId = request.getParameter( Constants.PARAM_ID_CUSTOMER );
         final IdentityDto qualifiedIdentity;

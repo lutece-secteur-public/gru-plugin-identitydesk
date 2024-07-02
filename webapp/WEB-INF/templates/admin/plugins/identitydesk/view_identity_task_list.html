@@ -1,21 +1,111 @@
 <#include "search_functions.html" />
 <#include "components/task_card.ftl" />
+
+<#-- Calculate statistics -->
+<#assign totalTasks=identity.tasks?size completedTasks=0 pendingTasks=0 newTasks24h=0 currentTime=.now>
+<#list identity.tasks as task>
+    <#if task.taskStatus=='COMPLETED'><#assign completedTasks+=1><#else><#assign pendingTasks+=1></#if>
+    <#if (currentTime?long - task.creationDate?datetime?long) < 86400000><#assign newTasks24h+=1></#if>
+</#list>
+
 <@pageContainer class="bg-secondary">
     <@pageColumn>
-        <div class="container-xl">
-            <@pageHeader title=title>
-                <#assign searchParamsList=[]>
-                <#list search_params?keys as key>
-                    <#assign searchParamsList +=[key + "=" + (search_params[key]!)]>
-                </#list>
-                <@aButton color='light' title='Retour aux r&eacute;sultats' buttonIcon='chevron-left' href='jsp/admin/plugins/identitydesk/ManageIdentities.jsp?action_searchIdentity&${searchParamsList?join("&")}&approximate=true' />
-            </@pageHeader>
+        <@pageHeader title=title>
+            <#assign searchParamsList=[]>
+            <#list search_params?keys as key>
+                <#assign searchParamsList +=[key + "=" + (search_params[key]!)]>
+            </#list>
+            <@aButton color='light' title='Retour aux r&eacute;sultats' buttonIcon='chevron-left'
+                href='jsp/admin/plugins/identitydesk/ManageIdentities.jsp?action_searchIdentity&${searchParamsList?join("&")}&approximate=true' />
+        </@pageHeader>
+        <div id="task-list">
+            <div class="jumbotron jumbotron-fluid p-3 shadow-lg text-center bg-light">
+                <div>
+                    <#list [
+                        {'icon': 'tasks', 'color': 'primary', 'text': 'Total des t&acirc;ches', 'value': totalTasks},
+                        {'icon': 'check-circle', 'color': 'success', 'text': 'T&acirc;ches termin&eacute;es', 'value': completedTasks},
+                        {'icon': 'clock', 'color': 'warning', 'text': 'T&acirc;ches en cours', 'value': pendingTasks},
+                        {'icon': 'calendar-day', 'color': 'info', 'text': 'Nouvelles t&acirc;ches (24h)', 'value': newTasks24h}
+                    ] as stat>
+                        <div class="d-inline-block card rounded-5 p-4 py-2 shadow-lg m-1">
+                            <div class="d-flex">
+                                <div>
+                                    <i class="fas fa-${stat.icon} text-${stat.color} me-2"></i> ${stat.text}
+                                    <br>
+                                    <span class="fw-bold fs-2">${stat.value}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </#list>
+                </div>
+            </div>
             <@messages errors=errors warnings=warnings infos=infos />
             <@input type="hidden" name="token" value="${token}" />
-            <#if identity.tasks?? && identity.tasks?size != 0 >
-                <#list identity.tasks as task>
-                    <@taskCard task=task/>
-                </#list>
+            <#if identity.tasks?? && identity.tasks?size != 0>
+                <#assign sortedTasks=identity.tasks?sort_by("lastUpdateDate")?reverse>
+                <@table bordered=true>
+                    <thead>
+                        <tr>
+                            <th>#i18n{identitydesk.display_identity_task.label.task.change.author.name}</th>
+                            <th>#i18n{identitydesk.display_identity_task.label.task.creationDate}</th>
+                            <th>#i18n{identitydesk.display_identity_task.label.task.lastUpdateClientCode}</th>
+                            <th>#i18n{identitydesk.display_identity_task.label.task.lastUpdateDate}</th>
+                            <th>#i18n{identitydesk.display_identity_task.label.task.status}</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <#list sortedTasks as task>
+                            <tr>
+                                <td>${(task.taskChanges[0].author.name)!} - ${(task.taskChanges[0].clientCode)!'N/A'}</td>
+                                <td>${task.creationDate}</td>
+                                <td>${task.lastUpdateClientCode}</td>
+                                <td>${task.lastUpdateDate}</td>
+                                <td>
+                                    <#assign key>#i18n{identitydesk.display_identity_task.label.task.type.${task.taskStatus}}</#assign>
+                                    <@tag color=(task.taskStatus=='PROCESSED')?then('success','warning')>${key}</@tag>
+                                </td>
+                                <td>
+                                    <@offcanvas id='task-${task.taskCode}' title='T&acirc;che ${task.taskCode}' btnIcon="eye" bodyClass="p-0">
+                                        <@table>
+                                            <thead>
+                                                <tr>
+                                                    <th>#i18n{identitydesk.display_identity_task.label.task.change.date}</th>
+                                                    <th>#i18n{identitydesk.display_identity_task.label.task.change.author.name}</th>
+                                                    <th>#i18n{identitydesk.display_identity_task.label.task.change.author.type}</th>
+                                                    <th>#i18n{identitydesk.display_identity_task.label.task.change.clientCode}</th>
+
+                                                    <th>#i18n{identitydesk.display_identity_task.label.task.change.type}</th>
+                                                    <th class="text-center">#i18n{identitydesk.display_identity_task.label.task.change.status}</th>
+
+                                              
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <#list task.taskChanges as change>
+                                                <#assign taskStatutKey>#i18n{identitydesk.display_identity_task.label.task.type.${change.taskStatus}}</#assign>
+                                                <#assign taskChangeTypeKey>#i18n{identitydesk.display_identity_task.label.task.change.type.${change.taskChangeType}}</#assign>
+                                                    <tr>
+                                                        <td>${change.taskChangeDate}</td>
+                                                        <td>${change.author.name}</td>
+                                                        <td>${change.author.type}</td>
+                                                        <td>${change.clientCode}</td>
+                                                        <td>${taskChangeTypeKey}</td>
+                                                        <td class="text-center"><@tag color=(change.taskStatus=='PROCESSED')?then('success','warning')>${taskStatutKey}</@tag></td>
+                                                    </tr>
+                                                </#list>
+                                            </tbody>
+                                        </@table>
+                                    </@offcanvas>
+                                </td>
+                            </tr>
+                        </#list>
+                    </tbody>
+                </@table>
+            <#else>
+                <div class="alert alert-info" role="alert">
+                    <i class="fas fa-info-circle me-2"></i>Aucune t&acirc;che trouv&eacute;e.
+                </div>
             </#if>
         </div>
     </@pageColumn>

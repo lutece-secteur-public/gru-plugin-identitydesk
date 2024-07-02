@@ -140,10 +140,42 @@
                       <@aButton href='${return_url}?cuid=${identity.customerId}' buttonIcon='external-link' title='#i18n{identitydesk.search_identities.buttonSelectIdentityAndReturn}' hideTitle=['all'] />
                     </#if>
                     <#if eligible_identity_to_account_list?seq_contains(identity.customerId)>
-                      <@aButton href='jsp/admin/plugins/identitydesk/ManageIdentities.jsp?action_createAccount&customer_id=${identity.customerId}&token=${token}' buttonIcon='user-plus' title='#i18n{identitydesk.search_identities.createAccountTask}' hideTitle=['all'] />
+
+                    <a class="btn btn-primary" title="#i18n{identitydesk.search_identities.createAccountTask}" data-bs-toggle="modal" data-bs-target="#confirmCreateAccountModal${identity.customerId}">
+                      <i class="ti ti-user-plus" aria-hidden="true"></i>
+                    </a>
+
+                    <div class="modal fade" id="confirmCreateAccountModal${identity.customerId}" tabindex="-1" aria-labelledby="confirmCreateAccountModalLabel"
+                    aria-hidden="true">
+                    <div class="modal-dialog modal-lg rounded-5">
+                        <div class="modal-content rounded-5">
+                            <div class="modal-header border-0">
+                                <h1 class="modal-title text-center w-100 p-4 pb-0 fs-2" id="confirmCreateAccountModalLabel">
+                                  &Ecirc;tes-vous sur de vouloir demander une cr&eacute;ation de compte Mon Paris ?</h1>
+                                <button type="button"
+                                    class="btn btn-rounded btn-light border position-absolute end-0 me-3 top-0 mt-3"
+                                    data-bs-dismiss="modal" aria-label="Close"><i class="ti ti-x fs-2"></i></button>
+                            </div>
+                            <div id="summaryTableModal">
+                                <div class="modal-footer mt-0 border-0 justify-content-center pb-4 pt-0">
+                                        <@offcanvas targetUrl="jsp/admin/plugins/identitydesk/ManageIdentities.jsp?action_createAccount&customer_id=${identity.customerId}&token=${token}" targetElement="#task-result" id="taskResult-${identity.customerId}" title="#i18n{identitydesk.search_identities.createAccountTask}" btnTitle="#i18n{identitydesk.search_identities.createAccountTask}" btnTitleShow=true bodyClass="p-0" size="50" btnClass=""  />
+                                        <script>
+                                          document.getElementById("btn-taskResult-${identity.customerId}").addEventListener("click", function() {
+                                            const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById("confirmCreateAccountModal${identity.customerId}"));
+                                            console.log(modal)
+                                            modal.hide();
+                                          });
+                                        </script>
+                                    <button type="button" id="cancelSubmit" class="btn btn-light"
+                                        data-bs-dismiss="modal">${i18n("portal.admin.message.buttonCancel")}</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
                     </#if>
                     <#if identity.tasks?size != 0>
-                        <@aButton href='jsp/admin/plugins/identitydesk/ManageIdentities.jsp?view_displayIdentityTaskList&customer_id=${identity.customerId}&token=${token}' buttonIcon='list' title='#i18n{identitydesk.search_identities.displayIdentityTaskList}'  hideTitle=['all'] />
+                        <@offcanvas targetUrl="jsp/admin/plugins/identitydesk/ManageIdentities.jsp?view_displayIdentityTaskList&customer_id=${identity.customerId}&token=${token}" targetElement="#task-list" id="tasklist-${identity.customerId}" title="#i18n{identitydesk.search_identities.displayIdentityTaskList}" btnTitle="#i18n{identitydesk.search_identities.displayIdentityTaskList}" btnTitleShow=false bodyClass="p-0"  btnClass="" btnIcon="list"  />
                     </#if>
                   </@td>
                 </tr>
@@ -153,7 +185,7 @@
         </#if>
       </div>
     </@tform>
-  
+
   </@pageColumn>
   <#if return_url??>
   <div id="redirectButtonContainer" class="fixed-bottom text-center fade-in w-100 bg-dark text-white p-4 border-top shadow-lg d-none" style="--bs-bg-opacity: .9;">
@@ -171,6 +203,14 @@
 </@pageContainer>
 <link href="css/admin/plugins/identitydesk/identitydesk.css" rel="stylesheet">
 <script src="js/admin/plugins/identitydesk/identitydesk.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const offcanvas = document.querySelectorAll('.offcanvas');
+    offcanvas.forEach((element) => {
+      document.querySelector('.lutece-page').appendChild(element);
+    });
+  });
+</script>
 <#if return_url??>
 <script type="module">
   import IdentityDeskBack from './js/admin/plugins/identitydesk/identitydesk-back.js';
