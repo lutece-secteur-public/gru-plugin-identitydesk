@@ -70,6 +70,7 @@
                 <@th><center>#i18n{identitydesk.search_identities.monparis}</center></@th>
                 <@th><center>#i18n{identitydesk.search_identities.pivot}</center></@th>
                 <@th><center>#i18n{identitydesk.search_identities.quality}</center></@th>
+                <@th><center>#i18n{identitydesk.search_identities.duplicate}</center></@th>
                 <@th></@th>
               </@tr>
             </thead>
@@ -88,7 +89,6 @@
                   <#else>
                   ${identity?index + 1}
                   </#if>
-                  
                   </td>
                   <@td><strong>${getAttributeValue(identity.attributes, 'family_name')}</strong> ${getAttributeValue(identity.attributes, 'first_name')}<br><i>${getAttributeValue(identity.attributes, 'preferred_username')}</i></@td>
                   <@td>${getAttributeValue(identity.attributes, 'birthdate')}<br>${getAttributeValue(identity.attributes, 'birthplace')}<#if getAttributeValue(identity.attributes, 'birthplace')?has_content>, </#if>${getAttributeValue(identity.attributes, 'birthcountry')}</@td>
@@ -107,6 +107,24 @@
                     <#assign qualityPercent = (identity.quality.quality * 100)?string("0")>
                     <#assign colorClass = (qualityPercent?number gt 80)?string('success', (qualityPercent?number gt 50)?string('warning', 'danger'))>
                     <span class="text-${colorClass}-emphasis bg-${colorClass}-subtle border border-${colorClass}-subtle badge rounded-5">${qualityPercent}%</span>
+                  </td>
+                  <td class="text-center">
+                    <#if identity.duplicateDefinition??>
+                      <#if identity.duplicateDefinition.suspicious?? && identity.duplicateDefinition.suspicious>
+                        <#assign code><#if identity.duplicateDefinition.duplicateSuspicion?? && identity.duplicateDefinition.duplicateSuspicion.duplicateRuleCode??>${identity.duplicateDefinition.duplicateSuspicion.duplicateRuleCode}</#if></#assign>
+                        <#if is_active_mediation_plugin>
+                          <div class="d-inline-block">
+                            <@offcanvas targetUrl="jsp/admin/plugins/identitymediation/IdentityDuplicate.jsp?view=searchAllDuplicates&cuid=${identity.customerId}" targetElement="#duplicates-table" id="duplicates-table-${identity?index}" title="#i18n{identitymediation.search_all_duplicates.title}" btnTitle="#i18n{identitydesk.search_identities.duplicate.show}  <i class='ti ti-arrow-narrow-right'></i>" btnTitleShow=true bodyClass="p-0" size="50" btnClass="badge text-warning-emphasis bg-warning-subtle border border-warning-subtle rounded-5  py-1"  />
+                          </div>
+                        <#else>
+                          <@tag color="warning">#i18n{identitydesk.search_identities.duplicate.suspect}</@tag>
+                      </#if>
+                      </#if>
+                      <#else>
+                      <#if is_active_mediation_plugin>
+                        <@offcanvas targetUrl="jsp/admin/plugins/identitymediation/IdentityDuplicate.jsp?view=searchAllDuplicates&cuid=${identity.customerId}" targetElement="#duplicates-table" id="duplicates-table-${identity?index}" title="#i18n{identitymediation.search_all_duplicates.title}" btnTitle="#i18n{identitydesk.search_identities.duplicate.check}  <i class='ti ti-arrow-narrow-right'></i>" btnTitleShow=true bodyClass="p-0" size="50" btnClass="badge text-primary-emphasis bg-primary-subtle border border-primary-subtle rounded-5  btn text-warning  py-1"  /> 
+                      </#if>
+                    </#if>
                   </td>
                   <@td class="text-end">
                     <#assign tags>

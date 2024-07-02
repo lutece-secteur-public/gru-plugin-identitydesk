@@ -71,6 +71,7 @@ import fr.paris.lutece.plugins.identitystore.v3.web.rs.util.Constants;
 import fr.paris.lutece.plugins.identitystore.v3.web.service.IdentityService;
 import fr.paris.lutece.plugins.identitystore.web.exception.IdentityStoreException;
 import fr.paris.lutece.portal.service.admin.AccessDeniedException;
+import fr.paris.lutece.portal.service.plugin.PluginService;
 import fr.paris.lutece.portal.service.rbac.RBACService;
 import fr.paris.lutece.portal.service.security.SecurityTokenService;
 import fr.paris.lutece.portal.service.spring.SpringContextService;
@@ -166,6 +167,7 @@ public class IdentityJspBean extends MVCAdminJspBean
     private static final String MARK_TASK_CODE = "task_code";
     private static final String MARK_TASK_RESULT_MESSAGE = "task_result_message";
     private static final String MARK_IDENTITY_HISTORY = "history";
+    private static final String MARK_IS_ACTIVE_MEDIATION_PLUGIN = "is_active_mediation_plugin";
 
     // Views
     private static final String VIEW_SEARCH_IDENTITY = "searchIdentity";
@@ -174,6 +176,8 @@ public class IdentityJspBean extends MVCAdminJspBean
     private static final String VIEW_IDENTITY_TASK_LIST = "displayIdentityTaskList";
     private static final String VIEW_VIEW_IDENTITY = "viewIdentity";
 
+    // Plugins
+    private static final String MEDIATION_PLUGIN_NAME = "identitymediation";
     // Actions
     private static final String ACTION_SEARCH_IDENTITY = "searchIdentity";
     private static final String ACTION_CREATE_IDENTITY = "createIdentity";
@@ -264,7 +268,7 @@ public class IdentityJspBean extends MVCAdminJspBean
         model.put( MARK_CAN_WRITE, _canWriteIdentity );
         model.put( MARK_IDENTITY_HISTORY, history );
         model.put( SecurityTokenService.MARK_TOKEN, SecurityTokenService.getInstance( ).getToken( request, ACTION_MODIFY_IDENTITY ) );
-        addReturnUrlMarker( request, model );
+        addExternalInformations( request, model );
 
         return getPage( PROPERTY_PAGE_TITLE_MANAGE_IDENTITIES, TEMPLATE_VIEW_IDENTITY, model );
     }
@@ -307,7 +311,7 @@ public class IdentityJspBean extends MVCAdminJspBean
         model.put( MARK_CAN_CREATE, _canCreateIdentity );
         model.put( MARK_RULES_REQ_REACHED, rulesRequirementsReached );
         model.put( SecurityTokenService.MARK_TOKEN, SecurityTokenService.getInstance( ).getToken( request, ACTION_SEARCH_IDENTITY ) );
-        addReturnUrlMarker( request, model );
+        addExternalInformations( request, model );
 
         return getPage( PROPERTY_PAGE_TITLE_MANAGE_IDENTITIES, TEMPLATE_SEARCH_IDENTITIES, model );
     }
@@ -510,7 +514,7 @@ public class IdentityJspBean extends MVCAdminJspBean
         model.put( MARK_RULES_REQ_REACHED, rulesRequirementsReached );
         model.put( APPROXIMATED_SEARCH, Boolean.parseBoolean( request.getParameter( PARAMETER_APPROXIMATE ) ) );
         model.put( SecurityTokenService.MARK_TOKEN, SecurityTokenService.getInstance( ).getToken( request, ACTION_SEARCH_IDENTITY ) );
-        addReturnUrlMarker( request, model );
+        addExternalInformations( request, model );
 
         if ( identities.isEmpty( ) )
         {
@@ -577,7 +581,7 @@ public class IdentityJspBean extends MVCAdminJspBean
         model.put( MARK_REFERENTIAL, _processusReferential );
         model.put( MARK_ATTRIBUTE_INFO_KEY_LIST, _AttributeInfoKeyList );
         model.put( SecurityTokenService.MARK_TOKEN, SecurityTokenService.getInstance( ).getToken( request, ACTION_CREATE_IDENTITY ) );
-        addReturnUrlMarker( request, model );
+        addExternalInformations( request, model );
 
         return getPage( PROPERTY_PAGE_TITLE_CREATE_IDENTITY, TEMPLATE_CREATE_IDENTITY, model );
     }
@@ -678,7 +682,7 @@ public class IdentityJspBean extends MVCAdminJspBean
         model.put( MARK_REFERENTIAL, _processusReferential );
         model.put( MARK_ATTRIBUTE_INFO_KEY_LIST, _AttributeInfoKeyList );
         model.put( SecurityTokenService.MARK_TOKEN, SecurityTokenService.getInstance( ).getToken( request, ACTION_MODIFY_IDENTITY ) );
-        addReturnUrlMarker( request, model );
+        addExternalInformations( request, model );
 
         // Ajouter les paramètres de recherche au modèle
         Map<String, String> searchParams = collectSearchParams( );
@@ -958,17 +962,18 @@ public class IdentityJspBean extends MVCAdminJspBean
     }
 
     /**
-     * fill model with return url marker
+     * fill model with external informations
      * 
      * @param request
      * @param model
      */
-    private void addReturnUrlMarker( final HttpServletRequest request, final Map<String, Object> model )
+    private void addExternalInformations( final HttpServletRequest request, final Map<String, Object> model )
     {
         if( _returnUrl != null )
         {
             model.put( MARK_RETURN_URL, _returnUrl );
         }
+        model.put( MARK_IS_ACTIVE_MEDIATION_PLUGIN, PluginService.isPluginEnable( MEDIATION_PLUGIN_NAME ) );
     }
 
     /**
