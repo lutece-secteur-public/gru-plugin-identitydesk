@@ -13,7 +13,7 @@
     <artifactId>plugin-identitydesk</artifactId>
     <packaging>lutece-plugin</packaging>
     
-    <version>1.0.0-SNAPSHOT</version>
+    <version>1.0.0</version>
     <name>Lutece identitydesk plugin</name>
 
     <repositories>
@@ -67,13 +67,14 @@
     <properties>
         <componentName>identitydesk</componentName>
         <jiraProjectName>IDENTITYDESK</jiraProjectName>
-        <jiraComponentId></jiraComponentId>
+        <jiraComponentId />
     </properties>
 
     <scm>
         <connection>scm:git:https://github.com/lutece-secteur-public/gru-plugin-identitydesk.git</connection>
         <developerConnection>scm:git:https://github.com/lutece-secteur-public/gru-plugin-identitydesk.git</developerConnection>
         <url>https://github.com/lutece-secteur-public/gru-plugin-identitydesk.git</url>
-    </scm>
+      <tag>plugin-identitydesk-1.0.0</tag>
+  </scm>
 
 </project>
