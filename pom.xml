@@ -13,7 +13,7 @@
     <artifactId>plugin-identitydesk</artifactId>
     <packaging>lutece-plugin</packaging>
     
-    <version>1.0.0</version>
+    <version>1.0.1-SNAPSHOT</version>
     <name>Lutece identitydesk plugin</name>
 
     <repositories>
@@ -74,7 +74,7 @@
         <connection>scm:git:https://github.com/lutece-secteur-public/gru-plugin-identitydesk.git</connection>
         <developerConnection>scm:git:https://github.com/lutece-secteur-public/gru-plugin-identitydesk.git</developerConnection>
         <url>https://github.com/lutece-secteur-public/gru-plugin-identitydesk.git</url>
-      <tag>plugin-identitydesk-1.0.0</tag>
+      <tag>HEAD</tag>
   </scm>
 
 </project>
