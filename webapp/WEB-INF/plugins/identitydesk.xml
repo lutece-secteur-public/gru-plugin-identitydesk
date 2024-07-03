@@ -1,12 +1,11 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<plug-in>
+<?xml version="1.0" encoding="UTF-8"?><plug-in>
     <name>identitydesk</name>
     <class>fr.paris.lutece.portal.service.plugin.PluginDefaultImplementation</class>
-    <version>1.0.0-SNAPSHOT</version>
-    <documentation></documentation>
-    <installation></installation>
-    <changes></changes>
-    <user-guide></user-guide>
+    <version>1.0.0</version>
+    <documentation/>
+    <installation/>
+    <changes/>
+    <user-guide/>
     <description>identitydesk.plugin.description</description>
     <provider>identitydesk.plugin.provider</provider>
     <provider-url>http://yupiik.com</provider-url>
@@ -27,7 +26,7 @@
             <feature-description>identitydesk.adminFeature.ManageIdentities.description</feature-description>
             <feature-level>1</feature-level>
             <feature-url>jsp/admin/plugins/identitydesk/ManageIdentities.jsp</feature-url>
-            <feature-icon-url></feature-icon-url>
+            <feature-icon-url/>
         </admin-feature>
     </admin-features>
 
