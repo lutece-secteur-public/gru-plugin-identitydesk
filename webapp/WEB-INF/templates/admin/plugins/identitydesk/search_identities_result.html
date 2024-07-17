@@ -127,24 +127,33 @@
                     </#if>
                   </td>
                   <@td class="text-end">
-                    <#assign tags>
+                  <#assign tags>
                       <b>${getAttributeValue(identity.attributes, 'family_name')}</b> <span style="font-weight:normal">${getAttributeValue(identity.attributes, 'first_name')} <i>${getAttributeValue(identity.attributes, 'preferred_username')}</i></span>
                       <@tag color="secondary">#i18n{identitydesk.search_identities.detail.cuid} <strong>${identity.customerId!''}</strong></@tag>
                       <@tag color="secondary">#i18n{identitydesk.search_identities.detail.guid} <strong>${identity.connectionId!''}</strong></@tag>
-                    </#assign>
-                    <@offcanvas targetUrl="jsp/admin/plugins/identitydesk/ManageIdentities.jsp?view_viewIdentity=&customer_id=${identity.customerId}" targetElement="#identity-container" id="summarize-${identity?index}" title=tags btnTitle="#i18n{identitydesk.search_identities.details}" size="auto" bodyClass="p-0" btnIcon="eye" btnTitleShow=false  />
-                    <#if can_write>
-                      <@aButton href='jsp/admin/plugins/identitydesk/ManageIdentities.jsp?view_modifyIdentity&customer_id=${identity.customerId}' buttonIcon='edit' title='#i18n{identitydesk.search_identities.buttonModifyIdentity}' hideTitle=['all'] />
-                    </#if>
-                    <#if return_url??>
-                      <@aButton href='${return_url}?cuid=${identity.customerId}' buttonIcon='external-link' title='#i18n{identitydesk.search_identities.buttonSelectIdentityAndReturn}' hideTitle=['all'] />
-                    </#if>
-                    <#if eligible_identity_to_account_list?seq_contains(identity.customerId)>
-
-                    <a class="btn btn-primary" title="#i18n{identitydesk.search_identities.createAccountTask}" data-bs-toggle="modal" data-bs-target="#confirmCreateAccountModal${identity.customerId}">
-                      <i class="ti ti-user-plus" aria-hidden="true"></i>
-                    </a>
-
+                  </#assign>
+                  <@offcanvas targetUrl="jsp/admin/plugins/identitydesk/ManageIdentities.jsp?view_viewIdentity=&customer_id=${identity.customerId}" targetElement="#identity-container" id="summarize-${identity?index}" title=tags btnTitle="#i18n{identitydesk.search_identities.details}" size="auto" bodyClass="p-0" btnIcon="eye" btnTitleShow=false btnClass=' d-none'/>
+                  <@aButton class='dropdown-toggle py-1' size='' id='identity-actions-${identity.customerId}' dropdownMenu=true href='#'
+                      title='#i18n{portal.util.labelActions}' color="light" >
+                      <@dropdownItem href='#' title='#i18n{identitydesk.search_identities.details}' params='onClick="event.preventDefault(); document.getElementById(\'btn-summarize-${identity?index}\').click();"' />
+                      <#if can_write>
+                          <@dropdownItem href='jsp/admin/plugins/identitydesk/ManageIdentities.jsp?view_modifyIdentity&customer_id=${identity.customerId}' title='#i18n{identitydesk.search_identities.buttonModifyIdentity}' />
+                      </#if>
+                      <#if return_url??>
+                          <@dropdownItem href='${return_url}?cuid=${identity.customerId}' title='#i18n{identitydesk.search_identities.buttonSelectIdentityAndReturn}'/>
+                      </#if>
+                  
+                      <#if eligible_identity_to_account_list?seq_contains(identity.customerId)>
+                          <@dropdownItem href='#' title='#i18n{identitydesk.search_identities.createAccountTask}' params='data-bs-toggle="modal" data-bs-target="#confirmCreateAccountModal${identity.customerId}"' />
+                      </#if>
+                  
+                      <#if identity.tasks?size != 0>
+                          <@dropdownItem href='javascript:void(0);' title='#i18n{identitydesk.search_identities.displayIdentityTaskList}' params='onClick="event.preventDefault(); document.getElementById(\'btn-tasklist-${identity.customerId}\').click();"' 
+                          />
+                          <@offcanvas targetUrl="jsp/admin/plugins/identitydesk/ManageIdentities.jsp?view_displayIdentityTaskList&customer_id=${identity.customerId}&token=${token}" targetElement="#task-list" id="tasklist-${identity.customerId}" title="#i18n{identitydesk.search_identities.displayIdentityTaskList}" btnTitle="#i18n{identitydesk.search_identities.displayIdentityTaskList}" btnTitleShow=false bodyClass="p-0"  btnClass=" d-none" btnIcon="list"  />
+                      </#if>
+                  </@aButton>
+                  <#if eligible_identity_to_account_list?seq_contains(identity.customerId)>
                     <div class="modal fade" id="confirmCreateAccountModal${identity.customerId}" tabindex="-1" aria-labelledby="confirmCreateAccountModalLabel"
                     aria-hidden="true">
                     <div class="modal-dialog modal-lg rounded-5">
@@ -162,7 +171,6 @@
                                         <script>
                                           document.getElementById("btn-taskResult-${identity.customerId}").addEventListener("click", function() {
                                             const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById("confirmCreateAccountModal${identity.customerId}"));
-                                            console.log(modal)
                                             modal.hide();
                                           });
                                         </script>
@@ -173,9 +181,6 @@
                         </div>
                     </div>
                 </div>
-                    </#if>
-                    <#if identity.tasks?size != 0>
-                        <@offcanvas targetUrl="jsp/admin/plugins/identitydesk/ManageIdentities.jsp?view_displayIdentityTaskList&customer_id=${identity.customerId}&token=${token}" targetElement="#task-list" id="tasklist-${identity.customerId}" title="#i18n{identitydesk.search_identities.displayIdentityTaskList}" btnTitle="#i18n{identitydesk.search_identities.displayIdentityTaskList}" btnTitleShow=false bodyClass="p-0"  btnClass="" btnIcon="list"  />
                     </#if>
                   </@td>
                 </tr>
