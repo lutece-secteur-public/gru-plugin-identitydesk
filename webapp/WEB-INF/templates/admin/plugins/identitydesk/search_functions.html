@@ -1,3 +1,13 @@
+<#-- Retrieves the values of an attribute -->
+<#-- @param attributeName The name of the attribute -->
+<#function getAttributeValues attributeName>
+    <#list referential_attribute_list as attribute>
+        <#if attribute.keyName == attributeName>
+            <#return attribute.values>
+        </#if>
+    </#list>
+    <#return []>
+</#function>
 <#-- Retrieves the highest certification level for a given attribute key -->
 <#-- @param attributeKey The key of the attribute -->
 <#function getHighestLevelForAttributeKey attributeKey>
@@ -226,11 +236,13 @@
                     <@formGroup  formStyle="floating" labelFor='${attr.key}' labelKey='${attr.name}' class=class mandatory=mandatory rows=2 >
                         <#if attr.key == 'gender'>
                             <@select name='gender' disabled=disabled>
-                                <#assign value = "${attr.value!''}">
+                                <#assign currentValue = "${attr.value!''}">
                                 <option value=""></option>
-                                <option value="0" <#if value == "0">selected</#if>>Non d&#x00E9;fini</option>
-                                <option value="1" <#if value == "1">selected</#if>>Femme</option>
-                                <option value="2" <#if value == "2">selected</#if>>Homme</option>
+                                <#list getAttributeValues("gender") as genderOption>
+                                    <option value="${genderOption.value}" <#if currentValue == genderOption.value>selected</#if>>
+                                        ${genderOption.label?has_content?then(genderOption.label, genderOption.value)}
+                                    </option>
+                                </#list>
                             </@select>
                         <#else>
                         <#if attr.key == 'birthdate'>

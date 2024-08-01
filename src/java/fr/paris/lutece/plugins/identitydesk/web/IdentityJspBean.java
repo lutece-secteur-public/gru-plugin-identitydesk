@@ -161,6 +161,7 @@ public class IdentityJspBean extends MVCAdminJspBean
     private static final String MARK_ATTRIBUTE_STATUSES = "attribute_statuses";
     private static final String MARK_SEARCH_RULES = "search_rules";
     private static final String MARK_REFERENTIAL = "referential";
+    private static final String MARK_REFERENTIAL_ATTRIBUTE_LIST = "referential_attribute_list";
     private static final String APPROXIMATED_SEARCH = "approximate";
     private static final String MARK_CAN_CREATE = "can_create";
     private static final String MARK_CAN_WRITE = "can_write";
@@ -268,6 +269,7 @@ public class IdentityJspBean extends MVCAdminJspBean
         model.put( MARK_IDENTITY, extendedIdentity );
         model.put( MARK_SERVICE_CONTRACT, _serviceContract );
         model.put( MARK_REFERENTIAL, _processusReferential );
+        model.put( MARK_REFERENTIAL_ATTRIBUTE_LIST, _attributesReferential );
         model.put( MARK_ATTRIBUTE_INFO_KEY_LIST, _AttributeInfoKeyList );
         model.put( MARK_CAN_WRITE, _canWriteIdentity );
         model.put( MARK_IDENTITY_HISTORY, history );
@@ -312,6 +314,7 @@ public class IdentityJspBean extends MVCAdminJspBean
         model.put( MARK_SERVICE_CONTRACT, _serviceContract );
         model.put( MARK_SEARCH_RULES, _searchRules );
         model.put( MARK_REFERENTIAL, _processusReferential );
+        model.put( MARK_REFERENTIAL_ATTRIBUTE_LIST, _attributesReferential );
         model.put( MARK_CAN_CREATE, _canCreateIdentity );
         model.put( MARK_RULES_REQ_REACHED, rulesRequirementsReached );
         model.put( SecurityTokenService.MARK_TOKEN, SecurityTokenService.getInstance( ).getToken( request, ACTION_SEARCH_IDENTITY ) );
@@ -527,6 +530,7 @@ public class IdentityJspBean extends MVCAdminJspBean
         model.put( MARK_SERVICE_CONTRACT, _serviceContract );
         model.put( MARK_SEARCH_RULES, _searchRules );
         model.put( MARK_REFERENTIAL, _processusReferential );
+        model.put( MARK_REFERENTIAL_ATTRIBUTE_LIST, _attributesReferential );
         model.put( MARK_CAN_CREATE, _canCreateIdentity );
         model.put( MARK_CAN_WRITE, _canWriteIdentity );
         model.put( MARK_RULES_REQ_REACHED, rulesRequirementsReached );
@@ -597,6 +601,7 @@ public class IdentityJspBean extends MVCAdminJspBean
         model.put( MARK_AUTOCOMPLETE_COUNTRY_ENDPOINT, _autocompleteCountryEndpoint );
         model.put( MARK_ATTRIBUTE_STATUSES, _attributeStatuses );
         model.put( MARK_REFERENTIAL, _processusReferential );
+        model.put( MARK_REFERENTIAL_ATTRIBUTE_LIST, _attributesReferential );
         model.put( MARK_ATTRIBUTE_INFO_KEY_LIST, _AttributeInfoKeyList );
         model.put( SecurityTokenService.MARK_TOKEN, SecurityTokenService.getInstance( ).getToken( request, ACTION_CREATE_IDENTITY ) );
         addExternalInformations( request, model );
@@ -699,6 +704,7 @@ public class IdentityJspBean extends MVCAdminJspBean
         model.put( MARK_AUTOCOMPLETE_COUNTRY_ENDPOINT, _autocompleteCountryEndpoint );
         model.put( MARK_ATTRIBUTE_STATUSES, _attributeStatuses );
         model.put( MARK_REFERENTIAL, _processusReferential );
+        model.put( MARK_REFERENTIAL_ATTRIBUTE_LIST, _attributesReferential );
         model.put( MARK_ATTRIBUTE_INFO_KEY_LIST, _AttributeInfoKeyList );
         model.put( SecurityTokenService.MARK_TOKEN, SecurityTokenService.getInstance( ).getToken( request, ACTION_MODIFY_IDENTITY ) );
         addExternalInformations( request, model );

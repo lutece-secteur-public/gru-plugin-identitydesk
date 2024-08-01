@@ -185,13 +185,17 @@
                                 <@td>${serviceContractAttr.name}</@td>
                                 <@td><strong>
                                     <#if serviceContractAttr.keyName == "gender">
-                                        <#switch attributeValue>
-                                            <#case "0">#i18n{identitydesk.view_identity.gender.undefined}<#break>
-                                            <#case "1">#i18n{identitydesk.view_identity.gender.mme}<#break>
-                                            <#case "2">#i18n{identitydesk.view_identity.gender.mr}<#break>
-                                            <#default>${attributeValue}
-                                        </#switch>
-                                    <#else>${attributeValue}</#if>
+                                        <#assign genderLabel = attributeValue>
+                                        <#list getAttributeValues("gender") as genderOption>
+                                            <#if genderOption.value == attributeValue>
+                                                <#assign genderLabel = genderOption.label!genderOption.value>
+                                                <#break>
+                                            </#if>
+                                        </#list>
+                                        ${genderLabel}
+                                    <#else>
+                                        ${attributeValue}
+                                    </#if>
                                 </strong></@td>
                                 <@td>${mandatory}</@td>
                                 <td class="text-center">
@@ -256,13 +260,17 @@
                                                                 <td>${attributeChange.clientCode!''}</td>
                                                                 <td class="fw-bolder">
                                                                     <#if attributeChange.attributeKey == "gender" && attributeChange.attributeValue??>
-                                                                        <#switch attributeChange.attributeValue>
-                                                                            <#case "0">#i18n{identitydesk.view_identity.gender.undefined}<#break>
-                                                                            <#case "1">#i18n{identitydesk.view_identity.gender.mme}<#break>
-                                                                            <#case "2">#i18n{identitydesk.view_identity.gender.mr}<#break>
-                                                                            <#default>${attributeChange.attributeValue!''}
-                                                                        </#switch>
-                                                                    <#else>${attributeChange.attributeValue!''}</#if>
+                                                                        <#assign genderLabel = attributeChange.attributeValue>
+                                                                        <#list getAttributeValues("gender") as genderOption>
+                                                                            <#if genderOption.value == attributeChange.attributeValue>
+                                                                                <#assign genderLabel = genderOption.label?has_content?then(genderOption.label, genderOption.value)>
+                                                                                <#break>
+                                                                            </#if>
+                                                                        </#list>
+                                                                        ${genderLabel}
+                                                                    <#else>
+                                                                     ${attributeChange.attributeValue!''}
+                                                                    </#if>
                                                                 </td>
                                                                 <td>${attributeChange.certificationProcessus!''}</td>
                                                                 <td style="max-width:400px">${attributeChange.changeMessage!''}</td>
