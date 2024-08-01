@@ -148,18 +148,20 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             birthPlaceContainer.classList.add('d-none');
             birthPlaceContainer.querySelector('input').removeAttribute('name');
+            birthPlaceContainer.querySelector('input').setAttribute('readonly', true);
             elements.birthPlaceCertif.setAttribute('name', 'birthplace-certif');
         } else {
             elements.birthPlaceExternalContainer.classList.add('d-none');
             elements.birthPlaceExternalInput.setAttribute('name', 'birthplace_external');
             birthPlaceContainer.classList.remove('d-none');
             birthPlaceContainer.querySelector('input').setAttribute('name', 'birthplace');
+            birthPlaceContainer.querySelector('input').removeAttribute('readonly');
             elements.birthPlaceCertif.setAttribute('name', 'birthplace_code-certif');
         }
     };
-    elements.birthPlaceExternalInput.addEventListener('input', () => {
+    elements.birthPlaceExternalInput.addEventListener('input', (event) => {
         if (elements.birthCountryCode.value !== "" && elements.birthCountryCode.value !== "99100") {
-            if (birthPlaceExternalInput.value === '') {
+            if (event.target.value === '') {
                 elements.birthPlaceCertif.removeAttribute('required');
                 elements.birthPlaceCertif.parentElement.querySelector('.text-danger')?.remove();
             } else {
