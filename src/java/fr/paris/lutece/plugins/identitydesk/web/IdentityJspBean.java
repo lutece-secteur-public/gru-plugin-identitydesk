@@ -944,13 +944,13 @@ public class IdentityJspBean extends MVCAdminJspBean
     private void updateSearchAttributes( final HttpServletRequest request )
     {
         final boolean strictSearch = !Boolean.parseBoolean( request.getParameter( APPROXIMATED_SEARCH ) );
-        final List<String> requiredAttrs = Arrays.asList( "birthdate", "common_lastname", "first_name" );
+        final List<String> requiredAttrs = Arrays.asList( Constants.PARAM_BIRTH_DATE, Constants.PARAM_FAMILY_NAME, Constants.PARAM_FIRST_NAME );
 
         final List<SearchAttribute> searchList = _serviceContract.getAttributeDefinitions( ).stream( ).map( AttributeDefinitionDto::getKeyName )
                 .filter( requiredAttrs::contains ) // Check if the key is in the list of required attributes
                 .map( attrKey -> {
                     String value = request.getParameter( attrKey );
-                    if ( attrKey.equals( "birthdate" ) && value != null && !value.isEmpty( ) )
+                    if ( attrKey.equals( Constants.PARAM_BIRTH_DATE ) && value != null && !value.isEmpty( ) )
                     {
                         try
                         {
@@ -961,6 +961,9 @@ public class IdentityJspBean extends MVCAdminJspBean
                         {
                             AppLogService.error( "Can't convert the date: " + value, e );
                         }
+                    }
+                    if( attrKey.equals( Constants.PARAM_FAMILY_NAME )) {
+                        attrKey = Constants.PARAM_COMMON_LASTNAME;
                     }
                     if ( value != null )
                     {

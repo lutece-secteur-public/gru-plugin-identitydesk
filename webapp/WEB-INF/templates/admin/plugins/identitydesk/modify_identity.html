@@ -30,6 +30,9 @@
                                         <#if attr.key=='gender' || attr.key=='first_name' ||
                                             attr.key=='preferred_username' || attr.key=='family_name'>
                                             <@generateAttributeHtml attr=attr />
+                                            <#if attr.key=='family_name'>
+                                                <input type="hidden" name="common_lastname" value="${attr.value!}" />
+                                            </#if>
                                         </#if>
                                     </#list>
                                 </div>
