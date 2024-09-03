@@ -142,6 +142,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (elements.birthCountryCode.value !== "" && elements.birthCountryCode.value !== "99100") {
             elements.birthPlaceExternalContainer.classList.remove('d-none');
             elements.birthPlaceExternalInput.setAttribute('name', 'birthplace');
+            elements.birthPlaceExternalInput.setAttribute('required', true);
             if ( elements.birthPlaceExternalInput.value == "" ) {
                 elements.birthPlaceCertif.removeAttribute('required');
                 elements.birthPlaceCertif.parentElement.querySelector('.text-danger')?.remove();    
@@ -153,6 +154,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             elements.birthPlaceExternalContainer.classList.add('d-none');
             elements.birthPlaceExternalInput.setAttribute('name', 'birthplace_external');
+            elements.birthPlaceExternalInput.removeAttribute('required');
             birthPlaceContainer.classList.remove('d-none');
             birthPlaceContainer.querySelector('input').setAttribute('name', 'birthplace');
             birthPlaceContainer.querySelector('input').removeAttribute('readonly');
