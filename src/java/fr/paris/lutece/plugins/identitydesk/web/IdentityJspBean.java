@@ -43,15 +43,7 @@ import fr.paris.lutece.plugins.identitydesk.dto.ExtendedIdentityDto;
 import fr.paris.lutece.plugins.identitydesk.rbac.AccessIdentityResource;
 import fr.paris.lutece.plugins.identitydesk.service.HistoryService;
 import fr.paris.lutece.plugins.identitydesk.service.IdentityDeskService;
-import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.common.AttributeDto;
-import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.common.AttributeKeyDto;
-import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.common.AttributeStatus;
-import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.common.AttributeTreatmentType;
-import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.common.AuthorType;
-import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.common.IdentityDto;
-import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.common.RequestAuthor;
-import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.common.ResponseDto;
-import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.common.ResponseStatusType;
+import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.common.*;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.contract.AttributeDefinitionDto;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.contract.ServiceContractDto;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.crud.IdentityChangeRequest;
@@ -63,13 +55,9 @@ import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.search.IdentitySearch
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.search.IdentitySearchResponse;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.search.SearchAttribute;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.search.SearchDto;
-import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.task.IdentityResourceType;
-import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.task.IdentityTaskCreateRequest;
-import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.task.IdentityTaskCreateResponse;
-import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.task.IdentityTaskDto;
-import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.task.IdentityTaskType;
+import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.task.*;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.util.Constants;
-import fr.paris.lutece.plugins.identitystore.v3.web.service.IdentityService;
+import fr.paris.lutece.plugins.identitystore.v3.web.service.IdentityServiceExtended;
 import fr.paris.lutece.plugins.identitystore.web.exception.IdentityStoreException;
 import fr.paris.lutece.portal.service.admin.AccessDeniedException;
 import fr.paris.lutece.portal.service.plugin.PluginService;
@@ -88,15 +76,7 @@ import org.apache.commons.lang3.StringUtils;
 import javax.servlet.http.HttpServletRequest;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -190,7 +170,7 @@ public class IdentityJspBean extends MVCAdminJspBean
     private static final String ACTION_VALIDATE_EMAIL = "validateEmail";
 
     // Cache
-    private static final ServiceContractCache _serviceContractCache = SpringContextService.getBean( "identity.serviceContractCacheService" );
+    private static final ServiceContractCache _serviceContractCache = SpringContextService.getBean( "identitydesk.serviceContractCacheService" );
     private static final ServiceProcessusReferentialCache _serviceProcessusReferentialCache = SpringContextService
             .getBean( "identitydesk.serviceProcessusReferentialCache" );
     private static final ServiceAttributeKeyReferentialCache _serviceAttributeKeyReferentialCache = SpringContextService
@@ -208,7 +188,7 @@ public class IdentityJspBean extends MVCAdminJspBean
     boolean _canCreateIdentity = false;
     boolean _canWriteIdentity = false;
 
-    private final IdentityService _identityService = SpringContextService.getBean( "identity.identityService" );
+    private final IdentityServiceExtended _identityService = SpringContextService.getBean( "identitydesk.identityService" );
     private final String _accountCreationTaskMinLevel = AppPropertiesService.getProperty( "identitydesk.account.creation.task.eligibility.min.level" );
     private final String _autocompleteCityEndpoint = AppPropertiesService.getProperty( "identitydesk.autocomplete.city.endpoint" );
     private final String _autocompleteCountryEndpoint = AppPropertiesService.getProperty( "identitydesk.autocomplete.country.endpoint" );

@@ -1,11 +1,10 @@
 package fr.paris.lutece.plugins.identitydesk.service;
 
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.common.RequestAuthor;
-import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.common.ResponseStatusType;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.common.ResponseDto;
+import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.common.ResponseStatusType;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.history.IdentityHistory;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.history.IdentityHistoryGetResponse;
-import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.history.IdentityHistorySearchRequest;
 import fr.paris.lutece.plugins.identitystore.v3.web.service.IdentityServiceExtended;
 import fr.paris.lutece.plugins.identitystore.web.exception.IdentityStoreException;
 import fr.paris.lutece.portal.service.spring.SpringContextService;
@@ -14,9 +13,8 @@ import fr.paris.lutece.portal.service.util.AppPropertiesService;
 
 public class HistoryService {
 
-    private static final IdentityServiceExtended _serviceIdentity = SpringContextService
-            .getBean("identityService.rest.httpAccess");
-    private String _currentClientCode = AppPropertiesService.getProperty("identitydesk.default.client.code");
+    private static final IdentityServiceExtended _serviceIdentity = SpringContextService.getBean("identitydesk.identityService");
+    private final String _currentClientCode = AppPropertiesService.getProperty("identitydesk.default.client.code");
 
     private static HistoryService _instance;
 

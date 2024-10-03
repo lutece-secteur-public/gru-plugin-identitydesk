@@ -21,7 +21,7 @@ import java.util.Collections;
 import java.util.List;
 
 public class IdentityDeskService {
-    private static final IdentityServiceExtended _serviceIdentity = SpringContextService.getBean("identityService.rest.httpAccess");
+    private static final IdentityServiceExtended _serviceIdentity = SpringContextService.getBean("identitydesk.identityService");
     private final String _currentClientCode = AppPropertiesService.getProperty( "identitydesk.default.client.code" );
 
     private static IdentityDeskService _instance;
