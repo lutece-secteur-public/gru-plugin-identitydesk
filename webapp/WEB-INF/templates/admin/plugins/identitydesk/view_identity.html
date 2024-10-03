@@ -41,7 +41,7 @@
                     </div>
                   </#list>
                     <#if identity.consolidate?? && identity.consolidate.mergedIdentities?size != 0 >
-                        <@offcanvas id="mergedList" title="<i class='fa fa-list fs-2'></i> #i18n{identitydesk.search_identities.detail.monparis.merged.list}" btnTitle="#i18n{identitydesk.search_identities.detail.monparis.merged}<br>#i18n{identitydesk.search_identities.yes}" size="auto" bodyClass="p-5" btnClass=" mt-3" btnTitleShow=true badgeContent="" bodyClass="p-0" badgeContent="${identity.consolidate.mergedIdentities?size}">
+                        <@offcanvas id="mergedList" title="<i class='fa fa-list fs-2'></i> #i18n{identitydesk.search_identities.detail.monparis.merged.list}" btnTitle="#i18n{identitydesk.search_identities.detail.monparis.consolidated}<br>#i18n{identitydesk.search_identities.yes}" size="auto" bodyClass="p-5" btnClass=" mt-3" btnTitleShow=true badgeContent="" bodyClass="p-0" badgeContent="${identity.consolidate.mergedIdentities?size}">
                             <@table bordered=true>
                             <tr>
                                 <th>
@@ -61,7 +61,7 @@
                         <div class="d-inline-block card rounded-5 p-4 py-2 shadow-lg m-1">
                             <div class="d-flex">
                                 <div>
-                                    <span>#i18n{identitydesk.search_identities.detail.monparis.merged}</span>
+                                    <span>#i18n{identitydesk.search_identities.detail.monparis.consolidated}</span>
                                     <br>
                                     <span class="text-primary fw-bold">#i18n{identitydesk.search_identities.no}</span></div>
                             </div>
