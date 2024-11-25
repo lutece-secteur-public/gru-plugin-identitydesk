@@ -174,7 +174,7 @@
                             <#assign level = 0>
                             <#assign certifier = "">
                             <#list identity.attributes?filter(a -> a.key == serviceContractAttr.keyName) as attr>
-                                <#assign attributeValue = attr.value>
+                                <#assign attributeValue = attr.value!"">
                                 <#assign level = (attributeValue?has_content)?then(getAttributeCertificationLevel(attr.certifier, attr.key)?number, 0)>
                                 <#assign certifier = attr.certifier>
                             </#list>

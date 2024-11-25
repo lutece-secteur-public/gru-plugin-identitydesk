@@ -61,11 +61,11 @@
                 <#elseif key == "gender">
                     <#switch attr.value>
                         <#case "0">
-                            <#return "N/A">
+                            <#return "ND">
                         <#case "1">
-                            <#return "MME">
+                            <#return "F">
                         <#case "2">
-                            <#return "MR">
+                            <#return "H">
                     </#switch>
                 <#else>
                     <#return attr.value>

@@ -62,7 +62,7 @@
           <@table bordered=true>
             <thead>
               <@tr>
-                <th class="text-center">#</th>
+                <@th>#i18n{identitydesk.search_identities.gender}</@th>
                 <@th>#i18n{identitydesk.search_identities.name}</@th>
                 <@th>#i18n{identitydesk.search_identities.birthplace}</@th>
                 <@th>#i18n{identitydesk.search_identities.address}</@th>
@@ -81,16 +81,15 @@
                 <tr class="filtering-item"
                   <#list service_contract.attributeDefinitions?filter(a -> a.attributeRight.searchable && a.keyName != 'birthplace_code' && a.keyName != 'birthcountry_code' && a.keyName != 'login') as searchableAttr>
                     <#list identity.attributes?filter(a -> a.key == searchableAttr.keyName) as attr>
-                      data-filter-${searchableAttr.keyName}="${attr.value}"
+                      data-filter-${searchableAttr.keyName!""}="${attr.value!""}"
                     </#list>
                   </#list>
                 >
-                  <td class="text-center">
-                  <#if return_url??>
-                  <input class="form-check-input" type="checkbox" value="${identity.customerId!''}" name="select_identity_${identity?index + 1}" aria-label="selection" style="transform: scale(1.5);">
-                  <#else>
-                  ${identity?index + 1}
-                  </#if>
+                  <td>
+                      <#if return_url??>
+                      <input class="form-check-input" type="checkbox" value="${identity.customerId!''}" name="select_identity_${identity?index + 1}" aria-label="selection" style="transform: scale(1.5);">
+                      </#if>
+                      <strong>${getAttributeValue(identity.attributes, 'gender')}</strong>
                   </td>
                   <@td><strong>${getAttributeValue(identity.attributes, 'family_name')}</strong> ${getAttributeValue(identity.attributes, 'first_name')}<br><i>${getAttributeValue(identity.attributes, 'preferred_username')}</i></@td>
                   <@td>${getAttributeValue(identity.attributes, 'birthdate')}<br>${getAttributeValue(identity.attributes, 'birthplace')}<#if getAttributeValue(identity.attributes, 'birthplace')?has_content>, </#if>${getAttributeValue(identity.attributes, 'birthcountry')}</@td>
