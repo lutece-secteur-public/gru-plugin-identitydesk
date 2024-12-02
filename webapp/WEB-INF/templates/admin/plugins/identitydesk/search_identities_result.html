@@ -96,7 +96,7 @@
                   <@td>${getAttributeValue(identity.attributes, 'address')}<br>${getAttributeValue(identity.attributes, 'address_city')}<#if getAttributeValue(identity.attributes, 'address_city')?has_content>, </#if>${getAttributeValue(identity.attributes, 'address_postal_code')}</@td>
                   <@td>${getAttributeValue(identity.attributes, 'mobile_phone')}<br>${getAttributeValue(identity.attributes, 'email')}</@td>
                   <td class="text-center">
-                    <#if identity.connectionId??>
+                    <#if identity.monParisActive>
                       <strong class="text-success">#i18n{identitydesk.search_identities.yes}</strong><br>
                       <span>${getAttributeValue(identity.attributes, 'login')}</span>
                     <#else>

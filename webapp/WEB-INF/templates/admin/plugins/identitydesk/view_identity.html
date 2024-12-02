@@ -29,7 +29,7 @@
                                 <#if identity.expiration?exists>${identity.expiration.expirationDate!''}<#else>-</#if>
                                 <#break>
                               <#case "monparis">
-                                <#if identity.connectionId??><span class="text-success fw-bold">#i18n{identitydesk.search_identities.yes}</span><#else><span class="text-danger fw-bold">#i18n{identitydesk.search_identities.no}</span></#if>
+                                <#if identity.monParisActive><span class="text-success fw-bold">#i18n{identitydesk.search_identities.yes}</span><#else><span class="text-danger fw-bold">#i18n{identitydesk.search_identities.no}</span></#if>
                                 <#break>
                               <#case "monparis.deleted">
                                 <#if identity.expiration?? && identity.expiration.deleted><span class="text-danger fw-bold">#i18n{identitydesk.search_identities.yes}</span><#else><span class="text-success fw-bold">#i18n{identitydesk.search_identities.no}</span></#if>
