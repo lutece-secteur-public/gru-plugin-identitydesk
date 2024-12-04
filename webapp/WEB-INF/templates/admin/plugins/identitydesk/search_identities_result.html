@@ -131,11 +131,11 @@
                           <@dropdownItem href='${return_url}?cuid=${identity.customerId}' title='#i18n{identitydesk.search_identities.buttonSelectIdentityAndReturn}'/>
                       </#if>
                   
-                      <#if eligible_identity_to_account_list?seq_contains(identity.customerId)>
+                      <#if eligible_identity_to_account_list?seq_contains(identity.customerId) && getAttributeValue(identity.attributes, 'email')?has_content>
                           <@dropdownItem href='#' title='#i18n{identitydesk.search_identities.createAccountTask}' params='data-bs-toggle="modal" data-bs-target="#confirmCreateAccountModal${identity.customerId}"' />
                       </#if>
 
-                      <#if eligible_identity_to_email_validation_list?seq_contains(identity.customerId)>
+                      <#if eligible_identity_to_email_validation_list?seq_contains(identity.customerId) && getAttributeValue(identity.attributes, 'email')?has_content>
                           <@dropdownItem href='jsp/admin/plugins/identitydesk/ManageIdentities.jsp?action_validateEmail&customer_id=${identity.customerId}&token=${token}' title='#i18n{identitydesk.search_identities.validateEmailTask}'  />
                       </#if>
                   
@@ -145,35 +145,35 @@
                           <@offcanvas targetUrl="jsp/admin/plugins/identitydesk/ManageIdentities.jsp?view_displayIdentityTaskList&customer_id=${identity.customerId}&token=${token}" targetElement="#task-list" id="tasklist-${identity.customerId}" title="#i18n{identitydesk.search_identities.displayIdentityTaskList}" btnTitle="#i18n{identitydesk.search_identities.displayIdentityTaskList}" btnTitleShow=false bodyClass="p-0"  btnClass=" d-none" btnIcon="list"  />
                       </#if>
                   </@aButton>
-                  <#if eligible_identity_to_account_list?seq_contains(identity.customerId)>
+                  <#if eligible_identity_to_account_list?seq_contains(identity.customerId) >
                     <div class="modal fade" id="confirmCreateAccountModal${identity.customerId}" tabindex="-1" aria-labelledby="confirmCreateAccountModalLabel"
                     aria-hidden="true">
-                    <div class="modal-dialog modal-lg rounded-5">
-                        <div class="modal-content rounded-5">
-                            <div class="modal-header border-0">
-                                <h1 class="modal-title text-center w-100 p-4 pb-0 fs-2" id="confirmCreateAccountModalLabel">
-                                  &Ecirc;tes-vous sur de vouloir demander une cr&eacute;ation de compte Mon Paris ?</h1>
-                                <button type="button"
-                                    class="btn btn-rounded btn-light border position-absolute end-0 me-3 top-0 mt-3"
-                                    data-bs-dismiss="modal" aria-label="Close"><i class="ti ti-x fs-2"></i></button>
-                            </div>
-                            <div id="summaryTableModal">
-                                <div class="modal-footer mt-0 border-0 justify-content-center pb-4 pt-0">
-                                        <@offcanvas targetUrl="jsp/admin/plugins/identitydesk/ManageIdentities.jsp?action_createAccount&customer_id=${identity.customerId}&token=${token}" targetElement="#task-result" id="taskResult-${identity.customerId}" title="#i18n{identitydesk.search_identities.createAccountTask}" btnTitle="#i18n{identitydesk.search_identities.createAccountTask}" btnTitleShow=true bodyClass="p-0" size="50" btnClass=""  />
-                                        <script>
-                                          document.getElementById("btn-taskResult-${identity.customerId}").addEventListener("click", function() {
-                                            const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById("confirmCreateAccountModal${identity.customerId}"));
-                                            modal.hide();
-                                          });
-                                        </script>
-                                    <button type="button" id="cancelSubmit" class="btn btn-light"
-                                        data-bs-dismiss="modal">${i18n("portal.admin.message.buttonCancel")}</button>
+                        <div class="modal-dialog modal-lg rounded-5">
+                            <div class="modal-content rounded-5">
+                                <div class="modal-header border-0">
+                                    <h1 class="modal-title text-center w-100 p-4 pb-0 fs-2" id="confirmCreateAccountModalLabel">
+                                      &Ecirc;tes-vous sur de vouloir demander une cr&eacute;ation de compte Mon Paris ?</h1>
+                                    <button type="button"
+                                        class="btn btn-rounded btn-light border position-absolute end-0 me-3 top-0 mt-3"
+                                        data-bs-dismiss="modal" aria-label="Close"><i class="ti ti-x fs-2"></i></button>
+                                </div>
+                                <div id="summaryTableModal">
+                                    <div class="modal-footer mt-0 border-0 justify-content-center pb-4 pt-0">
+                                            <@offcanvas targetUrl="jsp/admin/plugins/identitydesk/ManageIdentities.jsp?action_createAccount&customer_id=${identity.customerId}&token=${token}" targetElement="#task-result" id="taskResult-${identity.customerId}" title="#i18n{identitydesk.search_identities.createAccountTask}" btnTitle="#i18n{identitydesk.search_identities.createAccountTask}" btnTitleShow=true bodyClass="p-0" size="50" btnClass=""  />
+                                            <script>
+                                              document.getElementById("btn-taskResult-${identity.customerId}").addEventListener("click", function() {
+                                                const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById("confirmCreateAccountModal${identity.customerId}"));
+                                                modal.hide();
+                                              });
+                                            </script>
+                                        <button type="button" id="cancelSubmit" class="btn btn-light"
+                                            data-bs-dismiss="modal">${i18n("portal.admin.message.buttonCancel")}</button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
-                    </#if>
+                  </#if>
                   </@td>
                 </tr>
               </#list>
