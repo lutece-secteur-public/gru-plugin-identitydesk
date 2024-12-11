@@ -17,6 +17,9 @@
                 </#assign>
             <#else>
                 <#assign description>#i18n{identitydesk.search_identities.description}
+                <a class="btn btn-dark btn-sm text-decoration-none border rounded-5" href="jsp/admin/plugins/identitydesk/ManageIdentities.jsp?plugin_name=identitydesk&new_search=true">
+                    <small> <i class="ti ti-search"></i> Nouvelle recherche</small>
+                </a>
                 </#assign>
             </#if>
             <@tform action="jsp/admin/plugins/identitydesk/ManageIdentities.jsp?action_searchIdentity" class="container-fluid p-5" params='style="max-width:1600px !important"'>
