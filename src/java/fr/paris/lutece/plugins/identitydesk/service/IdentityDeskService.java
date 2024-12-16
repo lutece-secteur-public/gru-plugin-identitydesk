@@ -79,4 +79,17 @@ public class IdentityDeskService {
         }
         return Collections.emptyList();
     }
+
+    public List<IdentityTaskDto> getIdentityTasksBySecondaryCuid( final String customerId, final RequestAuthor author ) {
+        try
+        {
+            final IdentityTaskListGetResponse response = _serviceIdentity.getIdentityTaskBySecondaryCuid( customerId, _currentClientCode, author );
+            return response.getTasks();
+        }
+        catch ( final IdentityStoreException e )
+        {
+            AppLogService.debug( "An error occurred trying to get the task list associated to identity " + customerId, e );
+        }
+        return Collections.emptyList();
+    }
 }
