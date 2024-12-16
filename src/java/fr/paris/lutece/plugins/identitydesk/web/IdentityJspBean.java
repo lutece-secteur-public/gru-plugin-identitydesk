@@ -351,6 +351,8 @@ public class IdentityJspBean extends MVCAdminJspBean
 
         final LocalIdentityDto dto = IdentityDeskService.instance().toLocalIdentityDto( qualifiedIdentity, _serviceContract, this.getAuthor( ) );
 
+        dto.getTasks().addAll(IdentityDeskService.instance().getIdentityTasksBySecondaryCuid( qualifiedIdentity.getCustomerId(), this.getAuthor( ) ));
+
         final Map<String, Object> model = getModel( );
         model.put( MARK_IDENTITY, dto );
         model.put( MARK_SERVICE_CONTRACT, _serviceContract );
