@@ -46,8 +46,8 @@
                 <@table bordered=true>
                     <thead>
                         <tr>
+                            <th>#i18n{identitydesk.display_identity_task.label.task.type}</th>
                             <th>#i18n{identitydesk.display_identity_task.label.task.change.author.name}</th>
-                            <th>#i18n{identitydesk.display_identity_task.label.task.type</th>
                             <th>#i18n{identitydesk.display_identity_task.label.task.creationDate}</th>
                             <th>#i18n{identitydesk.display_identity_task.label.task.lastUpdateClientCode}</th>
                             <th>#i18n{identitydesk.display_identity_task.label.task.lastUpdateDate}</th>
@@ -59,17 +59,17 @@
                     <tbody>
                         <#list sortedTasks as task>
                             <tr>
-                                <td>${(task.taskChanges[0].author.name)!} - ${(task.taskChanges[0].clientCode)!'N/A'}</td>
                                 <td>
                                     <#if task.taskType == "EMAIL_VALIDATION_REQUEST" ||
                                     task.taskType == "ACCOUNT_CREATION_REQUEST" ||
                                     task.taskType == "ACCOUNT_MERGE_REQUEST" ||
                                     task.taskType == "ACCOUNT_IDENTITY_MERGE_REQUEST" >
-                                        #i18n{identitydesk.display_identity_task.label.task.type.${task.taskType}}
+                                    #i18n{identitydesk.display_identity_task.label.task.type.${task.taskType}}
                                     <#else>
-                                        {task.taskType}
-                                    </#if>
+                                    {task.taskType}
+                                </#if>
                                 </td>
+                                <td>${(task.taskChanges[0].author.name)!} - ${(task.taskChanges[0].clientCode)!'N/A'}</td>
                                 <td>${task.creationDate}</td>
                                 <td>${task.lastUpdateClientCode}</td>
                                 <td>${task.lastUpdateDate}</td>
