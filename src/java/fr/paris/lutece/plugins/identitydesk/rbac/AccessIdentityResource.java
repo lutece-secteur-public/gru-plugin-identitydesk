@@ -45,6 +45,11 @@ public class AccessIdentityResource implements RBACResource
     public static final String PERMISSION_READ = "READ";
     public static final String PERMISSION_WRITE = "WRITE";
     public static final String PERMISSION_CREATE = "CREATE";
+    public static final String PERMISSION_DELETE_IDENTITY = "DELETE_IDENTITY";
+    public static final String PERMISSION_VIEW_HISTORY = "VIEW_HISTORY";
+    public static final String PERMISSION_ACTION_CREATE_ACCOUNT = "ACTION_CREATE_ACCOUNT";
+    public static final String PERMISSION_ACTION_VALIDATE_EMAIL = "ACTION_VALIDATE_EMAIL";
+    public static final String PERMISSION_VIEW_TASKS = "VIEW_TASKS";
 
     @Override
     public String getResourceTypeCode( )

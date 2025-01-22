@@ -49,6 +49,11 @@ public class AccessIdentityResourceIdService extends ResourceIdService
     private static final String PROPERTY_LABEL_READ = "identitydesk.rbac.access.identity.permission.read";
     private static final String PROPERTY_LABEL_WRITE = "identitydesk.rbac.access.identity.permission.write";
     private static final String PROPERTY_LABEL_CREATE = "identitydesk.rbac.access.identity.permission.create";
+    private static final String PROPERTY_LABEL_DELETE_IDENTITY = "identitydesk.rbac.access.identity.permission.delete";
+    private static final String PROPERTY_LABEL_VIEW_HISTORY = "identitydesk.rbac.access.identity.permission.history";
+    private static final String PROPERTY_LABEL_ACTION_CREATE_ACCOUNT = "identitydesk.rbac.access.identity.permission.account.create";
+    private static final String PROPERTY_LABEL_ACTION_VALIDATE_EMAIL = "identitydesk.rbac.access.identity.permission.validate.email";
+    private static final String PROPERTY_LABEL_VIEW_TASKS = "identitydesk.rbac.access.identity.permission.tasks";
 
     /**
      * {@inheritDoc}
@@ -76,6 +81,31 @@ public class AccessIdentityResourceIdService extends ResourceIdService
         permCreate.setPermissionKey( AccessIdentityResource.PERMISSION_CREATE );
         permCreate.setPermissionTitleKey( PROPERTY_LABEL_CREATE );
         rt.registerPermission( permCreate );
+
+        Permission permDelete = new Permission( );
+        permDelete.setPermissionKey( AccessIdentityResource.PERMISSION_DELETE_IDENTITY );
+        permDelete.setPermissionTitleKey( PROPERTY_LABEL_DELETE_IDENTITY );
+        rt.registerPermission( permDelete );
+
+        Permission permHistory = new Permission( );
+        permHistory.setPermissionKey( AccessIdentityResource.PERMISSION_VIEW_HISTORY );
+        permHistory.setPermissionTitleKey( PROPERTY_LABEL_VIEW_HISTORY );
+        rt.registerPermission( permHistory );
+
+        Permission permCreateAccount = new Permission( );
+        permCreateAccount.setPermissionKey( AccessIdentityResource.PERMISSION_ACTION_CREATE_ACCOUNT );
+        permCreateAccount.setPermissionTitleKey( PROPERTY_LABEL_ACTION_CREATE_ACCOUNT );
+        rt.registerPermission( permCreateAccount );
+
+        Permission permValidateEmail = new Permission( );
+        permValidateEmail.setPermissionKey( AccessIdentityResource.PERMISSION_ACTION_VALIDATE_EMAIL );
+        permValidateEmail.setPermissionTitleKey( PROPERTY_LABEL_ACTION_VALIDATE_EMAIL );
+        rt.registerPermission( permValidateEmail );
+
+        Permission permTasks = new Permission( );
+        permTasks.setPermissionKey( AccessIdentityResource.PERMISSION_VIEW_TASKS );
+        permTasks.setPermissionTitleKey( PROPERTY_LABEL_VIEW_TASKS );
+        rt.registerPermission( permTasks );
 
         ResourceTypeManager.registerResourceType( rt );
     }

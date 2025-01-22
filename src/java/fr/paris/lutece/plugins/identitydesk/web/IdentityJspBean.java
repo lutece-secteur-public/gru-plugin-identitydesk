@@ -145,6 +145,10 @@ public class IdentityJspBean extends MVCAdminJspBean
     private static final String APPROXIMATED_SEARCH = "approximate";
     private static final String MARK_CAN_CREATE = "can_create";
     private static final String MARK_CAN_WRITE = "can_write";
+    private static final String MARK_CAN_CREATE_ACCOUNT = "can_create_account";
+    private static final String MARK_CAN_VALIDATE_EMAIL = "can_validate_email";
+    private static final String MARK_CAN_VIEW_TASKS = "can_view_tasks";
+    private static final String MARK_CAN_VIEW_HISTORY = "can_view_history";
     private static final String MARK_RULES_REQ_REACHED = "rules_requirements_reached";
     private static final String MARK_ATTRIBUTE_INFO_KEY_LIST = "attribute_info_key_list";
     private static final String MARK_SEARCH_PARAMS = "search_params";
@@ -187,6 +191,10 @@ public class IdentityJspBean extends MVCAdminJspBean
 
     boolean _canCreateIdentity = false;
     boolean _canWriteIdentity = false;
+    boolean _canCreateAccount = false;
+    boolean _canValidateEmail = false;
+    boolean _canViewTasks = false;
+    boolean _canViewHisotry = false;
 
     private final IdentityServiceExtended _identityService = SpringContextService.getBean( "identitydesk.identityService" );
     private final String _accountCreationTaskMinLevel = AppPropertiesService.getProperty( "identitydesk.account.creation.task.eligibility.min.level" );
@@ -235,14 +243,18 @@ public class IdentityJspBean extends MVCAdminJspBean
             return getSearchIdentities( request );
         }
 
-        try
+        _canViewHisotry = RBACService.isAuthorized( new AccessIdentityResource( ), AccessIdentityResource.PERMISSION_VIEW_HISTORY, (User) getUser( ) );
+
+        if(_canViewHisotry)
         {
-            history = HistoryService.getInstance().getIdentityHistory(qualifiedIdentity.getCustomerId(), getAuthor());
-        }
-        catch (IdentityStoreException e)
-        {
-            AppLogService.error("Error while retrieving the history for identity [customerId = " + qualifiedIdentity.getCustomerId() + "].", e);
-            addError(MESSAGE_GET_IDENTITY_HISTORY_ERROR, getLocale());
+            try
+            {
+                history = HistoryService.getInstance().getIdentityHistory(qualifiedIdentity.getCustomerId(), getAuthor());
+            } catch (IdentityStoreException e)
+            {
+                AppLogService.error("Error while retrieving the history for identity [customerId = " + qualifiedIdentity.getCustomerId() + "].", e);
+                addError(MESSAGE_GET_IDENTITY_HISTORY_ERROR, getLocale());
+            }
         }
 
         final Map<String, Object> model = getModel( );
@@ -252,6 +264,7 @@ public class IdentityJspBean extends MVCAdminJspBean
         model.put( MARK_REFERENTIAL_ATTRIBUTE_LIST, _attributesReferential );
         model.put( MARK_ATTRIBUTE_INFO_KEY_LIST, _AttributeInfoKeyList );
         model.put( MARK_CAN_WRITE, _canWriteIdentity );
+        model.put( MARK_CAN_VIEW_HISTORY, _canViewHisotry );
         model.put( MARK_IDENTITY_HISTORY, history );
         model.put( SecurityTokenService.MARK_TOKEN, SecurityTokenService.getInstance( ).getToken( request, ACTION_MODIFY_IDENTITY ) );
         addExternalInformations( request, model );
@@ -330,6 +343,10 @@ public class IdentityJspBean extends MVCAdminJspBean
         //     throw new AccessDeniedException( "Invalid security token" );
         // }
 
+        if ( !_canViewTasks )
+        {
+            throw new AccessDeniedException( "You don't have the right to view task list." );
+        }
         final String customerId = request.getParameter( Constants.PARAM_ID_CUSTOMER );
         final IdentityDto qualifiedIdentity;
         try
@@ -366,12 +383,20 @@ public class IdentityJspBean extends MVCAdminJspBean
     @Action( ACTION_CREATE_ACCOUNT )
     public String doCreateAccount( final HttpServletRequest request ) throws AccessDeniedException
     {
+        if ( !_canCreateAccount )
+        {
+            throw new AccessDeniedException( "You don't have the right to do a account creation request." );
+        }
         return this.createTask( request, IdentityTaskType.ACCOUNT_CREATION_REQUEST.name(), MESSAGE_CREATE_IDENTITY_ACCOUNT_ERROR );
     }
 
     @Action( ACTION_VALIDATE_EMAIL )
     public String doValidateEmail( final HttpServletRequest request ) throws AccessDeniedException
     {
+        if ( !_canValidateEmail )
+        {
+            throw new AccessDeniedException( "You don't have the right to do a email validation request." );
+        }
         return this.createTask( request, IdentityTaskType.EMAIL_VALIDATION_REQUEST.name(), MESSAGE_VALIDATE_IDENTITY_EMAIL_ERROR );
     }
 
@@ -494,6 +519,9 @@ public class IdentityJspBean extends MVCAdminJspBean
 
         _canWriteIdentity = RBACService.isAuthorized( new AccessIdentityResource( ), AccessIdentityResource.PERMISSION_WRITE, (User) getUser( ) );
         _canCreateIdentity = RBACService.isAuthorized( new AccessIdentityResource( ), AccessIdentityResource.PERMISSION_CREATE, (User) getUser( ) );
+        _canCreateAccount = RBACService.isAuthorized( new AccessIdentityResource( ), AccessIdentityResource.PERMISSION_ACTION_CREATE_ACCOUNT, (User) getUser( ) );
+        _canValidateEmail = RBACService.isAuthorized( new AccessIdentityResource( ), AccessIdentityResource.PERMISSION_ACTION_VALIDATE_EMAIL, (User) getUser( ) );
+        _canViewTasks = RBACService.isAuthorized( new AccessIdentityResource( ), AccessIdentityResource.PERMISSION_VIEW_TASKS, (User) getUser( ) );
         final boolean rulesRequirementsReached = _searchRules.stream( )
                 .anyMatch( rule -> rule.stream( ).allMatch( key -> _searchAttributes.stream( ).map( SearchAttribute::getKey ).anyMatch( key::equals ) ) );
 
@@ -514,6 +542,9 @@ public class IdentityJspBean extends MVCAdminJspBean
         model.put( MARK_REFERENTIAL, _processusReferential );
         model.put( MARK_REFERENTIAL_ATTRIBUTE_LIST, _attributesReferential );
         model.put( MARK_CAN_CREATE, _canCreateIdentity );
+        model.put( MARK_CAN_CREATE_ACCOUNT, _canCreateAccount );
+        model.put( MARK_CAN_VALIDATE_EMAIL, _canValidateEmail );
+        model.put( MARK_CAN_VIEW_TASKS, _canViewTasks );
         model.put( MARK_CAN_WRITE, _canWriteIdentity );
         model.put( MARK_RULES_REQ_REACHED, rulesRequirementsReached );
         model.put( APPROXIMATED_SEARCH, Boolean.parseBoolean( request.getParameter( PARAMETER_APPROXIMATE ) ) );
@@ -1226,56 +1257,62 @@ public class IdentityJspBean extends MVCAdminJspBean
 
     private boolean eligibleToEmailValidation( final ExtendedIdentityDto identityDto )
     {
-        return identityDto.getAttributes().stream().anyMatch(attributeDto -> Objects.equals(attributeDto.getKey(), Constants.PARAM_EMAIL) && ( attributeDto.getCertificationLevel( ) == null || attributeDto.getCertificationLevel( ) <= 100 ) );
+        if(_canValidateEmail)
+        {
+            return identityDto.getAttributes().stream().anyMatch(attributeDto -> Objects.equals(attributeDto.getKey(), Constants.PARAM_EMAIL) && (attributeDto.getCertificationLevel() == null || attributeDto.getCertificationLevel() <= 100));
+        }
+        return false;
     }
 
     private boolean eligibleToAccountCreation( final ExtendedIdentityDto identityDto )
     {
-        if ( identityDto.isMonParisActive( ) )
+        if(_canCreateAccount)
         {
-            final StringBuilder error = new StringBuilder( "Computing Identity " ).append( identityDto.getCustomerId( ) )
-                    .append( " eligibility to account creation :: " ).append( "Already connected" );
-            AppLogService.debug( error );
-            return false;
-        }
-
-        final List<String> pivotKeys = _attributesReferential.stream( ).filter( AttributeKeyDto::isPivot ).map( AttributeKeyDto::getKeyName )
-                .collect( Collectors.toList( ) );
-        final List<AttributeDto> pivotAttributes = identityDto.getAttributes( ).stream( ).filter( a -> pivotKeys.contains( a.getKey( ) ) )
-                .collect( Collectors.toList( ) );
-
-        if ( pivotAttributes.size( ) == pivotKeys.size( ) // Born in France
-                || ( pivotAttributes.size( ) == pivotKeys.size( ) - 1 // Not born in france
-                        && pivotAttributes.stream( ).map( AttributeDto::getKey ).noneMatch( s -> s.equals( Constants.PARAM_BIRTH_PLACE_CODE ) )
-                        && pivotAttributes.stream( ).anyMatch( attributeDto -> attributeDto.getKey( ).equals( Constants.PARAM_BIRTH_COUNTRY_CODE )
-                                && !attributeDto.getValue( ).equals( "99100" ) ) ) )
-        {
-            final List<String> errors = new ArrayList<>( );
-            final AttributeCertificationProcessusDto attributeCertificationProcessusDto = _processusReferential.stream( )
-                    .filter( processus -> processus.getCode( ).equals( _accountCreationTaskMinLevel ) ).findFirst( ).orElse( null );
-
-            for ( final AttributeDto attributeDto : pivotAttributes )
+            if (identityDto.isMonParisActive())
             {
-                final AttributeCertificationLevelDto certificationLevel = attributeCertificationProcessusDto.getAttributeCertificationLevels( ).stream( )
-                        .filter( cert -> cert.getAttributeKey( ).equals( attributeDto.getKey( ) ) ).findFirst( ).orElse( null );
-                final Integer minRequiredLevel = Integer.valueOf( certificationLevel.getLevel( ).getLevel( ) );
-                if ( attributeDto.getCertificationLevel( ) < minRequiredLevel )
+                final StringBuilder error = new StringBuilder("Computing Identity ").append(identityDto.getCustomerId())
+                        .append(" eligibility to account creation :: ").append("Already connected");
+                AppLogService.debug(error);
+                return false;
+            }
+
+            final List<String> pivotKeys = _attributesReferential.stream().filter(AttributeKeyDto::isPivot).map(AttributeKeyDto::getKeyName)
+                    .collect(Collectors.toList());
+            final List<AttributeDto> pivotAttributes = identityDto.getAttributes().stream().filter(a -> pivotKeys.contains(a.getKey()))
+                    .collect(Collectors.toList());
+
+            if (pivotAttributes.size() == pivotKeys.size() // Born in France
+                    || (pivotAttributes.size() == pivotKeys.size() - 1 // Not born in france
+                    && pivotAttributes.stream().map(AttributeDto::getKey).noneMatch(s -> s.equals(Constants.PARAM_BIRTH_PLACE_CODE))
+                    && pivotAttributes.stream().anyMatch(attributeDto -> attributeDto.getKey().equals(Constants.PARAM_BIRTH_COUNTRY_CODE)
+                    && !attributeDto.getValue().equals("99100"))))
+            {
+                final List<String> errors = new ArrayList<>();
+                final AttributeCertificationProcessusDto attributeCertificationProcessusDto = _processusReferential.stream()
+                        .filter(processus -> processus.getCode().equals(_accountCreationTaskMinLevel)).findFirst().orElse(null);
+
+                for (final AttributeDto attributeDto : pivotAttributes)
                 {
-                    errors.add( "[attribute-key=" + attributeDto.getKey( ) + "][attribute-certification-level=" + attributeDto.getCertificationLevel( )
-                            + "][expected-level=" + minRequiredLevel + "]" );
+                    final AttributeCertificationLevelDto certificationLevel = attributeCertificationProcessusDto.getAttributeCertificationLevels().stream()
+                            .filter(cert -> cert.getAttributeKey().equals(attributeDto.getKey())).findFirst().orElse(null);
+                    final Integer minRequiredLevel = Integer.valueOf(certificationLevel.getLevel().getLevel());
+                    if (attributeDto.getCertificationLevel() < minRequiredLevel)
+                    {
+                        errors.add("[attribute-key=" + attributeDto.getKey() + "][attribute-certification-level=" + attributeDto.getCertificationLevel()
+                                + "][expected-level=" + minRequiredLevel + "]");
+                    }
                 }
+                if (!errors.isEmpty())
+                {
+                    final StringBuilder error = new StringBuilder("Computing Identity " + identityDto.getCustomerId() + " eligibility to account creation")
+                            .append("Some errors occurred during pivot attributes validation. The minimum certification processus is ")
+                            .append(_accountCreationTaskMinLevel).append(".");
+                    errors.forEach(error::append);
+                    AppLogService.debug(error);
+                }
+                return errors.isEmpty();
             }
-            if ( !errors.isEmpty( ) )
-            {
-                final StringBuilder error = new StringBuilder( "Computing Identity " + identityDto.getCustomerId( ) + " eligibility to account creation" )
-                        .append( "Some errors occurred during pivot attributes validation. The minimum certification processus is " )
-                        .append( _accountCreationTaskMinLevel ).append( "." );
-                errors.forEach( error::append );
-                AppLogService.debug( error );
-            }
-            return errors.isEmpty( );
         }
-
         // invalid
         return false;
     }

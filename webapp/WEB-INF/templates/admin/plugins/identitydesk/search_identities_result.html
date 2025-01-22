@@ -131,15 +131,15 @@
                           <@dropdownItem href='${return_url}?cuid=${identity.customerId}' title='#i18n{identitydesk.search_identities.buttonSelectIdentityAndReturn}'/>
                       </#if>
                   
-                      <#if eligible_identity_to_account_list?seq_contains(identity.customerId) && getAttributeValue(identity.attributes, 'email')?has_content>
+                      <#if can_create_account && eligible_identity_to_account_list?seq_contains(identity.customerId) && getAttributeValue(identity.attributes, 'email')?has_content>
                           <@dropdownItem href='#' title='#i18n{identitydesk.search_identities.createAccountTask}' params='data-bs-toggle="modal" data-bs-target="#confirmCreateAccountModal${identity.customerId}"' />
                       </#if>
 
-                      <#if eligible_identity_to_email_validation_list?seq_contains(identity.customerId) && getAttributeValue(identity.attributes, 'email')?has_content>
+                      <#if can_validate_email && eligible_identity_to_email_validation_list?seq_contains(identity.customerId) && getAttributeValue(identity.attributes, 'email')?has_content>
                           <@dropdownItem href='jsp/admin/plugins/identitydesk/ManageIdentities.jsp?action_validateEmail&customer_id=${identity.customerId}&token=${token}' title='#i18n{identitydesk.search_identities.validateEmailTask}'  />
                       </#if>
                   
-                      <#if identity.tasks?size != 0>
+                      <#if can_view_tasks && identity.tasks?size != 0>
                           <@dropdownItem href='javascript:void(0);' title='#i18n{identitydesk.search_identities.displayIdentityTaskList}' params='onClick="event.preventDefault(); document.getElementById(\'btn-tasklist-${identity.customerId}\').click();"' 
                           />
                           <@offcanvas targetUrl="jsp/admin/plugins/identitydesk/ManageIdentities.jsp?view_displayIdentityTaskList&customer_id=${identity.customerId}&token=${token}" targetElement="#task-list" id="tasklist-${identity.customerId}" title="#i18n{identitydesk.search_identities.displayIdentityTaskList}" btnTitle="#i18n{identitydesk.search_identities.displayIdentityTaskList}" btnTitleShow=false bodyClass="p-0"  btnClass=" d-none" btnIcon="list"  />
