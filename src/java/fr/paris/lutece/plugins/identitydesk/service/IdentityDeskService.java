@@ -10,6 +10,9 @@ import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.contract.ServiceContr
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.task.IdentityResourceType;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.task.IdentityTaskDto;
 import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.task.IdentityTaskListGetResponse;
+import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.task.IdentityTaskSearchRequest;
+import fr.paris.lutece.plugins.identitystore.v3.web.rs.dto.task.IdentityTaskSearchResponse;
+import fr.paris.lutece.plugins.identitystore.v3.web.rs.util.Constants;
 import fr.paris.lutece.plugins.identitystore.v3.web.service.IdentityServiceExtended;
 import fr.paris.lutece.plugins.identitystore.web.exception.IdentityStoreException;
 import fr.paris.lutece.portal.service.spring.SpringContextService;
@@ -83,7 +86,9 @@ public class IdentityDeskService {
     public List<IdentityTaskDto> getIdentityTasksBySecondaryCuid( final String customerId, final RequestAuthor author ) {
         try
         {
-            final IdentityTaskListGetResponse response = _serviceIdentity.getIdentityTaskBySecondaryCuid( customerId, _currentClientCode, author );
+            final IdentityTaskSearchRequest request = new IdentityTaskSearchRequest();
+            request.getMetadata().put( Constants.METADATA_ACCOUNT_MERGE_SECOND_CUID, customerId );
+            final IdentityTaskSearchResponse response = _serviceIdentity.searchIdentityTasks(request, _currentClientCode, author );
             return response.getTasks();
         }
         catch ( final IdentityStoreException e )
