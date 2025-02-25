@@ -74,8 +74,10 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import javax.servlet.http.HttpServletRequest;
+import java.sql.Timestamp;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -1132,7 +1134,7 @@ public class IdentityJspBean extends MVCAdminJspBean
         if ( StringUtils.isNotBlank( certificationCode ) )
         {
             attr.setCertifier( certificationCode );
-            attr.setCertificationDate( new Date( ) );
+            attr.setCertificationDate( Timestamp.from( Instant.now( ) ) );
         }
         return attr;
     }
