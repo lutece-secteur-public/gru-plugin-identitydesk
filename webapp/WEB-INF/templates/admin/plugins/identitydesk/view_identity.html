@@ -90,13 +90,13 @@
                                             <div class="d-flex align-items-center ps-5">
                                             <#if identityChange.changeType?? && identityChange.changeStatus??>
                                                 <#if identityChange.metadata['METADATA_NEW_GUID']??>
-                                                    <#if identityChange.changeStatus=="SUCCESS">
+                                                    <#if identityChange.changeStatus=="SUCCESS" || identityChange.changeStatus=="OK">
                                                         <@tag color="success">#i18n{identitydesk.view_identity.attach.${identityChange.changeStatus?lower_case}}</@tag>
                                                     <#else>
                                                         <@tag color="danger">#i18n{identitydesk.view_identity.attach.${identityChange.changeStatus?lower_case}}</@tag>
                                                     </#if>
                                                 <#else>
-                                                    <#if identityChange.changeStatus=="SUCCESS">
+                                                    <#if identityChange.changeStatus=="SUCCESS" || identityChange.changeStatus=="OK">
                                                         <@tag color="success">#i18n{identitydesk.view_identity.${identityChange.changeType?lower_case}.${identityChange.changeStatus?lower_case}}</@tag>
                                                     <#else>
                                                         <@tag color="danger">#i18n{identitydesk.view_identity.${identityChange.changeType?lower_case}.${identityChange.changeStatus?lower_case}}</@tag>
