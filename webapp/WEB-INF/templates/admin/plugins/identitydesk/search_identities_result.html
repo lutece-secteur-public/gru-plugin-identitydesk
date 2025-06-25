@@ -101,6 +101,7 @@
                       <span>${getAttributeValue(identity.attributes, 'login')}</span>
                     <#else>
                       <strong class="text-danger">#i18n{identitydesk.search_identities.no}</strong>
+                          <#if identity.connectionId?? >#i18n{identitydesk.search_identities.MPS}</#if>
                     </#if>
                   </td>
                   <td><center>${getCertifierPivotBadge(identity.attributes)}</center></td>
