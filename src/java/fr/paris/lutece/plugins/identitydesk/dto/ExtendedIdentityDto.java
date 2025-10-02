@@ -54,6 +54,7 @@ public class ExtendedIdentityDto extends IdentityDto
         this.setMonParisActive( identityDto.getMonParisActive( ) );
         this.setCreationDate( identityDto.getCreationDate( ) );
         this.setExpiration( identityDto.getExpiration( ) );
+        this.setDeleteDate( identityDto.getDeleteDate( ) );
         this.setMerge( identityDto.getMerge( ) );
         this.setSuspicious( identityDto.isSuspicious( ) );
         this.setConsolidate( identityDto.getConsolidate( ) );
