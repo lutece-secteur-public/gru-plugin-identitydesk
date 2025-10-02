@@ -11,7 +11,7 @@
         <div id="identity-container">
             <div class="jumbotron jumbotron-fluid p-4 pt-2 shadow-lg text-center bg-light">
                 <div>
-                  <#list ["creationdate", "modificationdate", "expirationdate", "monparis", "monparis.deleted"] as item>
+                  <#list ["creationdate", "modificationdate", "expirationdate", "deletedate", "monparis"] as item>
                     <div class="d-inline-block card rounded-5 p-4 py-2 shadow-lg m-1">
                       <div class="d-flex">
                         <div>
@@ -28,11 +28,11 @@
                               <#case "expirationdate">
                                 <#if identity.expiration?exists>${identity.expiration.expirationDate!''}<#else>-</#if>
                                 <#break>
+                              <#case "deletedate">
+                                <#if identity.deleteDate??>${identity.deleteDate!''}<#else>-</#if>
+                                <#break>
                               <#case "monparis">
                                 <#if identity.monParisActive><span class="text-success fw-bold">#i18n{identitydesk.search_identities.yes}</span><#else><span class="text-danger fw-bold">#i18n{identitydesk.search_identities.no}</span></#if>
-                                <#break>
-                              <#case "monparis.deleted">
-                                <#if identity.expiration?? && identity.expiration.deleted><span class="text-danger fw-bold">#i18n{identitydesk.search_identities.yes}</span><#else><span class="text-success fw-bold">#i18n{identitydesk.search_identities.no}</span></#if>
                                 <#break>
                             </#switch>
                           </strong>

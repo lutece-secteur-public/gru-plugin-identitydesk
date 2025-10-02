@@ -100,8 +100,12 @@
                       <strong class="text-success">#i18n{identitydesk.search_identities.yes}</strong><br>
                       <span>${getAttributeValue(identity.attributes, 'login')}</span>
                     <#else>
-                      <strong class="text-danger">#i18n{identitydesk.search_identities.no}</strong>
-                          <#if identity.connectionId?? >#i18n{identitydesk.search_identities.MPS}</#if>
+                      <strong class="text-danger">
+                          #i18n{identitydesk.search_identities.no}
+                          <#if identity.deleteDate?? >
+                              #i18n{identitydesk.search_identities.MPS}
+                          </#if>
+                      </strong>
                     </#if>
                   </td>
                   <td><center>${getCertifierPivotBadge(identity.attributes)}</center></td>
