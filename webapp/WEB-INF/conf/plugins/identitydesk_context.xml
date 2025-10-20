@@ -6,13 +6,13 @@
 
     <!-- IHttpTransportProvider declarations -->
     <bean id="identitydesk.identitystore.httpAccessTransport" class="fr.paris.lutece.plugins.identitystore.v3.web.rs.service.HttpApiManagerAccessTransport" >
-	<property name="ApiEndPointUrl">
-            <value>${identitydesk.identitystore.apiEndPointUrl}</value>
-        </property>
-	<property name="AccessManagerEndPointUrl">
-            <value>${identitydesk.identitystore.accessManagerEndPointUrl}</value>
-        </property>
-	<property name="AccessManagerCredentials">
+        <property name="apiEndPointUrl">
+                <value>${identitydesk.identitystore.apiEndPointUrl}</value>
+            </property>
+        <property name="accessManagerEndPointUrl">
+                <value>${identitydesk.identitystore.accessManagerEndPointUrl}</value>
+            </property>
+        <property name="accessManagerCredentials">
             <value>${identitydesk.identitystore.accessManagerCredentials}</value>
         </property>
      </bean>
