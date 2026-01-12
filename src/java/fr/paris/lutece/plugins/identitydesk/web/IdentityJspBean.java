@@ -71,9 +71,11 @@ import fr.paris.lutece.portal.util.mvc.admin.annotations.Controller;
 import fr.paris.lutece.portal.util.mvc.commons.annotations.Action;
 import fr.paris.lutece.portal.util.mvc.commons.annotations.View;
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.text.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import javax.servlet.http.HttpServletRequest;
+
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -1073,7 +1075,8 @@ public class IdentityJspBean extends MVCAdminJspBean
                 .filter( attr -> bCreate ? !StringUtils.isEmpty( request.getParameter( strPrefix + attr.getKeyName( ) ) )
                         : ( request.getParameter( strPrefix + attr.getKeyName( ) ) != null ) )
                 .forEach( attr -> {
-                    String attrValue = request.getParameter( strPrefix + attr.getKeyName( ) );
+                    String attrValue = StringEscapeUtils.unescapeHtml4( request.getParameter( strPrefix + attr.getKeyName( ) ) );
+                    
                     if ( "birthdate".equals( attr.getKeyName( ) ) && attrValue != null && !attrValue.isEmpty( ) )
                     {
                         try
