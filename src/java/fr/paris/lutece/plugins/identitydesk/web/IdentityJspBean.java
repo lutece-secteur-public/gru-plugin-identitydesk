@@ -404,14 +404,13 @@ public class IdentityJspBean extends MVCAdminJspBean
 
     private String createTask( final HttpServletRequest request, final String taskType, final String errorMessageKey ) throws AccessDeniedException
     {
-        final String customerId = request.getParameter( Constants.PARAM_ID_CUSTOMER );
-
         // CSRF Token control
         if ( !SecurityTokenService.getInstance( ).validate( request, ACTION_SEARCH_IDENTITY ) )
         {
             throw new AccessDeniedException( "Invalid security token" );
         }
 
+        final String customerId = request.getParameter( Constants.PARAM_ID_CUSTOMER );
         String taskCode = null;
         String taskResultMessage = null;
         final IdentityDto qualifiedIdentity;
