@@ -404,13 +404,14 @@ public class IdentityJspBean extends MVCAdminJspBean
 
     private String createTask( final HttpServletRequest request, final String taskType, final String errorMessageKey ) throws AccessDeniedException
     {
+        final String customerId = request.getParameter( Constants.PARAM_ID_CUSTOMER );
+
         // CSRF Token control
         if ( !SecurityTokenService.getInstance( ).validate( request, ACTION_SEARCH_IDENTITY ) )
         {
             throw new AccessDeniedException( "Invalid security token" );
         }
 
-        final String customerId = request.getParameter( Constants.PARAM_ID_CUSTOMER );
         String taskCode = null;
         String taskResultMessage = null;
         final IdentityDto qualifiedIdentity;
@@ -461,7 +462,7 @@ public class IdentityJspBean extends MVCAdminJspBean
         // Ajouter les paramètres de recherche au modèle
         Map<String, String> searchParams = collectSearchParams( );
         model.put( MARK_SEARCH_PARAMS, searchParams );
-        model.put( SecurityTokenService.MARK_TOKEN, SecurityTokenService.getInstance( ).getToken( request, ACTION_MODIFY_IDENTITY ) );
+        model.put( SecurityTokenService.MARK_TOKEN, SecurityTokenService.getInstance( ).getToken( request, ACTION_SEARCH_IDENTITY ) );
         return getPage( PROPERTY_PAGE_TITLE_CREATE_TASK_IDENTITY, TEMPLATE_TASK_CREATION_RESULT, model );
     }
 
