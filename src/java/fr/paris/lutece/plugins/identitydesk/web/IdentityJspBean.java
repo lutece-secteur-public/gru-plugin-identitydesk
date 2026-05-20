@@ -87,7 +87,12 @@ import java.util.stream.Collectors;
 @Controller( controllerJsp = "ManageIdentities.jsp", controllerPath = "jsp/admin/plugins/identitydesk/", right = "IDENTITYDESK_MANAGEMENT" )
 public class IdentityJspBean extends MVCAdminJspBean
 {
+    /* ==================== */
+    /* CONSTANTES           */
+    /* ==================== */
+
     private static final long serialVersionUID = 6053504380426222888L;
+
     // Templates
     private static final String TEMPLATE_SEARCH_IDENTITIES_RESULT = "/admin/plugins/identitydesk/search_identities_result.html";
     private static final String TEMPLATE_SEARCH_IDENTITIES = "/admin/plugins/identitydesk/search_identities.html";
@@ -158,6 +163,8 @@ public class IdentityJspBean extends MVCAdminJspBean
     private static final String MARK_TASK_RESULT_MESSAGE = "task_result_message";
     private static final String MARK_IDENTITY_HISTORY = "history";
     private static final String MARK_IS_ACTIVE_MEDIATION_PLUGIN = "is_active_mediation_plugin";
+    private static final String MARK_READ_TOKEN = "read_token";
+    private static final String MARK_WRITE_TOKEN = "write_token";
 
     // Views
     private static final String VIEW_SEARCH_IDENTITY = "searchIdentity";
@@ -181,6 +188,10 @@ public class IdentityJspBean extends MVCAdminJspBean
             .getBean( "identitydesk.serviceProcessusReferentialCache" );
     private static final ServiceAttributeKeyReferentialCache _serviceAttributeKeyReferentialCache = SpringContextService
             .getBean( "identitydesk.serviceAttributeKeyReferentialCache" );
+
+    /* ==================== */
+    /* VARIABLES            */
+    /* ==================== */
 
     // Session variable to store working values
     private List<SearchAttribute> _searchAttributes = new ArrayList<>( );
@@ -213,8 +224,17 @@ public class IdentityJspBean extends MVCAdminJspBean
             .filter( property -> !property.trim( ).isEmpty( ) ).map( property -> Arrays.asList( property.split( "," ) ) ).orElseGet( ArrayList::new );
 
 
+    /* ==================== */
+    /* VUES DE LECTURE      */
+    /* ==================== */
 
-
+    /**
+     * Displays the identity when a click on "Consulter l'identité" is performed
+     *
+     * @param request the HTTP request containing the selected customer id
+     * @return the HTML code of the identity detail view, or the search page if the identity cannot be loaded
+     * @throws AccessDeniedException if access to the fallback search page is denied
+     */
     @View ( VIEW_VIEW_IDENTITY )
     public String getViewIdentity( HttpServletRequest request ) throws AccessDeniedException
     {
@@ -268,7 +288,6 @@ public class IdentityJspBean extends MVCAdminJspBean
         model.put( MARK_CAN_WRITE, _canWriteIdentity );
         model.put( MARK_CAN_VIEW_HISTORY, _canViewHisotry );
         model.put( MARK_IDENTITY_HISTORY, history );
-        model.put( SecurityTokenService.MARK_TOKEN, SecurityTokenService.getInstance( ).getToken( request, ACTION_MODIFY_IDENTITY ) );
         addExternalInformations( request, model );
 
         return getPage( PROPERTY_PAGE_TITLE_MANAGE_IDENTITIES, TEMPLATE_VIEW_IDENTITY, model );
@@ -276,11 +295,17 @@ public class IdentityJspBean extends MVCAdminJspBean
 
 
     /**
-     * Displays the search form
-     *
-     * @param request
-     *            The Http request
-     * @return the html code of the search form
+     * [STEP 1]
+     * Displays the default identity search page.
+     * <p>
+     * This view is shown before any search result is available.
+     * It initializes the client context, the service contract,
+     * the referential data,
+     * and the current search criteria stored in the bean.
+     * </p>
+     * @param request the HTTP request used to initialize the search context
+     * @return the HTML code of the initial identity search form
+     * @throws AccessDeniedException if the current user is not allowed to read identities
      */
     @View( value = VIEW_SEARCH_IDENTITY, defaultView = true )
     public String getSearchIdentities( final HttpServletRequest request ) throws AccessDeniedException
@@ -312,27 +337,27 @@ public class IdentityJspBean extends MVCAdminJspBean
         model.put( MARK_REFERENTIAL_ATTRIBUTE_LIST, _attributesReferential );
         model.put( MARK_CAN_CREATE, _canCreateIdentity );
         model.put( MARK_RULES_REQ_REACHED, rulesRequirementsReached );
-        model.put( SecurityTokenService.MARK_TOKEN, SecurityTokenService.getInstance( ).getToken( request, ACTION_SEARCH_IDENTITY ) );
+        model.put( MARK_READ_TOKEN, SecurityTokenService.getInstance( ).getToken( request, ACTION_SEARCH_IDENTITY ) );
         addExternalInformations( request, model );
 
         return getPage( PROPERTY_PAGE_TITLE_MANAGE_IDENTITIES, TEMPLATE_SEARCH_IDENTITIES, model );
     }
 
     /**
+     * [Step 2]
      * Process the search request and returns the search results
      *
-     * @param request
-     *            The Http request
+     * @param request The Http request
      * @return the html code of the search results
      */
     @Action( ACTION_SEARCH_IDENTITY )
     public String doSearchIdentities( final HttpServletRequest request ) throws AccessDeniedException
     {
         // CSRF Token control
-        // if ( !SecurityTokenService.getInstance( ).validate( request, ACTION_SEARCH_IDENTITY ) )
-        // {
-        // throw new AccessDeniedException( "Invalid security token" );
-        // }
+        if ( !SecurityTokenService.getInstance( ).validate( request, ACTION_SEARCH_IDENTITY ) )
+        {
+            throw new AccessDeniedException( "Invalid security token" );
+        }
         return searchIdentitiesAndCreatePage( request );
     }
 
@@ -378,9 +403,18 @@ public class IdentityJspBean extends MVCAdminJspBean
         // Ajouter les paramètres de recherche au modèle
         final Map<String, String> searchParams = collectSearchParams( );
         model.put( MARK_SEARCH_PARAMS, searchParams );
-        model.put( SecurityTokenService.MARK_TOKEN, SecurityTokenService.getInstance( ).getToken( request, ACTION_MODIFY_IDENTITY ) );
+        String readToken = request.getParameter( MARK_READ_TOKEN );
+        if ( StringUtils.isBlank( readToken ) )
+        {
+            readToken = SecurityTokenService.getInstance( ).getToken( request, ACTION_SEARCH_IDENTITY );
+        }
+        model.put( MARK_READ_TOKEN, readToken );
         return getPage( PROPERTY_PAGE_TITLE_MANAGE_IDENTITIES, TEMPLATE_DISPLAY_IDENTITY_TASK_LIST, model );
     }
+
+    /* ==================== */
+    /* ACTIONS D'ECRITURE   */
+    /* ==================== */
 
     @Action( ACTION_CREATE_ACCOUNT )
     public String doCreateAccount( final HttpServletRequest request ) throws AccessDeniedException
@@ -405,7 +439,7 @@ public class IdentityJspBean extends MVCAdminJspBean
     private String createTask( final HttpServletRequest request, final String taskType, final String errorMessageKey ) throws AccessDeniedException
     {
         // CSRF Token control
-        if ( !SecurityTokenService.getInstance( ).validate( request, ACTION_SEARCH_IDENTITY ) )
+        if ( !SecurityTokenService.getInstance( ).validate( request, ACTION_MODIFY_IDENTITY ) )
         {
             throw new AccessDeniedException( "Invalid security token" );
         }
@@ -461,10 +495,31 @@ public class IdentityJspBean extends MVCAdminJspBean
         // Ajouter les paramètres de recherche au modèle
         Map<String, String> searchParams = collectSearchParams( );
         model.put( MARK_SEARCH_PARAMS, searchParams );
-        model.put( SecurityTokenService.MARK_TOKEN, SecurityTokenService.getInstance( ).getToken( request, ACTION_SEARCH_IDENTITY ) );
+        String readToken = request.getParameter( MARK_READ_TOKEN );
+        if ( StringUtils.isBlank( readToken ) )
+        {
+            readToken = SecurityTokenService.getInstance( ).getToken( request, ACTION_SEARCH_IDENTITY );
+        }
+        model.put( MARK_READ_TOKEN, readToken );
+        model.put( SecurityTokenService.MARK_TOKEN, SecurityTokenService.getInstance( ).getToken( request, ACTION_MODIFY_IDENTITY ) );
         return getPage( PROPERTY_PAGE_TITLE_CREATE_TASK_IDENTITY, TEMPLATE_TASK_CREATION_RESULT, model );
     }
 
+    /* ==================== */
+    /* TRAITEMENT RECHERCHE */
+    /* ==================== */
+
+    /**
+     * Executes the current identity search, builds the result model, and returns either the search form or the result page.
+     * It also regenerates the read and write tokens used by the result page.
+     *
+     * @param request
+     *            the HTTP request containing the submitted search criteria
+     * @return
+     *            the HTML code of the search form or the search result page
+     * @throws AccessDeniedException
+     *             if access to the fallback search page is denied
+     */
     private String searchIdentitiesAndCreatePage( final HttpServletRequest request ) throws AccessDeniedException
     {
         if ( _serviceContract == null )
@@ -550,7 +605,8 @@ public class IdentityJspBean extends MVCAdminJspBean
         model.put( MARK_CAN_WRITE, _canWriteIdentity );
         model.put( MARK_RULES_REQ_REACHED, rulesRequirementsReached );
         model.put( APPROXIMATED_SEARCH, Boolean.parseBoolean( request.getParameter( PARAMETER_APPROXIMATE ) ) );
-        model.put( SecurityTokenService.MARK_TOKEN, SecurityTokenService.getInstance( ).getToken( request, ACTION_SEARCH_IDENTITY ) );
+        model.put( MARK_READ_TOKEN, SecurityTokenService.getInstance( ).getToken( request, ACTION_SEARCH_IDENTITY ));
+        model.put( MARK_WRITE_TOKEN, SecurityTokenService.getInstance( ).getToken( request, ACTION_MODIFY_IDENTITY ) );
         addExternalInformations( request, model );
 
         if ( identities.isEmpty( ) )
@@ -562,6 +618,10 @@ public class IdentityJspBean extends MVCAdminJspBean
             return getPage( PROPERTY_PAGE_TITLE_MANAGE_IDENTITIES, TEMPLATE_SEARCH_IDENTITIES_RESULT, model );
         }
     }
+
+    /* ==================== */
+    /* VUES D'ECRITURE      */
+    /* ==================== */
 
     /**
      * Returns the form to create a identity
@@ -618,7 +678,7 @@ public class IdentityJspBean extends MVCAdminJspBean
         model.put( MARK_REFERENTIAL, _processusReferential );
         model.put( MARK_REFERENTIAL_ATTRIBUTE_LIST, _attributesReferential );
         model.put( MARK_ATTRIBUTE_INFO_KEY_LIST, _AttributeInfoKeyList );
-        model.put( SecurityTokenService.MARK_TOKEN, SecurityTokenService.getInstance( ).getToken( request, ACTION_CREATE_IDENTITY ) );
+        model.put( SecurityTokenService.MARK_TOKEN, SecurityTokenService.getInstance( ).getToken( request, ACTION_MODIFY_IDENTITY ) );
         addExternalInformations( request, model );
 
         return getPage( PROPERTY_PAGE_TITLE_CREATE_IDENTITY, TEMPLATE_CREATE_IDENTITY, model );
@@ -635,7 +695,7 @@ public class IdentityJspBean extends MVCAdminJspBean
     public String doCreateIdentity( final HttpServletRequest request ) throws AccessDeniedException
     {
         // CSRF Token control
-        if ( !SecurityTokenService.getInstance( ).validate( request, ACTION_CREATE_IDENTITY ) )
+        if ( !SecurityTokenService.getInstance( ).validate( request, ACTION_MODIFY_IDENTITY ) )
         {
             throw new AccessDeniedException( "Invalid security token" );
         }
@@ -721,6 +781,12 @@ public class IdentityJspBean extends MVCAdminJspBean
         model.put( MARK_REFERENTIAL, _processusReferential );
         model.put( MARK_REFERENTIAL_ATTRIBUTE_LIST, _attributesReferential );
         model.put( MARK_ATTRIBUTE_INFO_KEY_LIST, _AttributeInfoKeyList );
+        String readToken = request.getParameter( MARK_READ_TOKEN );
+        if ( StringUtils.isBlank( readToken ) )
+        {
+            readToken = SecurityTokenService.getInstance( ).getToken( request, ACTION_SEARCH_IDENTITY );
+        }
+        model.put( MARK_READ_TOKEN, readToken );
         model.put( SecurityTokenService.MARK_TOKEN, SecurityTokenService.getInstance( ).getToken( request, ACTION_MODIFY_IDENTITY ) );
         addExternalInformations( request, model );
 
@@ -816,6 +882,10 @@ public class IdentityJspBean extends MVCAdminJspBean
         return getModifyIdentity( request ); // Rediriger vers la page de modification
     }
 
+
+    /* ==================== */
+    /* HELPERS FORMULAIRES  */
+    /* ==================== */
 
     private LocalIdentityDto keepModificationFormData( final IdentityDto qualifiedIdentity,final HttpServletRequest request )
     {
@@ -999,6 +1069,10 @@ public class IdentityJspBean extends MVCAdminJspBean
         _searchAttributes.clear( );
         _searchAttributes.addAll( searchList );
     }
+
+    /* ==================== */
+    /* HELPERS TECHNIQUES   */
+    /* ==================== */
 
     /**
      * check search criterias * email or lastname+firstname+birthdate are required
