@@ -358,6 +358,7 @@ public class IdentityJspBean extends MVCAdminJspBean
         // CSRF Token control
         if ( !SecurityTokenService.getInstance( ).validate( request, ACTION_SEARCH_IDENTITY ) )
         {
+            logTokenValidationFailure( request, ACTION_SEARCH_IDENTITY, "doSearchIdentities" );
             throw new AccessDeniedException( "Invalid security token" );
         }
         logTokenConsumption( ACTION_SEARCH_IDENTITY, request.getParameter( SecurityTokenService.PARAMETER_TOKEN ), "doSearchIdentities" );
@@ -445,6 +446,7 @@ public class IdentityJspBean extends MVCAdminJspBean
         // CSRF Token control
         if ( !SecurityTokenService.getInstance( ).validate( request, ACTION_MODIFY_IDENTITY ) )
         {
+            logTokenValidationFailure( request, ACTION_MODIFY_IDENTITY, "createTask" );
             throw new AccessDeniedException( "Invalid security token" );
         }
         logTokenConsumption( ACTION_MODIFY_IDENTITY, request.getParameter( SecurityTokenService.PARAMETER_TOKEN ), "createTask" );
@@ -711,6 +713,7 @@ public class IdentityJspBean extends MVCAdminJspBean
         // CSRF Token control
         if ( !SecurityTokenService.getInstance( ).validate( request, ACTION_MODIFY_IDENTITY ) )
         {
+            logTokenValidationFailure( request, ACTION_MODIFY_IDENTITY, "doCreateIdentity" );
             throw new AccessDeniedException( "Invalid security token" );
         }
         logTokenConsumption( ACTION_MODIFY_IDENTITY, request.getParameter( SecurityTokenService.PARAMETER_TOKEN ), "doCreateIdentity" );
@@ -827,6 +830,7 @@ public class IdentityJspBean extends MVCAdminJspBean
     {
         if ( !SecurityTokenService.getInstance( ).validate( request, ACTION_MODIFY_IDENTITY ) )
         {
+            logTokenValidationFailure( request, ACTION_MODIFY_IDENTITY, "doModifyIdentity" );
             throw new AccessDeniedException( "Invalid security token" );
         }
         logTokenConsumption( ACTION_MODIFY_IDENTITY, request.getParameter( SecurityTokenService.PARAMETER_TOKEN ), "doModifyIdentity" );
@@ -1320,6 +1324,19 @@ public class IdentityJspBean extends MVCAdminJspBean
     {
         AppLogService.info( "\n#######################################\nTOKEN type " + tokenType + " consommé avec id " + tokenId + " dans " + methodName
                 + "\n#######################################" );
+    }
+
+    private void logTokenValidationFailure( final HttpServletRequest request, final String expectedTokenType, final String methodName )
+    {
+        final String tokenId = request.getParameter( SecurityTokenService.PARAMETER_TOKEN );
+        final String requestUrl = request.getRequestURL( ).toString( );
+        final String queryString = request.getQueryString( );
+        final String referer = request.getHeader( "Referer" );
+        final String requestedWith = request.getHeader( "X-Requested-With" );
+
+        AppLogService.error( "\n#######################################\nTOKEN type " + expectedTokenType + " invalide avec id " + tokenId + " dans "
+                + methodName + "\nURL: " + requestUrl + ( StringUtils.isNotBlank( queryString ) ? "?" + queryString : "" ) + "\nReferer: "
+                + referer + "\nX-Requested-With: " + requestedWith + "\n#######################################" );
     }
 
     /**
