@@ -329,6 +329,8 @@ public class IdentityJspBean extends MVCAdminJspBean
         final boolean rulesRequirementsReached = _searchRules.stream( )
                 .anyMatch( rule -> rule.stream( ).allMatch( key -> _searchAttributes.stream( ).map( SearchAttribute::getKey ).anyMatch( key::equals ) ) );
 
+        final String readToken = SecurityTokenService.getInstance( ).getToken( request, ACTION_SEARCH_IDENTITY );
+        logTokenCreation( ACTION_SEARCH_IDENTITY, readToken, "getSearchIdentities" );
         final Map<String, Object> model = getModel( );
         model.put( MARK_QUERY_SEARCH_ATTRIBUTES, _searchAttributes );
         model.put( MARK_SERVICE_CONTRACT, _serviceContract );
@@ -337,7 +339,7 @@ public class IdentityJspBean extends MVCAdminJspBean
         model.put( MARK_REFERENTIAL_ATTRIBUTE_LIST, _attributesReferential );
         model.put( MARK_CAN_CREATE, _canCreateIdentity );
         model.put( MARK_RULES_REQ_REACHED, rulesRequirementsReached );
-        model.put( MARK_READ_TOKEN, SecurityTokenService.getInstance( ).getToken( request, ACTION_SEARCH_IDENTITY ) );
+        model.put( MARK_READ_TOKEN, readToken );
         addExternalInformations( request, model );
 
         return getPage( PROPERTY_PAGE_TITLE_MANAGE_IDENTITIES, TEMPLATE_SEARCH_IDENTITIES, model );
@@ -358,6 +360,7 @@ public class IdentityJspBean extends MVCAdminJspBean
         {
             throw new AccessDeniedException( "Invalid security token" );
         }
+        logTokenConsumption( ACTION_SEARCH_IDENTITY, request.getParameter( SecurityTokenService.PARAMETER_TOKEN ), "doSearchIdentities" );
         return searchIdentitiesAndCreatePage( request );
     }
 
@@ -407,6 +410,7 @@ public class IdentityJspBean extends MVCAdminJspBean
         if ( StringUtils.isBlank( readToken ) )
         {
             readToken = SecurityTokenService.getInstance( ).getToken( request, ACTION_SEARCH_IDENTITY );
+            logTokenCreation( ACTION_SEARCH_IDENTITY, readToken, "getDisplayIdentityTaskList" );
         }
         model.put( MARK_READ_TOKEN, readToken );
         return getPage( PROPERTY_PAGE_TITLE_MANAGE_IDENTITIES, TEMPLATE_DISPLAY_IDENTITY_TASK_LIST, model );
@@ -443,6 +447,7 @@ public class IdentityJspBean extends MVCAdminJspBean
         {
             throw new AccessDeniedException( "Invalid security token" );
         }
+        logTokenConsumption( ACTION_MODIFY_IDENTITY, request.getParameter( SecurityTokenService.PARAMETER_TOKEN ), "createTask" );
 
         final String customerId = request.getParameter( Constants.PARAM_ID_CUSTOMER );
         String taskCode = null;
@@ -499,9 +504,12 @@ public class IdentityJspBean extends MVCAdminJspBean
         if ( StringUtils.isBlank( readToken ) )
         {
             readToken = SecurityTokenService.getInstance( ).getToken( request, ACTION_SEARCH_IDENTITY );
+            logTokenCreation( ACTION_SEARCH_IDENTITY, readToken, "createTask" );
         }
         model.put( MARK_READ_TOKEN, readToken );
-        model.put( SecurityTokenService.MARK_TOKEN, SecurityTokenService.getInstance( ).getToken( request, ACTION_MODIFY_IDENTITY ) );
+        final String writeToken = SecurityTokenService.getInstance( ).getToken( request, ACTION_MODIFY_IDENTITY );
+        logTokenCreation( ACTION_MODIFY_IDENTITY, writeToken, "createTask" );
+        model.put( SecurityTokenService.MARK_TOKEN, writeToken );
         return getPage( PROPERTY_PAGE_TITLE_CREATE_TASK_IDENTITY, TEMPLATE_TASK_CREATION_RESULT, model );
     }
 
@@ -587,6 +595,10 @@ public class IdentityJspBean extends MVCAdminJspBean
                 .collect( Collectors.toList( ) );
         final List<String> eligibleCustomerIdsToMailValidation = extendedIdentities.stream( ).filter( this::eligibleToEmailValidation ).map( IdentityDto::getCustomerId )
                 .collect( Collectors.toList( ) );
+        final String readToken = SecurityTokenService.getInstance( ).getToken( request, ACTION_SEARCH_IDENTITY );
+        logTokenCreation( ACTION_SEARCH_IDENTITY, readToken, "searchIdentitiesAndCreatePage" );
+        final String writeToken = SecurityTokenService.getInstance( ).getToken( request, ACTION_MODIFY_IDENTITY );
+        logTokenCreation( ACTION_MODIFY_IDENTITY, writeToken, "searchIdentitiesAndCreatePage" );
         final Map<String, Object> model = getModel( );
         model.put( MARK_IDENTITY_LIST, extendedIdentities );
         model.put( MARK_ELIGIBLE_IDENTITY_TO_ACCOUNT, eligibleCustomerIdsToAccount );
@@ -605,8 +617,8 @@ public class IdentityJspBean extends MVCAdminJspBean
         model.put( MARK_CAN_WRITE, _canWriteIdentity );
         model.put( MARK_RULES_REQ_REACHED, rulesRequirementsReached );
         model.put( APPROXIMATED_SEARCH, Boolean.parseBoolean( request.getParameter( PARAMETER_APPROXIMATE ) ) );
-        model.put( MARK_READ_TOKEN, SecurityTokenService.getInstance( ).getToken( request, ACTION_SEARCH_IDENTITY ));
-        model.put( MARK_WRITE_TOKEN, SecurityTokenService.getInstance( ).getToken( request, ACTION_MODIFY_IDENTITY ) );
+        model.put( MARK_READ_TOKEN, readToken );
+        model.put( MARK_WRITE_TOKEN, writeToken );
         addExternalInformations( request, model );
 
         if ( identities.isEmpty( ) )
@@ -678,7 +690,9 @@ public class IdentityJspBean extends MVCAdminJspBean
         model.put( MARK_REFERENTIAL, _processusReferential );
         model.put( MARK_REFERENTIAL_ATTRIBUTE_LIST, _attributesReferential );
         model.put( MARK_ATTRIBUTE_INFO_KEY_LIST, _AttributeInfoKeyList );
-        model.put( SecurityTokenService.MARK_TOKEN, SecurityTokenService.getInstance( ).getToken( request, ACTION_MODIFY_IDENTITY ) );
+        final String writeToken = SecurityTokenService.getInstance( ).getToken( request, ACTION_MODIFY_IDENTITY );
+        logTokenCreation( ACTION_MODIFY_IDENTITY, writeToken, "createIdentityPage" );
+        model.put( SecurityTokenService.MARK_TOKEN, writeToken );
         addExternalInformations( request, model );
 
         return getPage( PROPERTY_PAGE_TITLE_CREATE_IDENTITY, TEMPLATE_CREATE_IDENTITY, model );
@@ -699,6 +713,7 @@ public class IdentityJspBean extends MVCAdminJspBean
         {
             throw new AccessDeniedException( "Invalid security token" );
         }
+        logTokenConsumption( ACTION_MODIFY_IDENTITY, request.getParameter( SecurityTokenService.PARAMETER_TOKEN ), "doCreateIdentity" );
         final IdentityChangeRequest identityChangeRequest = new IdentityChangeRequest( );
         _attributeStatuses.clear( );
         try
@@ -785,9 +800,12 @@ public class IdentityJspBean extends MVCAdminJspBean
         if ( StringUtils.isBlank( readToken ) )
         {
             readToken = SecurityTokenService.getInstance( ).getToken( request, ACTION_SEARCH_IDENTITY );
+            logTokenCreation( ACTION_SEARCH_IDENTITY, readToken, "getModifyIdentity" );
         }
         model.put( MARK_READ_TOKEN, readToken );
-        model.put( SecurityTokenService.MARK_TOKEN, SecurityTokenService.getInstance( ).getToken( request, ACTION_MODIFY_IDENTITY ) );
+        final String writeToken = SecurityTokenService.getInstance( ).getToken( request, ACTION_MODIFY_IDENTITY );
+        logTokenCreation( ACTION_MODIFY_IDENTITY, writeToken, "getModifyIdentity" );
+        model.put( SecurityTokenService.MARK_TOKEN, writeToken );
         addExternalInformations( request, model );
 
         // Ajouter les paramètres de recherche au modèle
@@ -811,6 +829,7 @@ public class IdentityJspBean extends MVCAdminJspBean
         {
             throw new AccessDeniedException( "Invalid security token" );
         }
+        logTokenConsumption( ACTION_MODIFY_IDENTITY, request.getParameter( SecurityTokenService.PARAMETER_TOKEN ), "doModifyIdentity" );
 
         final IdentityDto identityWithUpdates = getIdentityFromRequest( request, "", false );
         if ( identityWithUpdates.getCustomerId( ) == null )
@@ -1289,6 +1308,18 @@ public class IdentityJspBean extends MVCAdminJspBean
                 addError( MESSAGE_GET_REFERENTIAL_ERROR, getLocale( ) );
             }
         }
+    }
+
+    private void logTokenCreation( final String tokenType, final String tokenId, final String methodName )
+    {
+        AppLogService.info( "\n##################################\nTOKEN type " + tokenType + " créé avec id " + tokenId + " dans " + methodName
+                + "\n##################################" );
+    }
+
+    private void logTokenConsumption( final String tokenType, final String tokenId, final String methodName )
+    {
+        AppLogService.info( "\n#######################################\nTOKEN type " + tokenType + " consommé avec id " + tokenId + " dans " + methodName
+                + "\n#######################################" );
     }
 
     /**
