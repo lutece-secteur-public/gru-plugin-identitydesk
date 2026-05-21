@@ -333,7 +333,6 @@ public class IdentityJspBean extends MVCAdminJspBean
         final boolean rulesRequirementsReached = _searchRules.stream( )
                 .anyMatch( rule -> rule.stream( ).allMatch( key -> _searchAttributes.stream( ).map( SearchAttribute::getKey ).anyMatch( key::equals ) ) );
 
-        final String readToken = SecurityTokenService.getInstance( ).getToken( request, ACTION_SEARCH_IDENTITY );
         final Map<String, Object> model = getModel( );
         model.put( MARK_QUERY_SEARCH_ATTRIBUTES, _searchAttributes );
         model.put( MARK_SERVICE_CONTRACT, _serviceContract );
@@ -342,7 +341,7 @@ public class IdentityJspBean extends MVCAdminJspBean
         model.put( MARK_REFERENTIAL_ATTRIBUTE_LIST, _attributesReferential );
         model.put( MARK_CAN_CREATE, _canCreateIdentity );
         model.put( MARK_RULES_REQ_REACHED, rulesRequirementsReached );
-        model.put( MARK_READ_TOKEN, readToken );
+        model.put( MARK_READ_TOKEN, SecurityTokenService.getInstance( ).getToken( request, ACTION_SEARCH_IDENTITY ) );
         addExternalInformations( request, model );
 
         return getPage( PROPERTY_PAGE_TITLE_MANAGE_IDENTITIES, TEMPLATE_SEARCH_IDENTITIES, model );
