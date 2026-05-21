@@ -503,14 +503,8 @@ public class IdentityJspBean extends MVCAdminJspBean
         // Ajouter les paramètres de recherche au modèle
         Map<String, String> searchParams = collectSearchParams( );
         model.put( MARK_SEARCH_PARAMS, searchParams );
-        String readToken = request.getParameter( MARK_READ_TOKEN );
-        if ( StringUtils.isBlank( readToken ) )
-        {
-            readToken = SecurityTokenService.getInstance( ).getToken( request, ACTION_SEARCH_IDENTITY );
-        }
-        model.put( MARK_READ_TOKEN, readToken );
-        final String writeToken = SecurityTokenService.getInstance( ).getToken( request, ACTION_MODIFY_IDENTITY );
-        model.put( SecurityTokenService.MARK_TOKEN, writeToken );
+        model.put( MARK_READ_TOKEN,  request.getParameter( MARK_READ_TOKEN ) );
+        model.put( SecurityTokenService.MARK_TOKEN, SecurityTokenService.getInstance( ).getToken( request, ACTION_MODIFY_IDENTITY ) );
         return getPage( PROPERTY_PAGE_TITLE_CREATE_TASK_IDENTITY, TEMPLATE_TASK_CREATION_RESULT, model );
     }
 
@@ -596,8 +590,6 @@ public class IdentityJspBean extends MVCAdminJspBean
                 .collect( Collectors.toList( ) );
         final List<String> eligibleCustomerIdsToMailValidation = extendedIdentities.stream( ).filter( this::eligibleToEmailValidation ).map( IdentityDto::getCustomerId )
                 .collect( Collectors.toList( ) );
-        final String readToken = SecurityTokenService.getInstance( ).getToken( request, ACTION_SEARCH_IDENTITY );
-        final String writeToken = SecurityTokenService.getInstance( ).getToken( request, ACTION_MODIFY_IDENTITY );
         final Map<String, Object> model = getModel( );
         model.put( MARK_IDENTITY_LIST, extendedIdentities );
         model.put( MARK_ELIGIBLE_IDENTITY_TO_ACCOUNT, eligibleCustomerIdsToAccount );
@@ -616,8 +608,8 @@ public class IdentityJspBean extends MVCAdminJspBean
         model.put( MARK_CAN_WRITE, _canWriteIdentity );
         model.put( MARK_RULES_REQ_REACHED, rulesRequirementsReached );
         model.put( APPROXIMATED_SEARCH, Boolean.parseBoolean( request.getParameter( PARAMETER_APPROXIMATE ) ) );
-        model.put( MARK_READ_TOKEN, readToken );
-        model.put( MARK_WRITE_TOKEN, writeToken );
+        model.put( MARK_READ_TOKEN,  SecurityTokenService.getInstance( ).getToken( request, ACTION_SEARCH_IDENTITY ) );
+        model.put( MARK_WRITE_TOKEN,  SecurityTokenService.getInstance( ).getToken( request, ACTION_MODIFY_IDENTITY ) );
         addExternalInformations( request, model );
 
         if ( identities.isEmpty( ) )
@@ -689,8 +681,9 @@ public class IdentityJspBean extends MVCAdminJspBean
         model.put( MARK_REFERENTIAL, _processusReferential );
         model.put( MARK_REFERENTIAL_ATTRIBUTE_LIST, _attributesReferential );
         model.put( MARK_ATTRIBUTE_INFO_KEY_LIST, _AttributeInfoKeyList );
-        final String writeToken = SecurityTokenService.getInstance( ).getToken( request, ACTION_MODIFY_IDENTITY );
-        model.put( SecurityTokenService.MARK_TOKEN, writeToken );
+        model.put( MARK_SEARCH_PARAMS, collectSearchParams( ) );
+        model.put( MARK_READ_TOKEN, request.getParameter( MARK_READ_TOKEN ) );
+        model.put( SecurityTokenService.MARK_TOKEN, SecurityTokenService.getInstance( ).getToken( request, ACTION_MODIFY_IDENTITY ) );
         addExternalInformations( request, model );
 
         return getPage( PROPERTY_PAGE_TITLE_CREATE_IDENTITY, TEMPLATE_CREATE_IDENTITY, model );
@@ -752,9 +745,9 @@ public class IdentityJspBean extends MVCAdminJspBean
 
     /**
      * Renvoie le formulaire de modification d'une identité.
-     *
-     * @param request
-     *            la requête HTTP
+     * readToken : sert au retour vers les résultats de recherche.
+     * writeToken : sert au submit du formulaire de modification.
+     * @param request la requête HTTP
      * @return le formulaire HTML de modification
      */
     @View( VIEW_MODIFY_IDENTITY )
@@ -793,14 +786,8 @@ public class IdentityJspBean extends MVCAdminJspBean
         model.put( MARK_REFERENTIAL, _processusReferential );
         model.put( MARK_REFERENTIAL_ATTRIBUTE_LIST, _attributesReferential );
         model.put( MARK_ATTRIBUTE_INFO_KEY_LIST, _AttributeInfoKeyList );
-        String readToken = request.getParameter( MARK_READ_TOKEN );
-        if ( StringUtils.isBlank( readToken ) )
-        {
-            readToken = SecurityTokenService.getInstance( ).getToken( request, ACTION_SEARCH_IDENTITY );
-        }
-        model.put( MARK_READ_TOKEN, readToken );
-        final String writeToken = SecurityTokenService.getInstance( ).getToken( request, ACTION_MODIFY_IDENTITY );
-        model.put( SecurityTokenService.MARK_TOKEN, writeToken );
+        model.put( MARK_READ_TOKEN, request.getParameter( MARK_READ_TOKEN ) );
+        model.put( SecurityTokenService.MARK_TOKEN, SecurityTokenService.getInstance( ).getToken( request, ACTION_MODIFY_IDENTITY ) );
         addExternalInformations( request, model );
 
         // Ajouter les paramètres de recherche au modèle

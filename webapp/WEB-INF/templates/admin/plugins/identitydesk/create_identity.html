@@ -7,13 +7,14 @@
                 <@pageHeader title="#i18n{identitydesk.create_identity.title}">
                     <@button type='submit' color='primary' name="action_createIdentity" title='Enregistrer'
                         buttonIcon='check' />
-                    <@button color='light' title='Retour' buttonIcon='chevron-left'
-                        params='onclick="javascript:window.history.back();"' />
+                    <@aButton color='light' title='Retour' buttonIcon='chevron-left'
+                        href='jsp/admin/plugins/identitydesk/ManageIdentities.jsp?action_searchIdentity&${search_params?keys?map(key -> key + "=" + (search_params[key]!))?join("&")}&approximate=true&token=${read_token}' />
                 </@pageHeader>
                 <@messages infos=infos />
                 <@messages errors=errors />
                 <@messages warnings=warnings />
                 <@input type="hidden" name="token" value="${token}" />
+                <@input type="hidden" name="read_token" value="${read_token}" />
                 <@input type="hidden" name="return_url" value="${(return_url)!''}" />
                 <div class="card p-5">
                     <div class="row g-3">
@@ -63,8 +64,8 @@
                 <div class="float-end">
                     <@button type='submit' color='primary' name="action_createIdentity" title='Enregistrer'
                         buttonIcon='check' />
-                    <@button color='light' title='Retour' buttonIcon='chevron-left'
-                        params='onclick="javascript:window.history.back();"' />
+                    <@aButton color='light' title='Retour' buttonIcon='chevron-left'
+                        href='jsp/admin/plugins/identitydesk/ManageIdentities.jsp?action_searchIdentity&${search_params?keys?map(key -> key + "=" + (search_params[key]!))?join("&")}&approximate=true&token=${read_token}' />
                 </div>
                 <div id="mandatory-msg" class="text-danger" style="display: none">
                     #i18n{identitydesk.createmodify_identity.mandatoryFieldsWarning}
