@@ -682,7 +682,7 @@ public class IdentityJspBean extends MVCAdminJspBean
         model.put( MARK_REFERENTIAL_ATTRIBUTE_LIST, _attributesReferential );
         model.put( MARK_ATTRIBUTE_INFO_KEY_LIST, _AttributeInfoKeyList );
         model.put( MARK_SEARCH_PARAMS, collectSearchParams( ) );
-        model.put( MARK_READ_TOKEN, request.getParameter( MARK_READ_TOKEN ) );
+        model.put( MARK_READ_TOKEN, request.getParameter( SecurityTokenService.PARAMETER_TOKEN ) );
         model.put( SecurityTokenService.MARK_TOKEN, SecurityTokenService.getInstance( ).getToken( request, ACTION_MODIFY_IDENTITY ) );
         addExternalInformations( request, model );
 
