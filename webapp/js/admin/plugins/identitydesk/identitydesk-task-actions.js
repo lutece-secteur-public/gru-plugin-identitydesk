@@ -36,13 +36,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 const text = await response.text();
                 const doc = new DOMParser().parseFromString(text, 'text/html');
                 const taskResult = doc.querySelector('#task-result');
-                const newTokenInput = doc.querySelector('input[name="token"]');
+                const newWriteTokenInput = doc.querySelector('input[name="token"]');
 
                 // createTask renvoie un nouveau token d'écriture ; on remplace l'ancien dans tous les boutons restés sur la page.
-                if (newTokenInput && newTokenInput.value) {
+                if (newWriteTokenInput && newWriteTokenInput.value) {
                     document.querySelectorAll('.identitydesk-task-action').forEach((actionButton) => {
                         const nextUrl = new URL(actionButton.dataset.actionUrl, window.location.href);
-                        nextUrl.searchParams.set('token', newTokenInput.value);
+                        nextUrl.searchParams.set('token', newWriteTokenInput.value);
                         actionButton.dataset.actionUrl = nextUrl.href;
                     });
                 }

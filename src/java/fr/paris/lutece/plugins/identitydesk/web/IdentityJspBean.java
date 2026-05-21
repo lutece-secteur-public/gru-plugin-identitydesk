@@ -504,7 +504,7 @@ public class IdentityJspBean extends MVCAdminJspBean
         Map<String, String> searchParams = collectSearchParams( );
         model.put( MARK_SEARCH_PARAMS, searchParams );
         model.put( MARK_READ_TOKEN,  request.getParameter( MARK_READ_TOKEN ) );
-        model.put( SecurityTokenService.MARK_TOKEN, SecurityTokenService.getInstance( ).getToken( request, ACTION_MODIFY_IDENTITY ) );
+        model.put( MARK_WRITE_TOKEN, SecurityTokenService.getInstance( ).getToken( request, ACTION_MODIFY_IDENTITY ) );
         return getPage( PROPERTY_PAGE_TITLE_CREATE_TASK_IDENTITY, TEMPLATE_TASK_CREATION_RESULT, model );
     }
 
@@ -683,7 +683,7 @@ public class IdentityJspBean extends MVCAdminJspBean
         model.put( MARK_ATTRIBUTE_INFO_KEY_LIST, _AttributeInfoKeyList );
         model.put( MARK_SEARCH_PARAMS, collectSearchParams( ) );
         model.put( MARK_READ_TOKEN, request.getParameter( SecurityTokenService.PARAMETER_TOKEN ) );
-        model.put( SecurityTokenService.MARK_TOKEN, SecurityTokenService.getInstance( ).getToken( request, ACTION_MODIFY_IDENTITY ) );
+        model.put( MARK_WRITE_TOKEN, SecurityTokenService.getInstance( ).getToken( request, ACTION_MODIFY_IDENTITY ) );
         addExternalInformations( request, model );
 
         return getPage( PROPERTY_PAGE_TITLE_CREATE_IDENTITY, TEMPLATE_CREATE_IDENTITY, model );
@@ -787,7 +787,7 @@ public class IdentityJspBean extends MVCAdminJspBean
         model.put( MARK_REFERENTIAL_ATTRIBUTE_LIST, _attributesReferential );
         model.put( MARK_ATTRIBUTE_INFO_KEY_LIST, _AttributeInfoKeyList );
         model.put( MARK_READ_TOKEN, request.getParameter( MARK_READ_TOKEN ) );
-        model.put( SecurityTokenService.MARK_TOKEN, SecurityTokenService.getInstance( ).getToken( request, ACTION_MODIFY_IDENTITY ) );
+        model.put( MARK_WRITE_TOKEN, SecurityTokenService.getInstance( ).getToken( request, ACTION_MODIFY_IDENTITY ) );
         addExternalInformations( request, model );
 
         // Ajouter les paramètres de recherche au modèle
