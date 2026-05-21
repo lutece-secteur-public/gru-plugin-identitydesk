@@ -16,7 +16,7 @@
                 <#assign searchParamsList +=[key + "=" + (search_params[key]!)]>
             </#list>
             <@aButton color='light' title='Retour aux r&eacute;sultats' buttonIcon='chevron-left'
-                href='jsp/admin/plugins/identitydesk/ManageIdentities.jsp?action_searchIdentity&${searchParamsList?join("&")}&approximate=true&token=${read_token}' />
+                href='jsp/admin/plugins/identitydesk/ManageIdentities.jsp?action_searchIdentity&${searchParamsList?join("&")}&approximate=true' />
         </@pageHeader>
         <div id="task-list">
             <div class="jumbotron jumbotron-fluid p-3 shadow-lg text-center bg-light">
@@ -40,7 +40,6 @@
                 </div>
             </div>
             <@messages errors=errors warnings=warnings infos=infos />
-            <@input type="hidden" name="read_token" value="${read_token}" />
             <#if identity.tasks?? && identity.tasks?size != 0>
                 <#assign sortedTasks=identity.tasks?sort_by("lastUpdateDate")?reverse>
                 <@table bordered=true>
