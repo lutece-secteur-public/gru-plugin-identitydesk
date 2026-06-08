@@ -40,7 +40,6 @@
                 </div>
             </div>
             <@messages errors=errors warnings=warnings infos=infos />
-            <@input type="hidden" name="token" value="${token}" />
             <#if identity.tasks?? && identity.tasks?size != 0>
                 <#assign sortedTasks=identity.tasks?sort_by("lastUpdateDate")?reverse>
                 <@table bordered=true>

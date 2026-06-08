@@ -14,10 +14,11 @@
                             <@button type='submit' color='primary' name="action_modifyIdentity"
                                 title='${i18n("identitydesk.modify_identity.save")}' buttonIcon='check' />
                             <@aButton color='light' title='Retour aux r&eacute;sultats' buttonIcon='chevron-left'
-                                href='jsp/admin/plugins/identitydesk/ManageIdentities.jsp?action_searchIdentity&${searchParamsList?join("&")}&approximate=true' />
+                                href='jsp/admin/plugins/identitydesk/ManageIdentities.jsp?action_searchIdentity&${searchParamsList?join("&")}&approximate=true&token=${read_token}' />
                     </@pageHeader>
                     <@messages errors=errors warnings=warnings infos=infos />
-                    <@input type="hidden" name="token" value="${token}" />
+                    <@input type="hidden" name="token" value="${write_token}" />
+                    <@input type="hidden" name="read_token" value="${read_token}" />
                     <input type="hidden" name="return_url" value="${(return_url)!''}">
                     <input type="hidden" name="customer_id" value="${identity.customerId}" />
                     <input type="hidden" name="action_modifyIdentity" value="submit" />
@@ -73,7 +74,7 @@
                         <@button type='submit' color='primary' name="action_modifyIdentity"
                             title='${i18n("identitydesk.modify_identity.save")}' buttonIcon='check' />
                         <@aButton color='light' title='Retour aux r&eacute;sultats' buttonIcon='chevron-left'
-                            href='jsp/admin/plugins/identitydesk/ManageIdentities.jsp?action_searchIdentity&${searchParamsList?join("&")}&approximate=true' />
+                            href='jsp/admin/plugins/identitydesk/ManageIdentities.jsp?action_searchIdentity&${searchParamsList?join("&")}&approximate=true&token=${read_token}' />
                     </div>
                     <div id="mandatory-msg" class="text-danger" style="display: none">
                         #i18n{identitydesk.createmodify_identity.mandatoryFieldsWarning}
