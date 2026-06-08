@@ -12,7 +12,7 @@
       </#assign>
     </#if>
     <@tform action="jsp/admin/plugins/identitydesk/ManageIdentities.jsp?action_searchIdentity">
-      <@input type="hidden" name="token" value="${token}"/>
+      <@input type="hidden" name="token" value="${read_token}"/>
       <@input type="hidden" name="new_search" value=""/>
       <@input type="hidden" name="return_url" value="${(return_url)!''}"/>
       <div class="jumbotron jumbotron-fluid d-flex align-items-center justify-content-center text-center bg-secondary pb-4">
@@ -130,7 +130,7 @@
                       title='#i18n{portal.util.labelActions}' color="light" >
                       <@dropdownItem href='#' title='#i18n{identitydesk.search_identities.details}' params='onClick="event.preventDefault(); document.getElementById(\'btn-summarize-${identity?index}\').click();"' />
                       <#if can_write>
-                          <@dropdownItem href='jsp/admin/plugins/identitydesk/ManageIdentities.jsp?view_modifyIdentity&customer_id=${identity.customerId}' title='#i18n{identitydesk.search_identities.buttonModifyIdentity}' />
+                          <@dropdownItem href='jsp/admin/plugins/identitydesk/ManageIdentities.jsp?view_modifyIdentity&customer_id=${identity.customerId}&read_token=${read_token}' title='#i18n{identitydesk.search_identities.buttonModifyIdentity}' />
                       </#if>
                       <#if return_url??>
                           <@dropdownItem href='${return_url}?cuid=${identity.customerId}' title='#i18n{identitydesk.search_identities.buttonSelectIdentityAndReturn}'/>
@@ -147,7 +147,7 @@
                       <#if can_view_tasks && identity.tasks?size != 0>
                           <@dropdownItem href='javascript:void(0);' title='#i18n{identitydesk.search_identities.displayIdentityTaskList}' params='onClick="event.preventDefault(); document.getElementById(\'btn-tasklist-${identity.customerId}\').click();"' 
                           />
-                          <@offcanvas targetUrl="jsp/admin/plugins/identitydesk/ManageIdentities.jsp?view_displayIdentityTaskList&customer_id=${identity.customerId}&token=${token}" targetElement="#task-list" id="tasklist-${identity.customerId}" title="#i18n{identitydesk.search_identities.displayIdentityTaskList}" btnTitle="#i18n{identitydesk.search_identities.displayIdentityTaskList}" btnTitleShow=false bodyClass="p-0"  btnClass=" d-none" btnIcon="list"  />
+                          <@offcanvas targetUrl="jsp/admin/plugins/identitydesk/ManageIdentities.jsp?view_displayIdentityTaskList&customer_id=${identity.customerId}" targetElement="#task-list" id="tasklist-${identity.customerId}" title="#i18n{identitydesk.search_identities.displayIdentityTaskList}" btnTitle="#i18n{identitydesk.search_identities.displayIdentityTaskList}" btnTitleShow=false bodyClass="p-0"  btnClass=" d-none" btnIcon="list"  />
                       </#if>
                   </@aButton>
                   <#if eligible_identity_to_account_list?seq_contains(identity.customerId) >
@@ -164,13 +164,13 @@
                                 </div>
                                 <div id="summaryTableModal">
                                     <div class="modal-footer mt-0 border-0 justify-content-center pb-4 pt-0">
-                                            <@offcanvas targetUrl="jsp/admin/plugins/identitydesk/ManageIdentities.jsp?action_createAccount&customer_id=${identity.customerId}&token=${token}" targetElement="#task-result" id="taskResult-${identity.customerId}" title="#i18n{identitydesk.search_identities.createAccountTask}" btnTitle="#i18n{identitydesk.search_identities.createAccountTask}" btnTitleShow=true bodyClass="p-0" size="50" btnClass=""  />
-                                            <script>
-                                              document.getElementById("btn-taskResult-${identity.customerId}").addEventListener("click", function() {
-                                                const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById("confirmCreateAccountModal${identity.customerId}"));
-                                                modal.hide();
-                                              });
-                                            </script>
+                                            <@offcanvas targetUrl="" targetElement="#task-result" id="taskResult-${identity.customerId}" title="#i18n{identitydesk.search_identities.createAccountTask}" btnTitle="#i18n{identitydesk.search_identities.createAccountTask}" btnTitleShow=false bodyClass="p-0" size="50" btnClass="d-none"  />
+                                            <button type="button" class="btn btn-primary identitydesk-task-action"
+                                                    data-action-url="ManageIdentities.jsp?action_createAccount&customer_id=${identity.customerId}&token=${write_token}&read_token=${read_token}"
+                                                    data-modal-id="confirmCreateAccountModal${identity.customerId}"
+                                                    data-offcanvas-id="taskResult-${identity.customerId}">
+                                                #i18n{identitydesk.search_identities.createAccountTask}
+                                            </button>
                                         <button type="button" id="cancelSubmit" class="btn btn-light"
                                             data-bs-dismiss="modal">${i18n("portal.admin.message.buttonCancel")}</button>
                                     </div>
@@ -193,13 +193,13 @@
                                   </div>
                                   <div id="summaryValidateEmail${identity.customerId}TableModal">
                                       <div class="modal-footer mt-0 border-0 justify-content-center pb-4 pt-0">
-                                          <@offcanvas targetUrl="jsp/admin/plugins/identitydesk/ManageIdentities.jsp?action_validateEmail&customer_id=${identity.customerId}&token=${token}" targetElement="#task-result" id="taskResult-emailvalidation-${identity.customerId}" title="#i18n{identitydesk.search_identities.validateEmailTask}" btnTitle="#i18n{identitydesk.search_identities.validateEmailTask}" btnTitleShow=true bodyClass="p-0" size="50" btnClass=""  />
-                                          <script>
-                                              document.getElementById("btn-taskResult-emailvalidation-${identity.customerId}").addEventListener("click", function() {
-                                                  const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById("confirmValidateEmailModal${identity.customerId}"));
-                                                  modal.hide();
-                                              });
-                                          </script>
+                                          <@offcanvas targetUrl="" targetElement="#task-result" id="taskResult-emailvalidation-${identity.customerId}" title="#i18n{identitydesk.search_identities.validateEmailTask}" btnTitle="#i18n{identitydesk.search_identities.validateEmailTask}" btnTitleShow=false bodyClass="p-0" size="50" btnClass="d-none"  />
+                                          <button type="button" class="btn btn-primary identitydesk-task-action"
+                                                  data-action-url="ManageIdentities.jsp?action_validateEmail&customer_id=${identity.customerId}&token=${write_token}&read_token=${read_token}"
+                                                  data-modal-id="confirmValidateEmailModal${identity.customerId}"
+                                                  data-offcanvas-id="taskResult-emailvalidation-${identity.customerId}">
+                                              #i18n{identitydesk.search_identities.validateEmailTask}
+                                          </button>
                                           <button type="button" id="cancelValidateEmailSubmit" class="btn btn-light"
                                                   data-bs-dismiss="modal">${i18n("portal.admin.message.buttonCancel")}</button>
                                       </div>
@@ -234,18 +234,10 @@
 </@pageContainer>
 <link href="css/admin/plugins/identitydesk/identitydesk.css" rel="stylesheet">
 <script src="js/admin/plugins/identitydesk/identitydesk.js"></script>
-<script>
-  document.addEventListener('DOMContentLoaded', function() {
-    const offcanvas = document.querySelectorAll('.offcanvas');
-    offcanvas.forEach((element) => {
-      document.querySelector('.lutece-page').appendChild(element);
-    });
-  });
-</script>
+<script src="js/admin/plugins/identitydesk/identitydesk-task-actions.js"></script>
 <#if return_url??>
 <script type="module">
   import IdentityDeskBack from './js/admin/plugins/identitydesk/identitydesk-back.js';
   new IdentityDeskBack("${return_url}");
 </script>
 </#if>
-</script>

@@ -158,6 +158,8 @@ public class IdentityJspBean extends MVCAdminJspBean
     private static final String MARK_TASK_RESULT_MESSAGE = "task_result_message";
     private static final String MARK_IDENTITY_HISTORY = "history";
     private static final String MARK_IS_ACTIVE_MEDIATION_PLUGIN = "is_active_mediation_plugin";
+    private static final String MARK_READ_TOKEN = "read_token";
+    private static final String MARK_WRITE_TOKEN = "write_token";
 
     // Views
     private static final String VIEW_SEARCH_IDENTITY = "searchIdentity";
@@ -268,7 +270,6 @@ public class IdentityJspBean extends MVCAdminJspBean
         model.put( MARK_CAN_WRITE, _canWriteIdentity );
         model.put( MARK_CAN_VIEW_HISTORY, _canViewHisotry );
         model.put( MARK_IDENTITY_HISTORY, history );
-        model.put( SecurityTokenService.MARK_TOKEN, SecurityTokenService.getInstance( ).getToken( request, ACTION_MODIFY_IDENTITY ) );
         addExternalInformations( request, model );
 
         return getPage( PROPERTY_PAGE_TITLE_MANAGE_IDENTITIES, TEMPLATE_VIEW_IDENTITY, model );
@@ -312,7 +313,7 @@ public class IdentityJspBean extends MVCAdminJspBean
         model.put( MARK_REFERENTIAL_ATTRIBUTE_LIST, _attributesReferential );
         model.put( MARK_CAN_CREATE, _canCreateIdentity );
         model.put( MARK_RULES_REQ_REACHED, rulesRequirementsReached );
-        model.put( SecurityTokenService.MARK_TOKEN, SecurityTokenService.getInstance( ).getToken( request, ACTION_SEARCH_IDENTITY ) );
+        model.put( MARK_READ_TOKEN, SecurityTokenService.getInstance( ).getToken( request, ACTION_SEARCH_IDENTITY ) );
         addExternalInformations( request, model );
 
         return getPage( PROPERTY_PAGE_TITLE_MANAGE_IDENTITIES, TEMPLATE_SEARCH_IDENTITIES, model );
@@ -328,22 +329,16 @@ public class IdentityJspBean extends MVCAdminJspBean
     @Action( ACTION_SEARCH_IDENTITY )
     public String doSearchIdentities( final HttpServletRequest request ) throws AccessDeniedException
     {
-        // CSRF Token control
-        // if ( !SecurityTokenService.getInstance( ).validate( request, ACTION_SEARCH_IDENTITY ) )
-        // {
-        // throw new AccessDeniedException( "Invalid security token" );
-        // }
+        if ( !SecurityTokenService.getInstance( ).validate( request, ACTION_SEARCH_IDENTITY ) )
+        {
+            throw new AccessDeniedException( "Invalid security token" );
+        }
         return searchIdentitiesAndCreatePage( request );
     }
 
     @View(VIEW_IDENTITY_TASK_LIST)
     public String getDisplayIdentityTaskList( final HttpServletRequest request ) throws AccessDeniedException
     {
-        // CSRF Token control
-        // if ( !SecurityTokenService.getInstance( ).validate( request, ACTION_SEARCH_IDENTITY ) )
-        // {
-        //     throw new AccessDeniedException( "Invalid security token" );
-        // }
 
         if ( !_canViewTasks )
         {
@@ -378,7 +373,6 @@ public class IdentityJspBean extends MVCAdminJspBean
         // Ajouter les paramètres de recherche au modèle
         final Map<String, String> searchParams = collectSearchParams( );
         model.put( MARK_SEARCH_PARAMS, searchParams );
-        model.put( SecurityTokenService.MARK_TOKEN, SecurityTokenService.getInstance( ).getToken( request, ACTION_MODIFY_IDENTITY ) );
         return getPage( PROPERTY_PAGE_TITLE_MANAGE_IDENTITIES, TEMPLATE_DISPLAY_IDENTITY_TASK_LIST, model );
     }
 
@@ -405,7 +399,7 @@ public class IdentityJspBean extends MVCAdminJspBean
     private String createTask( final HttpServletRequest request, final String taskType, final String errorMessageKey ) throws AccessDeniedException
     {
         // CSRF Token control
-        if ( !SecurityTokenService.getInstance( ).validate( request, ACTION_SEARCH_IDENTITY ) )
+        if ( !SecurityTokenService.getInstance( ).validate( request, ACTION_MODIFY_IDENTITY ) )
         {
             throw new AccessDeniedException( "Invalid security token" );
         }
@@ -461,7 +455,8 @@ public class IdentityJspBean extends MVCAdminJspBean
         // Ajouter les paramètres de recherche au modèle
         Map<String, String> searchParams = collectSearchParams( );
         model.put( MARK_SEARCH_PARAMS, searchParams );
-        model.put( SecurityTokenService.MARK_TOKEN, SecurityTokenService.getInstance( ).getToken( request, ACTION_MODIFY_IDENTITY ) );
+        model.put( MARK_READ_TOKEN,  request.getParameter( MARK_READ_TOKEN ) );
+        model.put( MARK_WRITE_TOKEN, SecurityTokenService.getInstance( ).getToken( request, ACTION_MODIFY_IDENTITY ) );
         return getPage( PROPERTY_PAGE_TITLE_CREATE_TASK_IDENTITY, TEMPLATE_TASK_CREATION_RESULT, model );
     }
 
@@ -550,7 +545,8 @@ public class IdentityJspBean extends MVCAdminJspBean
         model.put( MARK_CAN_WRITE, _canWriteIdentity );
         model.put( MARK_RULES_REQ_REACHED, rulesRequirementsReached );
         model.put( APPROXIMATED_SEARCH, Boolean.parseBoolean( request.getParameter( PARAMETER_APPROXIMATE ) ) );
-        model.put( SecurityTokenService.MARK_TOKEN, SecurityTokenService.getInstance( ).getToken( request, ACTION_SEARCH_IDENTITY ) );
+        model.put( MARK_READ_TOKEN,  SecurityTokenService.getInstance( ).getToken( request, ACTION_SEARCH_IDENTITY ) );
+        model.put( MARK_WRITE_TOKEN,  SecurityTokenService.getInstance( ).getToken( request, ACTION_MODIFY_IDENTITY ) );
         addExternalInformations( request, model );
 
         if ( identities.isEmpty( ) )
@@ -618,7 +614,9 @@ public class IdentityJspBean extends MVCAdminJspBean
         model.put( MARK_REFERENTIAL, _processusReferential );
         model.put( MARK_REFERENTIAL_ATTRIBUTE_LIST, _attributesReferential );
         model.put( MARK_ATTRIBUTE_INFO_KEY_LIST, _AttributeInfoKeyList );
-        model.put( SecurityTokenService.MARK_TOKEN, SecurityTokenService.getInstance( ).getToken( request, ACTION_CREATE_IDENTITY ) );
+        model.put( MARK_SEARCH_PARAMS, collectSearchParams( ) );
+        model.put( MARK_READ_TOKEN, request.getParameter( SecurityTokenService.PARAMETER_TOKEN ) );
+        model.put( MARK_WRITE_TOKEN, SecurityTokenService.getInstance( ).getToken( request, ACTION_MODIFY_IDENTITY ) );
         addExternalInformations( request, model );
 
         return getPage( PROPERTY_PAGE_TITLE_CREATE_IDENTITY, TEMPLATE_CREATE_IDENTITY, model );
@@ -635,7 +633,7 @@ public class IdentityJspBean extends MVCAdminJspBean
     public String doCreateIdentity( final HttpServletRequest request ) throws AccessDeniedException
     {
         // CSRF Token control
-        if ( !SecurityTokenService.getInstance( ).validate( request, ACTION_CREATE_IDENTITY ) )
+        if ( !SecurityTokenService.getInstance( ).validate( request, ACTION_MODIFY_IDENTITY ) )
         {
             throw new AccessDeniedException( "Invalid security token" );
         }
@@ -721,7 +719,8 @@ public class IdentityJspBean extends MVCAdminJspBean
         model.put( MARK_REFERENTIAL, _processusReferential );
         model.put( MARK_REFERENTIAL_ATTRIBUTE_LIST, _attributesReferential );
         model.put( MARK_ATTRIBUTE_INFO_KEY_LIST, _AttributeInfoKeyList );
-        model.put( SecurityTokenService.MARK_TOKEN, SecurityTokenService.getInstance( ).getToken( request, ACTION_MODIFY_IDENTITY ) );
+        model.put( MARK_READ_TOKEN, request.getParameter( MARK_READ_TOKEN ) );
+        model.put( MARK_WRITE_TOKEN, SecurityTokenService.getInstance( ).getToken( request, ACTION_MODIFY_IDENTITY ) );
         addExternalInformations( request, model );
 
         // Ajouter les paramètres de recherche au modèle
