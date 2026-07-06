@@ -163,6 +163,7 @@ public class IdentityJspBean extends MVCAdminJspBean
 
     // Views
     private static final String VIEW_SEARCH_IDENTITY = "searchIdentity";
+    private static final String VIEW_SEARCH_IDENTITY_RESULTS = "searchIdentityResults";
     private static final String VIEW_CREATE_IDENTITY = "createIdentity";
     private static final String VIEW_MODIFY_IDENTITY = "modifyIdentity";
     private static final String VIEW_IDENTITY_TASK_LIST = "displayIdentityTaskList";
@@ -190,6 +191,7 @@ public class IdentityJspBean extends MVCAdminJspBean
     private List<AttributeCertificationProcessusDto> _processusReferential;
     private List<AttributeKeyDto> _attributesReferential;
     private List<AttributeStatus> _attributeStatuses = new ArrayList<>( );
+    private boolean _approximateSearch;
     private String _currentClientCode = AppPropertiesService.getProperty( "identitydesk.default.client.code" );
     private String _returnUrl = null;
 
@@ -296,6 +298,7 @@ public class IdentityJspBean extends MVCAdminJspBean
         
         if (Boolean.parseBoolean(request.getParameter(PARAMETER_NEW_SEARCH))) {
             _searchAttributes = new ArrayList<>();
+            _approximateSearch = false;
             _returnUrl = null;
         } else if (AppPropertiesService.getPropertyBoolean(PROPERTY_ALLOW_RETURN_URL_DYNAMIC_CHANGE, false)) {
             _returnUrl = StringUtils.defaultIfBlank(request.getParameter("return_url"), _returnUrl);
@@ -320,7 +323,7 @@ public class IdentityJspBean extends MVCAdminJspBean
     }
 
     /**
-     * Process the search request and returns the search results
+     * Process the search request and redirect to a get request
      *
      * @param request
      *            The Http request
@@ -333,6 +336,26 @@ public class IdentityJspBean extends MVCAdminJspBean
         {
             throw new AccessDeniedException( "Invalid security token" );
         }
+        initClientCode( request );
+        initServiceContract( _currentClientCode );
+        initReferential( _currentClientCode );
+        if ( _serviceContract == null )
+        {
+            return getSearchIdentities( request );
+        }
+        collectSearchAttributes( request );
+        return redirectView( request, VIEW_SEARCH_IDENTITY_RESULTS );
+    }
+
+    /**
+     * Method to display the search identities
+     * @param request The Http request
+     * @return the html code of the search results
+     * @throws AccessDeniedException
+     */
+    @View( VIEW_SEARCH_IDENTITY_RESULTS )
+    public String getSearchIdentityResults( final HttpServletRequest request ) throws AccessDeniedException
+    {
         return searchIdentitiesAndCreatePage( request );
     }
 
@@ -544,7 +567,7 @@ public class IdentityJspBean extends MVCAdminJspBean
         model.put( MARK_CAN_VIEW_TASKS, _canViewTasks );
         model.put( MARK_CAN_WRITE, _canWriteIdentity );
         model.put( MARK_RULES_REQ_REACHED, rulesRequirementsReached );
-        model.put( APPROXIMATED_SEARCH, Boolean.parseBoolean( request.getParameter( PARAMETER_APPROXIMATE ) ) );
+        model.put( APPROXIMATED_SEARCH, _approximateSearch );
         model.put( MARK_READ_TOKEN,  SecurityTokenService.getInstance( ).getToken( request, ACTION_SEARCH_IDENTITY ) );
         model.put( MARK_WRITE_TOKEN,  SecurityTokenService.getInstance( ).getToken( request, ACTION_MODIFY_IDENTITY ) );
         addExternalInformations( request, model );
@@ -931,6 +954,7 @@ public class IdentityJspBean extends MVCAdminJspBean
             return;
         }
 
+        _approximateSearch = Boolean.parseBoolean( request.getParameter( APPROXIMATED_SEARCH ) );
         _searchAttributes.clear( );
         _searchAttributes.addAll( searchList );
 
