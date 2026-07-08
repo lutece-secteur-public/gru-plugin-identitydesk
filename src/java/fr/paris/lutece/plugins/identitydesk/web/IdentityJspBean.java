@@ -158,7 +158,6 @@ public class IdentityJspBean extends MVCAdminJspBean
     private static final String MARK_TASK_RESULT_MESSAGE = "task_result_message";
     private static final String MARK_IDENTITY_HISTORY = "history";
     private static final String MARK_IS_ACTIVE_MEDIATION_PLUGIN = "is_active_mediation_plugin";
-    private static final String MARK_READ_TOKEN = "read_token";
     private static final String MARK_WRITE_TOKEN = "write_token";
 
     // Views
@@ -194,13 +193,6 @@ public class IdentityJspBean extends MVCAdminJspBean
     private boolean _approximateSearch;
     private String _currentClientCode = AppPropertiesService.getProperty( "identitydesk.default.client.code" );
     private String _returnUrl = null;
-
-    boolean _canCreateIdentity = false;
-    boolean _canWriteIdentity = false;
-    boolean _canCreateAccount = false;
-    boolean _canValidateEmail = false;
-    boolean _canViewTasks = false;
-    boolean _canViewHisotry = false;
 
     private final IdentityServiceExtended _identityService = SpringContextService.getBean( "identitydesk.identityService" );
     private final String _accountCreationTaskMinLevel = AppPropertiesService.getProperty( "identitydesk.account.creation.task.eligibility.min.level" );
@@ -249,9 +241,9 @@ public class IdentityJspBean extends MVCAdminJspBean
             return getSearchIdentities( request );
         }
 
-        _canViewHisotry = RBACService.isAuthorized( new AccessIdentityResource( ), AccessIdentityResource.PERMISSION_VIEW_HISTORY, (User) getUser( ) );
+        final boolean canViewHistory = hasPermission( AccessIdentityResource.PERMISSION_VIEW_HISTORY );
 
-        if(_canViewHisotry)
+        if( canViewHistory )
         {
             try
             {
@@ -269,8 +261,8 @@ public class IdentityJspBean extends MVCAdminJspBean
         model.put( MARK_REFERENTIAL, _processusReferential );
         model.put( MARK_REFERENTIAL_ATTRIBUTE_LIST, _attributesReferential );
         model.put( MARK_ATTRIBUTE_INFO_KEY_LIST, _AttributeInfoKeyList );
-        model.put( MARK_CAN_WRITE, _canWriteIdentity );
-        model.put( MARK_CAN_VIEW_HISTORY, _canViewHisotry );
+        model.put( MARK_CAN_WRITE, hasPermission( AccessIdentityResource.PERMISSION_WRITE ) );
+        model.put( MARK_CAN_VIEW_HISTORY, canViewHistory );
         model.put( MARK_IDENTITY_HISTORY, history );
         addExternalInformations( request, model );
 
@@ -304,7 +296,6 @@ public class IdentityJspBean extends MVCAdminJspBean
             _returnUrl = StringUtils.defaultIfBlank(request.getParameter("return_url"), _returnUrl);
         }
 
-        _canCreateIdentity = RBACService.isAuthorized( new AccessIdentityResource( ), AccessIdentityResource.PERMISSION_CREATE, (User) getUser( ) );
         final boolean rulesRequirementsReached = _searchRules.stream( )
                 .anyMatch( rule -> rule.stream( ).allMatch( key -> _searchAttributes.stream( ).map( SearchAttribute::getKey ).anyMatch( key::equals ) ) );
 
@@ -314,9 +305,8 @@ public class IdentityJspBean extends MVCAdminJspBean
         model.put( MARK_SEARCH_RULES, _searchRules );
         model.put( MARK_REFERENTIAL, _processusReferential );
         model.put( MARK_REFERENTIAL_ATTRIBUTE_LIST, _attributesReferential );
-        model.put( MARK_CAN_CREATE, _canCreateIdentity );
+        model.put( MARK_CAN_CREATE, hasPermission( AccessIdentityResource.PERMISSION_CREATE ) );
         model.put( MARK_RULES_REQ_REACHED, rulesRequirementsReached );
-        model.put( MARK_READ_TOKEN, SecurityTokenService.getInstance( ).getToken( request, ACTION_SEARCH_IDENTITY ) );
         addExternalInformations( request, model );
 
         return getPage( PROPERTY_PAGE_TITLE_MANAGE_IDENTITIES, TEMPLATE_SEARCH_IDENTITIES, model );
@@ -332,10 +322,7 @@ public class IdentityJspBean extends MVCAdminJspBean
     @Action( ACTION_SEARCH_IDENTITY )
     public String doSearchIdentities( final HttpServletRequest request ) throws AccessDeniedException
     {
-        if ( !SecurityTokenService.getInstance( ).validate( request, ACTION_SEARCH_IDENTITY ) )
-        {
-            throw new AccessDeniedException( "Invalid security token" );
-        }
+        // No CSRF token on identity search: it is a read-only operation. Token protection is kept on write actions only.
         initClientCode( request );
         initServiceContract( _currentClientCode );
         initReferential( _currentClientCode );
@@ -363,7 +350,7 @@ public class IdentityJspBean extends MVCAdminJspBean
     public String getDisplayIdentityTaskList( final HttpServletRequest request ) throws AccessDeniedException
     {
 
-        if ( !_canViewTasks )
+        if ( !hasPermission( AccessIdentityResource.PERMISSION_VIEW_TASKS ) )
         {
             throw new AccessDeniedException( "You don't have the right to view task list." );
         }
@@ -396,13 +383,14 @@ public class IdentityJspBean extends MVCAdminJspBean
         // Ajouter les paramètres de recherche au modèle
         final Map<String, String> searchParams = collectSearchParams( );
         model.put( MARK_SEARCH_PARAMS, searchParams );
+        model.put( APPROXIMATED_SEARCH, _approximateSearch );
         return getPage( PROPERTY_PAGE_TITLE_MANAGE_IDENTITIES, TEMPLATE_DISPLAY_IDENTITY_TASK_LIST, model );
     }
 
     @Action( ACTION_CREATE_ACCOUNT )
     public String doCreateAccount( final HttpServletRequest request ) throws AccessDeniedException
     {
-        if ( !_canCreateAccount )
+        if ( !hasPermission( AccessIdentityResource.PERMISSION_ACTION_CREATE_ACCOUNT ) )
         {
             throw new AccessDeniedException( "You don't have the right to do a account creation request." );
         }
@@ -412,7 +400,7 @@ public class IdentityJspBean extends MVCAdminJspBean
     @Action( ACTION_VALIDATE_EMAIL )
     public String doValidateEmail( final HttpServletRequest request ) throws AccessDeniedException
     {
-        if ( !_canValidateEmail )
+        if ( !hasPermission( AccessIdentityResource.PERMISSION_ACTION_VALIDATE_EMAIL ) )
         {
             throw new AccessDeniedException( "You don't have the right to do a email validation request." );
         }
@@ -478,7 +466,7 @@ public class IdentityJspBean extends MVCAdminJspBean
         // Ajouter les paramètres de recherche au modèle
         Map<String, String> searchParams = collectSearchParams( );
         model.put( MARK_SEARCH_PARAMS, searchParams );
-        model.put( MARK_READ_TOKEN,  request.getParameter( MARK_READ_TOKEN ) );
+        model.put( APPROXIMATED_SEARCH, _approximateSearch );
         model.put( MARK_WRITE_TOKEN, SecurityTokenService.getInstance( ).getToken( request, ACTION_MODIFY_IDENTITY ) );
         return getPage( PROPERTY_PAGE_TITLE_CREATE_TASK_IDENTITY, TEMPLATE_TASK_CREATION_RESULT, model );
     }
@@ -537,18 +525,18 @@ public class IdentityJspBean extends MVCAdminJspBean
             }
         }
 
-        _canWriteIdentity = RBACService.isAuthorized( new AccessIdentityResource( ), AccessIdentityResource.PERMISSION_WRITE, (User) getUser( ) );
-        _canCreateIdentity = RBACService.isAuthorized( new AccessIdentityResource( ), AccessIdentityResource.PERMISSION_CREATE, (User) getUser( ) );
-        _canCreateAccount = RBACService.isAuthorized( new AccessIdentityResource( ), AccessIdentityResource.PERMISSION_ACTION_CREATE_ACCOUNT, (User) getUser( ) );
-        _canValidateEmail = RBACService.isAuthorized( new AccessIdentityResource( ), AccessIdentityResource.PERMISSION_ACTION_VALIDATE_EMAIL, (User) getUser( ) );
-        _canViewTasks = RBACService.isAuthorized( new AccessIdentityResource( ), AccessIdentityResource.PERMISSION_VIEW_TASKS, (User) getUser( ) );
+        final boolean canWriteIdentity = hasPermission( AccessIdentityResource.PERMISSION_WRITE );
+        final boolean canCreateIdentity = hasPermission( AccessIdentityResource.PERMISSION_CREATE );
+        final boolean canCreateAccount = hasPermission( AccessIdentityResource.PERMISSION_ACTION_CREATE_ACCOUNT );
+        final boolean canValidateEmail = hasPermission( AccessIdentityResource.PERMISSION_ACTION_VALIDATE_EMAIL );
+        final boolean canViewTasks = hasPermission( AccessIdentityResource.PERMISSION_VIEW_TASKS );
         final boolean rulesRequirementsReached = _searchRules.stream( )
                 .anyMatch( rule -> rule.stream( ).allMatch( key -> _searchAttributes.stream( ).map( SearchAttribute::getKey ).anyMatch( key::equals ) ) );
 
         final List<ExtendedIdentityDto> extendedIdentities = identities.stream( ).map( identityDto -> IdentityDeskService.instance().toExtendedIdentityDto( identityDto, this.getAuthor( ) ) ).collect( Collectors.toList( ) );
-        final List<String> eligibleCustomerIdsToAccount = extendedIdentities.stream( ).filter( this::eligibleToAccountCreation ).map( IdentityDto::getCustomerId )
+        final List<String> eligibleCustomerIdsToAccount = extendedIdentities.stream( ).filter( identityDto -> eligibleToAccountCreation( identityDto, canCreateAccount ) ).map( IdentityDto::getCustomerId )
                 .collect( Collectors.toList( ) );
-        final List<String> eligibleCustomerIdsToMailValidation = extendedIdentities.stream( ).filter( this::eligibleToEmailValidation ).map( IdentityDto::getCustomerId )
+        final List<String> eligibleCustomerIdsToMailValidation = extendedIdentities.stream( ).filter( identityDto -> eligibleToEmailValidation( identityDto, canValidateEmail ) ).map( IdentityDto::getCustomerId )
                 .collect( Collectors.toList( ) );
         final Map<String, Object> model = getModel( );
         model.put( MARK_IDENTITY_LIST, extendedIdentities );
@@ -561,14 +549,13 @@ public class IdentityJspBean extends MVCAdminJspBean
         model.put( MARK_SEARCH_RULES, _searchRules );
         model.put( MARK_REFERENTIAL, _processusReferential );
         model.put( MARK_REFERENTIAL_ATTRIBUTE_LIST, _attributesReferential );
-        model.put( MARK_CAN_CREATE, _canCreateIdentity );
-        model.put( MARK_CAN_CREATE_ACCOUNT, _canCreateAccount );
-        model.put( MARK_CAN_VALIDATE_EMAIL, _canValidateEmail );
-        model.put( MARK_CAN_VIEW_TASKS, _canViewTasks );
-        model.put( MARK_CAN_WRITE, _canWriteIdentity );
+        model.put( MARK_CAN_CREATE, canCreateIdentity );
+        model.put( MARK_CAN_CREATE_ACCOUNT, canCreateAccount );
+        model.put( MARK_CAN_VALIDATE_EMAIL, canValidateEmail );
+        model.put( MARK_CAN_VIEW_TASKS, canViewTasks );
+        model.put( MARK_CAN_WRITE, canWriteIdentity );
         model.put( MARK_RULES_REQ_REACHED, rulesRequirementsReached );
         model.put( APPROXIMATED_SEARCH, _approximateSearch );
-        model.put( MARK_READ_TOKEN,  SecurityTokenService.getInstance( ).getToken( request, ACTION_SEARCH_IDENTITY ) );
         model.put( MARK_WRITE_TOKEN,  SecurityTokenService.getInstance( ).getToken( request, ACTION_MODIFY_IDENTITY ) );
         addExternalInformations( request, model );
 
@@ -592,7 +579,7 @@ public class IdentityJspBean extends MVCAdminJspBean
     @View( VIEW_CREATE_IDENTITY )
     public String getCreateIdentity( HttpServletRequest request ) throws AccessDeniedException
     {
-        if ( !_canCreateIdentity )
+        if ( !hasPermission( AccessIdentityResource.PERMISSION_CREATE ) )
         {
             throw new AccessDeniedException( "You don't have the right to create identities." );
         }
@@ -638,7 +625,7 @@ public class IdentityJspBean extends MVCAdminJspBean
         model.put( MARK_REFERENTIAL_ATTRIBUTE_LIST, _attributesReferential );
         model.put( MARK_ATTRIBUTE_INFO_KEY_LIST, _AttributeInfoKeyList );
         model.put( MARK_SEARCH_PARAMS, collectSearchParams( ) );
-        model.put( MARK_READ_TOKEN, request.getParameter( SecurityTokenService.PARAMETER_TOKEN ) );
+        model.put( APPROXIMATED_SEARCH, _approximateSearch );
         model.put( MARK_WRITE_TOKEN, SecurityTokenService.getInstance( ).getToken( request, ACTION_MODIFY_IDENTITY ) );
         addExternalInformations( request, model );
 
@@ -696,7 +683,7 @@ public class IdentityJspBean extends MVCAdminJspBean
             return getCreateIdentity( request, false );
         }
         updateSearchAttributes( request );
-        return searchIdentitiesAndCreatePage( request );
+        return redirectView( request, VIEW_SEARCH_IDENTITY_RESULTS );
     }
 
     /**
@@ -709,7 +696,7 @@ public class IdentityJspBean extends MVCAdminJspBean
     @View( VIEW_MODIFY_IDENTITY )
     public String getModifyIdentity( HttpServletRequest request ) throws AccessDeniedException
     {
-        if ( !_canWriteIdentity )
+        if ( !hasPermission( AccessIdentityResource.PERMISSION_WRITE ) )
         {
             throw new AccessDeniedException( "You don't have the right to modify identities." );
         }
@@ -742,13 +729,13 @@ public class IdentityJspBean extends MVCAdminJspBean
         model.put( MARK_REFERENTIAL, _processusReferential );
         model.put( MARK_REFERENTIAL_ATTRIBUTE_LIST, _attributesReferential );
         model.put( MARK_ATTRIBUTE_INFO_KEY_LIST, _AttributeInfoKeyList );
-        model.put( MARK_READ_TOKEN, request.getParameter( MARK_READ_TOKEN ) );
         model.put( MARK_WRITE_TOKEN, SecurityTokenService.getInstance( ).getToken( request, ACTION_MODIFY_IDENTITY ) );
         addExternalInformations( request, model );
 
         // Ajouter les paramètres de recherche au modèle
         Map<String, String> searchParams = collectSearchParams( );
         model.put( MARK_SEARCH_PARAMS, searchParams );
+        model.put( APPROXIMATED_SEARCH, _approximateSearch );
 
         return getPage( PROPERTY_PAGE_TITLE_MODIFY_IDENTITY, TEMPLATE_MODIFY_IDENTITY, model );
     }
@@ -835,7 +822,9 @@ public class IdentityJspBean extends MVCAdminJspBean
         }
 
         updateSearchAttributes( request );
-        return getModifyIdentity( request ); // Rediriger vers la page de modification
+        final Map<String, String> redirectParameters = new HashMap<>( );
+        redirectParameters.put( Constants.PARAM_ID_CUSTOMER, identityWithUpdates.getCustomerId( ) );
+        return redirect( request, VIEW_MODIFY_IDENTITY, redirectParameters );
     }
 
 
@@ -1081,8 +1070,33 @@ public class IdentityJspBean extends MVCAdminJspBean
     }
 
     /**
+     * Resolve the request parameter name for a service-contract attribute.
+     *
+     * @param strPrefix
+     *            the request parameter prefix ( {@link #PARAMETER_SEARCH_PREFIX} or empty )
+     * @param strKeyName
+     *            the service-contract attribute key name
+     * @return the request parameter name to read
+     */
+    private String resolveSearchRequestKey( final String strPrefix, final String strKeyName )
+    {
+        if ( PARAMETER_SEARCH_PREFIX.equals( strPrefix ) )
+        {
+            if ( Constants.PARAM_FAMILY_NAME.equals( strKeyName ) )
+            {
+                return strPrefix + Constants.PARAM_COMMON_LASTNAME;
+            }
+            if ( Constants.PARAM_EMAIL.equals( strKeyName ) )
+            {
+                return strPrefix + Constants.PARAM_COMMON_EMAIL;
+            }
+        }
+        return strPrefix + strKeyName;
+    }
+
+    /**
      * get updated identity attributes from request
-     * 
+     *
      * @param request
      * @return the identity with attributes to update
      */
@@ -1095,10 +1109,10 @@ public class IdentityJspBean extends MVCAdminJspBean
 
         // add attributes (and certification process) to identity if they are present in the request
         _serviceContract.getAttributeDefinitions( ).stream( )
-                .filter( attr -> bCreate ? !StringUtils.isEmpty( request.getParameter( strPrefix + attr.getKeyName( ) ) )
-                        : ( request.getParameter( strPrefix + attr.getKeyName( ) ) != null ) )
+                .filter( attr -> bCreate ? !StringUtils.isEmpty( request.getParameter( resolveSearchRequestKey( strPrefix, attr.getKeyName( ) ) ) )
+                        : ( request.getParameter( resolveSearchRequestKey( strPrefix, attr.getKeyName( ) ) ) != null ) )
                 .forEach( attr -> {
-                    String attrValue = StringEscapeUtils.unescapeHtml4( request.getParameter( strPrefix + attr.getKeyName( ) ) );
+                    String attrValue = StringEscapeUtils.unescapeHtml4( request.getParameter( resolveSearchRequestKey( strPrefix, attr.getKeyName( ) ) ) );
                     
                     if ( "birthdate".equals( attr.getKeyName( ) ) && attrValue != null && !attrValue.isEmpty( ) )
                     {
@@ -1164,8 +1178,19 @@ public class IdentityJspBean extends MVCAdminJspBean
     }
 
     /**
+     * Check user given permission
+     * @param permission
+     *            the permission to check
+     * @return {@code true} if the current user is authorized
+     */
+    private boolean hasPermission( final String permission )
+    {
+        return RBACService.isAuthorized( new AccessIdentityResource( ), permission, (User) getUser( ) );
+    }
+
+    /**
      * get Author
-     * 
+     *
      * @return the author
      */
     private RequestAuthor getAuthor( )
@@ -1281,18 +1306,18 @@ public class IdentityJspBean extends MVCAdminJspBean
         return searchParams;
     }
 
-    private boolean eligibleToEmailValidation( final ExtendedIdentityDto identityDto )
+    private boolean eligibleToEmailValidation( final ExtendedIdentityDto identityDto, final boolean canValidateEmail )
     {
-        if(_canValidateEmail)
+        if( canValidateEmail )
         {
             return identityDto.getAttributes().stream().anyMatch(attributeDto -> Objects.equals(attributeDto.getKey(), Constants.PARAM_EMAIL) && (attributeDto.getCertificationLevel() == null || attributeDto.getCertificationLevel() <= 100));
         }
         return false;
     }
 
-    private boolean eligibleToAccountCreation( final ExtendedIdentityDto identityDto )
+    private boolean eligibleToAccountCreation( final ExtendedIdentityDto identityDto, final boolean canCreateAccount )
     {
-        if(_canCreateAccount)
+        if( canCreateAccount )
         {
             if (identityDto.isMonParisActive())
             {
